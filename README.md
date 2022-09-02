@@ -5,9 +5,6 @@ setupでピンアサインを
 ui.setupPhBtns( screen, 33, 39, 36);
 のように設定できます。
 
-lua版はこちらです。
-https://github.com/dentaro/haco3
-
 「ハコさん」というキャラが大活躍する（はずの）esp32で動くレトロゲームエンジンを開発中です。
 
 ビルドオプションの設定などが必要なため、インストールはplatformIOでしかできません。（Arduino不可）
