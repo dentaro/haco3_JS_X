@@ -169,6 +169,7 @@ int RunJsGame::l_pget(duk_context* ctx){
   return 4;
 }
 */
+
 duk_ret_t RunJsGame::l_color(duk_context* ctx){
   duk_push_global_object(ctx);          // push global
   duk_get_prop_string(ctx, -1, "obako");// push obako
@@ -176,20 +177,74 @@ duk_ret_t RunJsGame::l_color(duk_context* ctx){
   duk_pop_2(ctx); // obako, global
 
   int r,g,b;
+
   if(duk_get_top(ctx) == 3){ // from rgb
+
     r = duk_get_int(ctx, 0);
     g = duk_get_int(ctx, 1);
     b = duk_get_int(ctx, 2);
-
+    //とにかく一回格納する
     self->col[0] = r;
     self->col[1] = g;
     self->col[2] = b;
-  }else{ // from palette
+
+    //色番号だったら上書き
+  if(g == NULL&& b == NULL){
+
+      int n = duk_get_int(ctx, 0);
+
+           if(n == 0){ r = 0;     g = 0;    b = 0; }//0: 黒色
+      else if(n == 1){ r = 27;    g = 42;   b = 86; }//1: 暗い青色
+      else if(n == 2){ r = 137;   g = 24;   b = 84; }//2: 暗い紫色
+      else if(n == 3){ r = 0;     g = 139;  b = 75; }//3: 暗い緑色
+      else if(n == 4){ r = 183;   g = 76;   b = 45; }//4: 茶色
+      else if(n == 5){ r = 97;    g = 87;   b = 78; }//5: 暗い灰色
+      else if(n == 6){ r = 194;   g = 195;  b = 199; }//6: 明るい灰色
+      else if(n == 7){ r = 255;   g = 241;  b = 231; }//7: 白色
+
+      else if(n == 8){ r = 255;   g = 0;    b = 70; }//8: 赤色
+      else if(n == 9){ r = 255;   g = 160;  b = 0; }//9: オレンジ
+      else if(n == 10){ r = 255;  g = 238;  b = 0; }//10: 黄色
+      else if(n == 11){ r = 0;    g = 234;  b = 0; }//11: 緑色
+      else if(n == 12){ r = 0;    g = 173;  b = 255; }//12: 水色
+      else if(n == 13){ r = 134;  g = 116;  b = 159; }//13: 藍色
+      else if(n == 14){ r = 255;  g = 107;  b = 169; }//14: ピンク
+      else if(n == 15){ r = 255;  g = 202;  b = 165; }//15: 桃色
+
+    //   uint16_t col16 = rgb24to16(r, g, b);
+    
+    // self->col[0] = ((col16 >> 11) << 3); // 5bit
+    // self->col[1] = (((col16  >> 5) & 0b111111) << 2); // 6bit
+    // self->col[2] = ((col16  & 0b11111) << 3);       // 5bit
+
+
+    self->col[0] = r; // 5bit
+    self->col[1] = g; // 6bit
+    self->col[2] = b;       // 5bit
+
+    }
+
+
+  }else{
     r = duk_get_int(ctx, 0);
     self->col[0] = ((self->palette[r] >> 11) << 3); // 5bit
     self->col[1] = (((self->palette[r] >> 5) & 0b111111) << 2); // 6bit
     self->col[2] = ((self->palette[r] & 0b11111) << 3);       // 5bit
   }
+  // else if(duk_get_top(ctx) == 1){ // from palette
+      
+
+  //   // uint16_t col16 = rgb24to16(r, g, b);
+    
+  //   // self->col[0] = ((col16 >> 11) << 3); // 5bit
+  //   // self->col[1] = (((col16  >> 5) & 0b111111) << 2); // 6bit
+  //   // self->col[2] = ((col16  & 0b11111) << 3);       // 5bit
+
+  //   // r = duk_get_int(ctx, 0);
+  //   // self->col[0] = ((self->palette[r] >> 11) << 3); // 5bit
+  //   // self->col[1] = (((self->palette[r] >> 5) & 0b111111) << 2); // 6bit
+  //   // self->col[2] = ((self->palette[r] & 0b11111) << 3);       // 5bit
+  // }
 
   return 0;
 }
@@ -206,6 +261,12 @@ duk_ret_t RunJsGame::l_pset(duk_context* ctx){
   return 0;
 }
 
+// String RunJsGame::l_intToString(int _val){
+//   char numStr[32];
+//   sprintf(numStr, "%d", _val);
+//   return "numStr";
+// }
+
 duk_ret_t RunJsGame::l_text(duk_context* ctx){
 
   duk_push_global_object(ctx);
@@ -219,6 +280,8 @@ duk_ret_t RunJsGame::l_text(duk_context* ctx){
   int y = duk_get_int(ctx, 2);
 
   tft.setCursor(x,y);
+
+  tft.setFont(&lgfxJapanGothicP_8);//日本語に対応する
   tft.setTextColor(rgb24to16(self->col[0], self->col[1], self->col[2]));
   tft.print(text);
   return 0;
@@ -323,6 +386,9 @@ void RunJsGame::resume(){
 
   fidx = duk_push_c_function(ctx, l_color, 3);
   duk_put_prop_string(ctx, -2, "color");
+
+  // fidx = duk_push_c_function(ctx, l_color, 1);//後に書いたものが優先される。
+  // duk_put_prop_string(ctx, -2, "color");
 
   fidx = duk_push_c_function(ctx, l_text, 3);
   duk_put_prop_string(ctx, -2, "text");
@@ -501,14 +567,16 @@ pressedBtnID = -1;
 
   // show FPS
   sprintf(str, "%02dFPS", 1000/remainTime); // FPS
+  
+  // tft.setFont(&lgfxJapanGothicP_8);
 
   tft.setTextSize(1);
   tft.setTextColor(TFT_WHITE, TFT_BLUE);
-  tft.setCursor(90, 127 - 16);
+  tft.setCursor(0, 127 - 18);
   tft.print(str);
 
   sprintf(str, "%02dms", remainTime); // ms
-  tft.setCursor(90, 127 - 8);
+  tft.setCursor(40, 127 - 18);
   tft.print(str);
 
   int wait = 1000/30 - remainTime;

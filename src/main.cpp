@@ -22,7 +22,7 @@ float matrix_side[6] = {2.0,   // 横2倍
                      2.0,   // 縦2倍
                      0.0    // Y座標
                     };
-                    
+
 //2倍拡大表示用のパラメータ
 float matrix_bg[6] = {2.0,   // 横2倍
                      -0.0,  // 横傾き
@@ -91,20 +91,21 @@ volatile SemaphoreHandle_t semaphore;
 void dispTask(void *pvParameters) {
   while (1) {
     xSemaphoreTake(semaphore, portMAX_DELAY);
-    
+
 
       if(flip){
         tft.pushSprite(&layoutSprite,0,0);
-        ui.showTouchEventInfo( layoutSprite, 120, 0 );//タッチイベントを視覚化する
-        ui.showInfo( layoutSprite, 0, 0 );//ボタン情報、フレームレート情報などを表示します。
-        ui.drawPhBtns( layoutSprite );//物理ボタンの状態を表示
+        ui.showFPS( layoutSprite, 0, 127 - 28);//タッチイベントを視覚化する
+        // ui.showTouchEventInfo( layoutSprite, 120, 0 );//タッチイベントを視覚化する
+        // ui.showInfo( layoutSprite, 0, 0 );//ボタン情報、フレームレート情報などを表示します。
+        // ui.drawPhBtns( layoutSprite );//物理ボタンの状態を表示
         layoutSprite.pushAffine(matrix_bg);
       }else{
 
       }
       flip = !flip;//描画は2フレにつき１回行う
 
-      
+
     }
     delay(1);
 }
@@ -118,9 +119,6 @@ void setup()
 {
   Serial.begin(115200);
   delay(50);
-
-  
-
   // タイマー作成(33.333ms)
   timer = timerBegin(0, 80, true);
   timerAttachInterrupt(timer, &onTimer, true);
@@ -161,13 +159,17 @@ void setup()
   sideSprite.createSprite(31, 120);//ゲーム画面用スプライトメモリ確保
   sideSprite.fillScreen(TFT_RED);
 // //  //SDからの読み込みは４Gb以下じゃないとうまく動作しないかも
-// //PNGをバッファに書いて2倍出力    
-  sideSprite.drawPngFile(SPIFFS, "/haco3/util/side.png", 0, 0);
+// //PNGをバッファに書いて2倍出力
+  sideSprite.drawPngFile(SPIFFS, "/haco3/util/side.png", 0, 0);//4ボタン
+  // sideSprite.drawPngFile(SPIFFS, "/haco3/util/side0.png", 0, 0);//
   sideSprite.pushAffine(matrix_side);
   sideSprite.deleteSprite();//描画したらメモリを解放する
-  
+
   //sprite（bg1)のボタン配置の時
-  ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー
+  ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
+
+    //sprite（bg1)のボタン配置の時
+  // ui.createBtns( 130,  9,  30, 44,  3, 4, TOUCH, 2);//コントローラー
   // ui.createBtns( 130, 53,  30, 66,  2, 6, TOUCH, 2);//メインメニュー
 
   // ui.createBtns( 3,   66,  66, 11,  6, 1, TOUCH, 2);//最後の引数でタッチエリアを2倍している
@@ -216,12 +218,12 @@ void loop() {
       pressedBtnID = ui.getTouchBtnID();
     }
   }
-  
+
   switch (ui.getHitValue())
   {
   default:  layoutSprite.println("--"); break;
   case 101: layoutSprite.println("A click");pressedBtnID = 2; break;
-  case 102: layoutSprite.println("B click");pressedBtnID = 1; break;
+  case 102: layoutSprite.println("B click");pressedBtnID = 0; break;
   case 103: layoutSprite.println("C click");pressedBtnID = 3; break;
   case 111: layoutSprite.println("A hold");pressedBtnID = 2; break;
   case 112: layoutSprite.println("B hold");pressedBtnID = 1; break;

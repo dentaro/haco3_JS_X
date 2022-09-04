@@ -61,6 +61,7 @@ class RunJsGame: public BaseGame
     int buttonState[7];
     uint8_t surface[128][128]; //16.3kb
     uint16_t palette[256];
+    // uint16_t haco3palette[16];
     bool wifiDebugRequest = false;
     bool wifiDebugSelf = false;
     WifiPhase wifiMode = NONE;
@@ -97,6 +98,10 @@ u   static int l_fillcircle(duk_context* ctx);
     static int l_reboot(duk_context* ctx);
     static int l_debug(duk_context* ctx);
     */
+
+   //haco3Lib
+  //  String l_intToString(int _val);
+   //haco3Lib
 
     String getBitmapName(String s);
     void init();
