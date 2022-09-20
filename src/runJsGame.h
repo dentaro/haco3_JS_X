@@ -37,34 +37,30 @@
 
 #define MAX_CHAR 256
 
-
 //Luaと共通なもの（baseGameに持っていきたい）
-
 inline uint16_t rgb24to16(uint8_t r, uint8_t g, uint8_t b) {
   uint16_t tmp = ((r>>3) << 11) | ((g>>2) << 5) | (b>>3);
   return tmp; //(tmp >> 8) | (tmp << 8);
 }
-
-
 class RunJsGame: public BaseGame
 {
   public:
-    enum WifiPhase{
-      NONE,
-      SELECT,
-      SHOW,
-      RUN
-    };
+    // enum WifiPhase{
+    //   NONE,
+    //   SELECT,
+    //   SHOW,
+    //   RUN
+    // };
 
     duk_context* ctx;
     byte col[3] = {0,0,0};
     int buttonState[7];
-    uint8_t surface[128][128]; //16.3kb
-    uint16_t palette[256];
+    // uint8_t surface[128][128]; //16.3kb
+    // uint16_t palette[256];
     // uint16_t haco3palette[16];
     bool wifiDebugRequest = false;
     bool wifiDebugSelf = false;
-    WifiPhase wifiMode = NONE;
+    // WifiPhase wifiMode = NONE;
     int modeSelect = 0;
     bool exitRequest = false;
     bool runError = false;
@@ -74,13 +70,21 @@ class RunJsGame: public BaseGame
     static int l_tone(duk_context* ctx);
     static int l_spr(duk_context* ctx);
     static int l_pset(duk_context* ctx);
+    static int l_mapno(duk_context* ctx);
+    static int l_drawmap(duk_context* ctx);
+    
+    static int l_gcn(duk_context* ctx);
     /*
     static int l_pget(duk_context* ctx);
     */
     static int l_color(duk_context* ctx);
     static int l_text(duk_context* ctx);
+    // static int l_readmap(duk_context* ctx);
     static int l_drawrect(duk_context* ctx);
     static int l_fillrect(duk_context* ctx);
+    
+    static int l_bg(duk_context* ctx);
+    static int l_setupbg(duk_context* ctx);
     /*
 u   static int l_fillcircle(duk_context* ctx);
     */

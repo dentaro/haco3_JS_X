@@ -1,87 +1,45 @@
 #include "runJsGame.h"
-// #include "MyTFT.h"
 extern MyTFT_eSprite tft;
+extern LGFX_Sprite sprite88_0;
+extern LGFX_Sprite spriteRoi;
+extern LGFX_Sprite spritebg[8];
 extern String fileName;
-extern void startWifiDebug(bool isSelf);
 extern void setFileName(String s);
-extern bool isWifiDebug();
 extern void reboot();
 extern Tunes tunes;
 extern int pressedBtnID;
+extern uint8_t charSpritex;
+extern uint8_t charSpritey;
+int bgSpriteNo = 0;
+extern uint8_t mapArray[256][256];
+extern int readMap(int mn);
+extern void readMapFsw(bool b);
+extern int readmapno;
+extern bool mapready;
+extern bool readMapF;
 
+extern uint8_t mapsx;
+extern uint8_t mapsy;
+// extern TaskHandle_t taskHandle2;
+extern volatile SemaphoreHandle_t semaphore;
+extern int getMapNo();
+// extern volatile SemaphoreHandle_t semaphore2;
+
+// extern bool readMapF;
+
+extern File fw;
+extern File fr;
+extern String readStr;
+extern String wrfile;	// ④読み書きするファイル名を設定
+extern String writeStr;
+
+int premapsx = 60;
+int premapsy = 100;
+bool moveF = true;
 int RunJsGame::loadSurface(File *fp, uint8_t* buf){
-  uint8_t c;
-  unsigned long offset;
-  unsigned long width, height;
-  unsigned long biSize;
-  uint16_t bitCount;
-
-  Serial.println("pre read");
-  fp->read(&c, 1);
-  Serial.println("read1");
-  if(c != 'B'){
-    printf("header error 0");
-    Serial.print(c);
-    Serial.println("unknown header");
-    return -1;
-  }
-  fp->read(&c, 1);
-  Serial.println("read2");
-  if(c != 'M'){
-    printf("header error 1");
-    return -1;
-  }
-  Serial.println("pre seek");
-  fp->seek(4 + 2 + 2, SeekCur); // size, resv1, resv2
-  fp->read((uint8_t*)&offset, 4);
-
-  fp->read((uint8_t*)&biSize, 4);
-  fp->read((uint8_t*)&width, 4);
-  fp->read((uint8_t*)&height, 4);
-  fp->seek(2, SeekCur); // skip biPlanes
-  fp->read((uint8_t*)&bitCount, 2);
-
-
-  Serial.println("pre check");
-  if(width != 128){
-    printf("invalid width:%d\n", width);
-    return -1;
-  }
-  if(height != 128){
-    printf("invalid height:%d\n", height);
-    return -1;
-  }
-  if(bitCount != 8){
-    printf("invalid bitCount:%x\n", bitCount);
-    return -1;
-  }
-
-  fp->seek(biSize - (4 + 4 + 4 + 2 + 2), SeekCur);
-  uint8_t r, g, b;
-  for(unsigned int i = 0; i < 256; i ++){
-    fp->read(&b, 1);
-    fp->read(&g, 1);
-    fp->read(&r, 1);
-    fp->seek(1, SeekCur);
-    palette[i] = rgb24to16(r, g, b);
-    Serial.print("palette");
-    Serial.println(i);
-    Serial.print(r);
-    Serial.print(g);
-    Serial.print(b);
-  }
-
-  Serial.println("pre seek");
-  fp->seek(offset, SeekSet); // go to bmp data section
-
-  for(unsigned int i = 0; i < width * height; i ++){
-    uint8_t d;
-    fp->read(&d, 1);
-    *buf = d;
-    buf ++;
-  }
   return 0;
 }
+
 duk_ret_t RunJsGame::l_tone(duk_context* ctx){
   duk_push_global_object(ctx);          // push global
   duk_get_prop_string(ctx, -1, "obako");// push obako
@@ -110,39 +68,20 @@ int RunJsGame::l_spr(duk_context* ctx){
   int sx = duk_get_int(ctx, 4);
   int sy = duk_get_int(ctx, 5);
 
+  //マップ座標からキャラの位置が0,0になるように計算しておく
+  charSpritex = (mapsx + 8)%256;
+  charSpritey = (mapsy + 7)%256;
+
   int sw = w, sh = h;
   if(duk_get_top(ctx) == 8){ // todo: is this bug?
     sw = duk_get_int(ctx, 6);
     sh = (duk_get_int, 7);
   }
-  uint8_t index;
+  sprite88_0.pushSprite(&tft, x, y);
 
-  int xscale = w/sw;
-  int yscale = h/sh;
-
-  if(xscale == 1 && yscale == 1){
-    for(uint8_t i = 0; i < sh; i ++){
-      for(uint8_t j = 0; j < sw; j ++){
-        index = self->surface[127 - (sy + i)][sx + j];
-        if(index != 0){
-          tft.drawPixel(x + j, y + i, self->palette[index]);
-        }
-      }
-    }
-  }else if(xscale > 1 && yscale > 1){
-    for(uint8_t i = 0; i < sh; i ++){
-      for(uint8_t j = 0; j < sw; j ++){
-        index = self->surface[127 - (sy + i)][sx + j];
-        if(index != 0){
-          tft.fillRect(x + j*xscale, y + i*yscale, xscale, yscale, self->palette[index]);
-        }
-      }
-    }
-  }else{
-    // not support small image
-  }
   return 0;
 }
+
 /*
 int RunJsGame::l_pget(duk_context* ctx){
   RunJsGame* self = (RunJsGame*)lua_touserdata(L, lua_upvalueindex(1));
@@ -217,35 +156,12 @@ duk_ret_t RunJsGame::l_color(duk_context* ctx){
     // self->col[1] = (((col16  >> 5) & 0b111111) << 2); // 6bit
     // self->col[2] = ((col16  & 0b11111) << 3);       // 5bit
 
-
     self->col[0] = r; // 5bit
     self->col[1] = g; // 6bit
     self->col[2] = b;       // 5bit
-
     }
 
-
-  }else{
-    r = duk_get_int(ctx, 0);
-    self->col[0] = ((self->palette[r] >> 11) << 3); // 5bit
-    self->col[1] = (((self->palette[r] >> 5) & 0b111111) << 2); // 6bit
-    self->col[2] = ((self->palette[r] & 0b11111) << 3);       // 5bit
   }
-  // else if(duk_get_top(ctx) == 1){ // from palette
-      
-
-  //   // uint16_t col16 = rgb24to16(r, g, b);
-    
-  //   // self->col[0] = ((col16 >> 11) << 3); // 5bit
-  //   // self->col[1] = (((col16  >> 5) & 0b111111) << 2); // 6bit
-  //   // self->col[2] = ((col16  & 0b11111) << 3);       // 5bit
-
-  //   // r = duk_get_int(ctx, 0);
-  //   // self->col[0] = ((self->palette[r] >> 11) << 3); // 5bit
-  //   // self->col[1] = (((self->palette[r] >> 5) & 0b111111) << 2); // 6bit
-  //   // self->col[2] = ((self->palette[r] & 0b11111) << 3);       // 5bit
-  // }
-
   return 0;
 }
 duk_ret_t RunJsGame::l_pset(duk_context* ctx){
@@ -261,11 +177,29 @@ duk_ret_t RunJsGame::l_pset(duk_context* ctx){
   return 0;
 }
 
-// String RunJsGame::l_intToString(int _val){
-//   char numStr[32];
-//   sprintf(numStr, "%d", _val);
-//   return "numStr";
-// }
+duk_ret_t RunJsGame::l_mapno(duk_context* ctx){
+  duk_push_global_object(ctx);          // push global
+  duk_get_prop_string(ctx, -1, "obako");// push obako
+  RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+  duk_pop_2(ctx); // obako, global
+  readmapno = duk_get_int(ctx, 0);
+  
+  readMapFsw(true);//一度だけtrueにして戻す
+  xSemaphoreGiveFromISR(semaphore, NULL);//セマフォで合図
+  return 1;//読み込んだら1をリターン
+}
+
+duk_ret_t RunJsGame::l_drawmap(duk_context* ctx){
+  duk_push_global_object(ctx);          // push global
+  duk_get_prop_string(ctx, -1, "obako");// push obako
+  RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+  duk_pop_2(ctx); // obako, global
+
+  readMapFsw(true);//一度だけtrueにして戻す
+  xSemaphoreGiveFromISR(semaphore, NULL);//セマフォで合図
+  return 1;//読み込んだら1をリターン
+}
+
 
 duk_ret_t RunJsGame::l_text(duk_context* ctx){
 
@@ -286,6 +220,7 @@ duk_ret_t RunJsGame::l_text(duk_context* ctx){
   tft.print(text);
   return 0;
 }
+
 int RunJsGame::l_drawrect(duk_context* ctx){
   duk_push_global_object(ctx);
   duk_get_prop_string(ctx, -1, "obako");
@@ -300,6 +235,7 @@ int RunJsGame::l_drawrect(duk_context* ctx){
   tft.myDrawRect(x, y, w, h, rgb24to16(self->col[0], self->col[1], self->col[2]));
   return 0;
 }
+
 int RunJsGame::l_fillrect(duk_context* ctx){
   duk_push_global_object(ctx);
   duk_get_prop_string(ctx, -1, "obako");
@@ -314,6 +250,52 @@ int RunJsGame::l_fillrect(duk_context* ctx){
   tft.fillRect(x, y, w, h, rgb24to16(self->col[0], self->col[1], self->col[2]));
   return 0;
 }
+
+int RunJsGame::l_setupbg(duk_context* ctx){
+  duk_push_global_object(ctx);
+  duk_get_prop_string(ctx, -1, "obako");
+  RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+  duk_pop_2(ctx); // pointer, obako, global
+
+  int x0 = duk_get_int(ctx, 0);
+  int y0 = duk_get_int(ctx, 1);
+  int x1 = duk_get_int(ctx, 2);
+  int y1 = duk_get_int(ctx, 3);
+
+  spriteRoi.drawPngFile(SPIFFS, "/init/sprite.png", -161, -211);
+
+  bgSpriteNo%=8;
+  spritebg[bgSpriteNo].drawPngFile(SPIFFS, "/init/sprite.png", -8*x0, -8*y0);
+  spritebg[bgSpriteNo+1].drawPngFile(SPIFFS, "/init/sprite.png", -8*x1, -8*y1);
+  bgSpriteNo+=2;
+  
+  return 0;
+}
+
+int RunJsGame::l_bg(duk_context* ctx){
+  duk_push_global_object(ctx);
+  duk_get_prop_string(ctx, -1, "obako");
+  RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+  duk_pop_2(ctx); // pointer, obako, global
+
+  mapsx = duk_get_int(ctx, 0);//グローバル変数に渡しておく
+  mapsy = duk_get_int(ctx, 1);
+
+  int w = duk_get_int(ctx, 2);
+  int h = duk_get_int(ctx, 3);
+
+  if(mapready == true){
+  for(int j = 0; j<15; j++){
+      for(int i = 0; i<16; i++){
+        int n = mapArray[(mapsx+i)%256][(mapsy+j)%256]; //0~7が入る
+        spritebg[n].pushSprite( &tft, i*8, j*8 );
+      }
+    }
+  }
+  return 0;
+}
+
+
 /*
 int RunJsGame::l_fillcircle(duk_context* ctx){
   RunJsGame* self = (RunJsGame*)lua_touserdata(L, lua_upvalueindex(1));
@@ -333,8 +315,31 @@ duk_ret_t RunJsGame::l_btn(duk_context* ctx){
   duk_pop_2(ctx); // obako, global
   int n = duk_get_int(ctx, 0);
   duk_push_int(ctx, (lua_Integer)self->buttonState[n]);
+  
   return 1;
 }
+
+// int RunJsGame::l_gcn(duk_context* ctx){
+//   duk_push_global_object(ctx);          // push global
+//   duk_get_prop_string(ctx, -1, "obako");// push obako
+//   RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+//   duk_pop_2(ctx); // obako, global
+//   int n = duk_get_int(ctx, 0);
+
+//   return 0;
+// }
+
+// int RunJsGame::l_gcn(duk_context* ctx){
+//   return 0;//読み込んだら1をリターン
+//   // duk_push_global_object(ctx);          // push global
+//   // duk_get_prop_string(ctx, -1, "obako");// push obako
+//   // RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+//   // duk_pop_2(ctx); // obako, global
+//   // int n = duk_get_int(ctx, 0);
+// //   // if(getMapNo() == 0)return 0;
+// //   // else if(getMapNo() == 1)return 1;
+
+// }
 
 // int RunLuaGame::l_btn(lua_State* L){
 // duk_ret_t RunJsGame::l_btn(duk_context* ctx)
@@ -347,7 +352,6 @@ duk_ret_t RunJsGame::l_btn(duk_context* ctx){
 //   duk_push_int(ctx, (lua_Integer)self->buttonState[n]);
 //   return 1;
 // }
-
 
 String RunJsGame::getBitmapName(String s){
   int p = s.lastIndexOf("/");
@@ -380,9 +384,16 @@ void RunJsGame::resume(){
 
   fidx = duk_push_c_function(ctx, l_spr, 6);
   duk_put_prop_string(ctx, -2, "spr");
+  
 
   fidx = duk_push_c_function(ctx, l_pset, 2);
   duk_put_prop_string(ctx, -2, "pset");
+
+  fidx = duk_push_c_function(ctx, l_mapno, 1);
+  duk_put_prop_string(ctx, -2, "mapno");
+
+  fidx = duk_push_c_function(ctx, l_drawmap, 1);
+  duk_put_prop_string(ctx, -2, "drawmap");
 
   fidx = duk_push_c_function(ctx, l_color, 3);
   duk_put_prop_string(ctx, -2, "color");
@@ -399,8 +410,18 @@ void RunJsGame::resume(){
   fidx = duk_push_c_function(ctx, l_fillrect, 4);
   duk_put_prop_string(ctx, -2, "fillrect");
 
+  fidx = duk_push_c_function(ctx, l_bg, 4);
+  duk_put_prop_string(ctx, -2, "bg");
+
+  fidx = duk_push_c_function(ctx, l_setupbg, 4);
+  duk_put_prop_string(ctx, -2, "setupbg");
+
   fidx = duk_push_c_function(ctx, l_btn, 1);
   duk_put_prop_string(ctx, -2, "btn");
+
+  // fidx = duk_push_c_function(ctx, l_gcn, 1);
+  // duk_put_prop_string(ctx, -2, "gcn");
+  
 
   duk_pop(ctx); // pop global
 
@@ -410,15 +431,18 @@ void RunJsGame::resume(){
   if(SPIFFS.exists(getBitmapName(fileName))){
     File bmpFile = SPIFFS.open(getBitmapName(fileName) , FILE_READ);
     Serial.println("bitmap load begin");
-    if(loadSurface(&bmpFile, (uint8_t*)surface) != 0){
-      printf("bitmap load error");
-      Serial.println("bitmap load error");
-      runError = true;
-      errorString = "bitmap load error fileName=" + getBitmapName(fileName);
-    }
+
+    // if(loadSurface(&bmpFile, (uint8_t*)surface) != 0){
+    //   printf("bitmap load error");
+    //   Serial.println("bitmap load error");
+    //   runError = true;
+    //   errorString = "bitmap load error fileName=" + getBitmapName(fileName);
+    // }
+
     Serial.println("bitmap load end");
     bmpFile.close();
   }
+
   Serial.println("loaded bitmap");
 
   File fp = SPIFFS.open(fileName, FILE_READ);
@@ -461,11 +485,6 @@ int RunJsGame::run(int remainTime){
   char str[100];
   char key;
 
-  if(wifiDebugRequest){
-    startWifiDebug(wifiDebugSelf);
-    wifiMode = SHOW;
-    wifiDebugRequest = false;
-  }
   if(exitRequest){
     exitRequest = false;
     return 1; // exit
@@ -485,7 +504,6 @@ if(pressedBtnID == 5){buttonState[5] = true;}//A
 if(pressedBtnID == 6){buttonState[6] = true;}//B
 pressedBtnID = -1;
 
-  if(wifiMode == NONE || wifiMode == RUN){
     if(runError){
       tft.setTextSize(1);
       tft.setTextColor(TFT_WHITE, TFT_BLUE);
@@ -502,9 +520,6 @@ pressedBtnID = -1;
         setFileName("/init/main.js"); // TODO: lua?
         return 1;
       }
-      if(buttonState[4] == 10){ // reload
-        wifiMode = SELECT;
-      }
     }else{
 
       if(duk_peval_string(ctx, "loop()") != 0){
@@ -516,54 +531,8 @@ pressedBtnID = -1;
       //  errorString = lua_tostring(L, -1);
       duk_pop(ctx);
 
-      if(buttonState[4] == 100){ // menu
-        wifiMode = SELECT;
-      }
     }
-  }else if(wifiMode == SELECT){
-    tft.fillRect(0, 0, 128, 64, rgb24to16(64,64,64));
-    tft.setTextSize(1);
-    tft.setTextColor(TFT_WHITE, TFT_BLUE);
-    tft.setCursor(0, 0);
-    tft.print("pause");
-    tft.setCursor(0, 8);
-    tft.print("  WiFi AP");
-    tft.setCursor(0, 16);
-    tft.print("  WiFi STA");
-    tft.setCursor(0, 24);
-    // tft.print("  load /init/main.lua");
-    tft.print("  load /init/main.js");
-    tft.setCursor(0, (modeSelect + 1) * 8);
-    tft.print(">");
-
-    if(buttonState[2] == 1 && modeSelect > 0){
-      modeSelect -= 1;
-    }
-    if(buttonState[5] == 1 || buttonState[3] == 1){
-      modeSelect += 1;
-      modeSelect = modeSelect%3;
-    }
-    if(buttonState[4] == 1){
-      switch(modeSelect){
-        case 0:
-          wifiDebugRequest = true;
-          wifiDebugSelf = true;
-        break;
-        case 1:
-          wifiDebugRequest = true;
-          wifiDebugSelf = false;
-        break;
-        case 2:
-          // setFileName("/init/main.lua"); // TODO: lua?
-          setFileName("/init/main.js"); // TODO: lua?
-          return 1;
-      }
-    }
-  }else if(wifiMode == SHOW){
-    if(buttonState[4] == 10){ // reload
-      wifiMode = RUN;
-    }
-  }
+  
 
   // show FPS
   sprintf(str, "%02dFPS", 1000/remainTime); // FPS
@@ -585,3 +554,5 @@ pressedBtnID = -1;
   }
   return 0;
 }
+
+
