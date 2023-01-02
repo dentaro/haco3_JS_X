@@ -81,7 +81,54 @@ int RunJsGame::l_spr(duk_context* ctx){
 
   return 0;
 }
+/*
+int RunJsGame::l_spr(duk_context* ctx){
+  duk_push_global_object(ctx);          // push global
+  duk_get_prop_string(ctx, -1, "obako");// push obako
+  RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+  duk_pop_2(ctx); // obako, global
 
+  int x = duk_get_int(ctx, 0);
+  int y = duk_get_int(ctx, 1);
+  int w = duk_get_int(ctx, 2);
+  int h = duk_get_int(ctx, 3);
+  int sx = duk_get_int(ctx, 4);
+  int sy = duk_get_int(ctx, 5);
+
+  int sw = w, sh = h;
+  if(duk_get_top(ctx) == 8){ // todo: is this bug?
+    sw = duk_get_int(ctx, 6);
+    sh = (duk_get_int, 7);
+  }
+  uint8_t index;
+
+  int xscale = w/sw;
+  int yscale = h/sh;
+
+  if(xscale == 1 && yscale == 1){
+    for(uint8_t i = 0; i < sh; i ++){
+      for(uint8_t j = 0; j < sw; j ++){
+        index = self->surface[127 - (sy + i)][sx + j];
+        if(index != 0){
+          tft.drawPixel(x + j, y + i, self->palette[index]);
+        }
+      }
+    }
+  }else if(xscale > 1 && yscale > 1){
+    for(uint8_t i = 0; i < sh; i ++){
+      for(uint8_t j = 0; j < sw; j ++){
+        index = self->surface[127 - (sy + i)][sx + j];
+        if(index != 0){
+          tft.fillRect(x + j*xscale, y + i*yscale, xscale, yscale, self->palette[index]);
+        }
+      }
+    }
+  }else{
+    // not support small image
+  }
+  return 0;
+}
+*/
 /*
 int RunJsGame::l_pget(duk_context* ctx){
   RunJsGame* self = (RunJsGame*)lua_touserdata(L, lua_upvalueindex(1));
