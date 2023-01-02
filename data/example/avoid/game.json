@@ -1,0 +1,7 @@
+{
+  "script": "main.js",
+  "image": "sprite.bmp",
+  "name": "jump",
+  "authors": ["inajob"],
+  "license": "MIT"
+}
