@@ -120,7 +120,7 @@ ui.begin( screen, 16, 1, false);
  
  jsを使って開発したい場合は参考にしてみてください。
  
- スプライトはメモリ節約のため、init/initspr/を参照しています。
+ スプライトはメモリ節約のため、init/initspr.pngを参照しています。
  
   data/drawing
   
