@@ -144,9 +144,9 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd)
       uint16_t bg = TFT_BLACK;
 
       if (_lcd.isEPD()) swap(fg, bg);
-      // _lcd.calibrateTouch(nullptr, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
-      _lcd.calibrateTouch(calData, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
-      _lcd.setTouchCalibrate(calData);
+      _lcd.calibrateTouch(nullptr, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
+      // _lcd.calibrateTouch(calData, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
+      // _lcd.setTouchCalibrate(calData);
 
       _lcd.fillScreen(TFT_BLACK);
       _lcd.setColorDepth(COL_DEPTH);
