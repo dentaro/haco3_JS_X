@@ -60,11 +60,10 @@ play = function(){
     dy=0;dx=0;dr=0;
     while(loopCnt==5){dy = 1;loopCnt = 0;}
     loopCnt++;
-    if(btn(0)==true){dx = -1;tone(6,10);}
     if(btn(1)==true){dx = 1;tone(6,10);}
-    if(btn(8)==true){dr = 1;tone(12,10);}//物理ボタン
-    if(btn(15)==true){dr = 1;tone(12,10);}//タッチボタン
-    if(btn(3)==true){ff = 1;tone(0,10);}//C4
+    if(btn(3)==true){dx = -1;tone(6,10);}
+    if(btn(2)==true){dr = 1;tone(12,10);}//物理ボタン
+    if(btn(4)==true){ff = 1;tone(0,10);}//C4
     if(ff){dy = 1;}
     y+=dy;x+=dx;r+=dr;
     if( collision()){y-=dy;x-=dx;r-=dr;ff = 0;
@@ -83,7 +82,7 @@ loop = function(){
     if (GameState == initState){init();}else if(GameState == playState){play();}else if(GameState == overState){over();}
 }
 init = function(){
-    if (btn(15) == 1){for(by=0; by<raws; by++){
+    if (btn(4) == 1){for(by=0; by<raws; by++){
             stage[by][0] = wall;
             stage[by][cols-1] = wall
             for(bx=1;bx<cols-1;bx++){
@@ -94,4 +93,4 @@ init = function(){
         GameState = playState;
     }
 }
-over = function(){drawStage();color(8);text("game over", 16,42);if(btn(15)==1){GameState = initState;}}
+over = function(){drawStage();color(8);text("game over", 16,42);if(btn(4)==1){GameState = initState;}}
