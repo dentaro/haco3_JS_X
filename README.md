@@ -87,7 +87,15 @@ fileのうち、拡張子がjsまたは、luaのファイルを選ぶと、ゲ�
 
 uint16_t calData[8] = {558,3648,447,396,3599,3622,3625,324};
 
-という配列に格納してください。
+という配列に格納してください。calDataの設定を有効化するために、
+
+lib/LovyanGFX_DentaroUI_haco3/src/LovyanGFX_DentaroUI.cpp/
+
+147行目あたりを以下のようなコメントアウトの状態にします。
+
+   //_lcd.calibrateTouch(nullptr, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
+   _lcd.calibrateTouch(calData, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
+   _lcd.setTouchCalibrate(calData);
 
 一度キャリブレーションしてしまえば、変わらないので、タッチキャリブレーションを切ります。
 
