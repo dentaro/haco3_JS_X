@@ -3,14 +3,16 @@ using namespace std;
 
 #define FLICK_DIST 3
 
+#define CALIBRATION_FILE "/config.txt"
+#define REPEAT_CAL false
+
 LovyanGFX_DentaroUI::LovyanGFX_DentaroUI(LGFX* _lcd)
 {
   lcd = _lcd;
 }
 
-void LovyanGFX_DentaroUI::setupPhBtns(LovyanGFX& _lcd, int pfbNo0, int pfbNo1, int pfbNo2 ){
+void LovyanGFX_DentaroUI::setupPhBtns(int pfbNo0, int pfbNo1, int pfbNo2 ){
   phbs.setup(pfbNo0, pfbNo1, pfbNo2);
-
 }
 
 std::uint32_t LovyanGFX_DentaroUI::getHitValue(){
@@ -33,13 +35,14 @@ void LovyanGFX_DentaroUI::updatePhBtns()
   if (prev == hitvalue) return;
 
 }
+
 const bits_btn_t*  LovyanGFX_DentaroUI::getStack()
 {
   return phbs.getStack();
 }
 
 //上のupdateを視覚化しただけの処理（やってることは同じ）
-void LovyanGFX_DentaroUI::drawPhBtns(LovyanGFX& _lcd)
+void LovyanGFX_DentaroUI::drawPhBtns(LovyanGFX& _lcd, int _x, int _y)
 {
 
   // ボタン入力履歴を画面に描画
@@ -53,18 +56,19 @@ void LovyanGFX_DentaroUI::drawPhBtns(LovyanGFX& _lcd)
         
   // phbs.loop();
 
-  delay(1);
+  // delay(1);
   // 入力状態の更新（変化がなければ終了）
   // if (!phbs.loop()) return;
 
   // ボタン入力履歴を画面に描画
-  auto stack = phbs.getStack();
-  for (std::size_t idx = 0; idx < BTN_STACK_MAX; ++idx)
-  {
-    _lcd.fillRect(idx * 5, 100, 4, 4, (stack[idx] & bit_btn_a) ? TFT_RED   : TFT_DARKGREY);
-    _lcd.fillRect(idx * 5, 105, 4, 4, (stack[idx] & bit_btn_b) ? TFT_GREEN : TFT_DARKGREY);
-    _lcd.fillRect(idx * 5, 110, 4, 4, (stack[idx] & bit_btn_c) ? TFT_BLUE  : TFT_DARKGREY);
-  }
+  // auto stack = phbs.getStack();
+  // for (std::size_t idx = 0; idx < BTN_STACK_MAX; ++idx)
+  // {
+  //   int offx = _x;
+  //   _lcd.fillRect(offx + idx * 5, _y + 0, 4, 4, (stack[idx] & bit_btn_a) ? TFT_RED   : TFT_DARKGREY);
+  //   _lcd.fillRect(offx + idx * 5, _y + 5, 4, 4, (stack[idx] & bit_btn_b) ? TFT_GREEN : TFT_DARKGREY);
+  //   _lcd.fillRect(offx + idx * 5, _y +10, 4, 4, (stack[idx] & bit_btn_c) ? TFT_BLUE  : TFT_DARKGREY);
+  // }
 
   // // コマンド判定結果を取得
   // static std::uint32_t hitvalue = ~0U;
@@ -105,6 +109,7 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _c
   touchCalibrationF = _calibF;
   begin(_lcd);
   _lcd.setRotation( _rotateNo );
+  showSavedCalData(_lcd);//タッチキャリブレーションの値を表示
     for(int i = 0; i < BUF_PNG_NUM; i++)
   {
     createLayout( 0, 0, 256, 256, layoutSprite_list[i], MULTI_EVENT );//レイアウト用のスプライトを作る
@@ -139,87 +144,73 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd)
       uint16_t bg = TFT_BLACK;
 
       if (_lcd.isEPD()) swap(fg, bg);
-      _lcd.calibrateTouch(nullptr, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
+      // _lcd.calibrateTouch(nullptr, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
+      _lcd.calibrateTouch(calData, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
+      _lcd.setTouchCalibrate(calData);
 
       _lcd.fillScreen(TFT_BLACK);
       _lcd.setColorDepth(COL_DEPTH);
 
-  Serial.printf("===============================================================\n");
-  Serial.printf("Mem Test\n");
-  Serial.printf("===============================================================\n");
-  Serial.printf("esp_get_free_heap_size()                              : %6d\n", esp_get_free_heap_size() );
-  Serial.printf("esp_get_minimum_free_heap_size()                      : %6d\n", esp_get_minimum_free_heap_size() );
-  //xPortGetFreeHeapSize()（データメモリ）ヒープの空きバイト数を返すFreeRTOS関数です。これはを呼び出すのと同じheap_caps_get_free_size(MALLOC_CAP_8BIT)です。
-  Serial.printf("xPortGetFreeHeapSize()                                : %6d\n", xPortGetFreeHeapSize() );
-  //xPortGetMinimumEverFreeHeapSize()また、関連heap_caps_get_minimum_free_size()するものを使用して、ブート以降のヒープの「最低水準点」を追跡できます。
-  Serial.printf("xPortGetMinimumEverFreeHeapSize()                     : %6d\n", xPortGetMinimumEverFreeHeapSize() );
-  //heap_caps_get_free_size() さまざまなメモリ機能の現在の空きメモリを返すためにも使用できます。
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_EXEC)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_EXEC) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_32BIT)             : %6d\n", heap_caps_get_free_size(MALLOC_CAP_32BIT) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_8BIT)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_8BIT) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_DMA)               : %6d\n", heap_caps_get_free_size(MALLOC_CAP_DMA) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID2)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID2) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID3)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID3) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID3)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID4) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID4)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID5) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID5)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID6) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID6)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID7) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID7)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID3) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_SPIRAM)            : %6d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_INTERNAL)          : %6d\n", heap_caps_get_free_size(MALLOC_CAP_INTERNAL) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_DEFAULT)           : %6d\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT) );
-  //Serial.printf("heap_caps_get_free_size(MALLOC_CAP_IRAM_8BIT)         : %6d\n", heap_caps_get_free_size(MALLOC_CAP_IRAM_8BIT) );
-  Serial.printf("heap_caps_get_free_size(MALLOC_CAP_INVALID)           : %6d\n", heap_caps_get_free_size(MALLOC_CAP_INVALID) );
-  //heap_caps_get_largest_free_block()ヒープ内の最大の空きブロックを返すために使用できます。これは、現在可能な最大の単一割り当てです。この値を追跡し、合計空きヒープと比較すると、ヒープの断片化を検出できます。
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_EXEC)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_EXEC) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_32BIT)    : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_32BIT) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_8BIT)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_DMA)      : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_DMA) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID2)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID2) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID3)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID3) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID3)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID4) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID4)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID5) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID5)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID6) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID6)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID7) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID7)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID3) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)   : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT)  : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT) );
-  //Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_IRAM_8BIT): %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_IRAM_8BIT) );
-  Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_INVALID)  : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_INVALID) );
-  //heap_caps_get_minimum_free_size()指定された機能を持つすべての領域の合計最小空きメモリを取得します。
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_EXEC)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_EXEC) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_32BIT)     : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_32BIT) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_DMA)       : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_DMA) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID2)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID2) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID3)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID3) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID3)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID4) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID4)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID5) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID5)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID6) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID6)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID7) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID7)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID3) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM)    : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL)  : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT)   : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT) );
-  //Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_IRAM_8BIT) : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_IRAM_8BIT) );
-  Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID)   : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID) );
-  //heap_caps_get_info()multi_heap_info_t上記の関数からの情報に加えて、ヒープ固有の追加データ（割り当て数など）を含む構造体を返します。
-  //Skip
-  // heap_caps_print_heap_info()が返す情報の要約をstdoutに出力しheap_caps_get_info()ます。
-  //Serial.printf("heap_caps_print_heap_info(MALLOC_CAP_INTERNAL) :\n");
-  //heap_caps_print_heap_info(MALLOC_CAP_INTERNAL);
-  // heap_caps_dump()そしてheap_caps_dump_all()意志出力は、ヒープ内の各ブロックの構造に関する情報を詳述します。これは大量の出力になる可能性があることに注意してください。
-  //Serial.printf("heap_caps_dump() :\n");
-  //heap_caps_dump(MALLOC_CAP_INTERNAL);
-          // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_SPIRAM)            : %6d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM) );
-          // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_DMA):%d\n", heap_caps_get_free_size(MALLOC_CAP_DMA) );
-          // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_DMA):%d\n", heap_caps_get_largest_free_block(MALLOC_CAP_DMA) );
-          // Serial.printf("Width:%d, Height:%d\n", 256, 256);
-      //    void *p = sprite1.createSprite(256, 256);
-      //    if ( p == NULL ) {
-      //      Serial.println("メモリが足りなくて確保できない");
-      //    }
+  // Serial.printf("===============================================================\n");
+  // Serial.printf("Mem Test\n");
+  // Serial.printf("===============================================================\n");
+  // Serial.printf("esp_get_free_heap_size()                              : %6d\n", esp_get_free_heap_size() );
+  // Serial.printf("esp_get_minimum_free_heap_size()                      : %6d\n", esp_get_minimum_free_heap_size() );
+  // //xPortGetFreeHeapSize()（データメモリ）ヒープの空きバイト数を返すFreeRTOS関数です。これはを呼び出すのと同じheap_caps_get_free_size(MALLOC_CAP_8BIT)です。
+  // Serial.printf("xPortGetFreeHeapSize()                                : %6d\n", xPortGetFreeHeapSize() );
+  // //xPortGetMinimumEverFreeHeapSize()また、関連heap_caps_get_minimum_free_size()するものを使用して、ブート以降のヒープの「最低水準点」を追跡できます。
+  // Serial.printf("xPortGetMinimumEverFreeHeapSize()                     : %6d\n", xPortGetMinimumEverFreeHeapSize() );
+  // //heap_caps_get_free_size() さまざまなメモリ機能の現在の空きメモリを返すためにも使用できます。
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_EXEC)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_EXEC) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_32BIT)             : %6d\n", heap_caps_get_free_size(MALLOC_CAP_32BIT) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_8BIT)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_8BIT) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_DMA)               : %6d\n", heap_caps_get_free_size(MALLOC_CAP_DMA) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID2)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID2) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID3)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID3) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID3)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID4) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID4)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID5) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID5)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID6) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID6)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID7) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_PID7)              : %6d\n", heap_caps_get_free_size(MALLOC_CAP_PID3) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_SPIRAM)            : %6d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_INTERNAL)          : %6d\n", heap_caps_get_free_size(MALLOC_CAP_INTERNAL) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_DEFAULT)           : %6d\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT) );
+  // //Serial.printf("heap_caps_get_free_size(MALLOC_CAP_IRAM_8BIT)         : %6d\n", heap_caps_get_free_size(MALLOC_CAP_IRAM_8BIT) );
+  // Serial.printf("heap_caps_get_free_size(MALLOC_CAP_INVALID)           : %6d\n", heap_caps_get_free_size(MALLOC_CAP_INVALID) );
+  // //heap_caps_get_largest_free_block()ヒープ内の最大の空きブロックを返すために使用できます。これは、現在可能な最大の単一割り当てです。この値を追跡し、合計空きヒープと比較すると、ヒープの断片化を検出できます。
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_EXEC)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_EXEC) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_32BIT)    : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_32BIT) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_8BIT)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_DMA)      : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_DMA) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID2)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID2) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID3)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID3) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID3)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID4) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID4)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID5) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID5)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID6) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID6)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID7) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_PID7)     : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_PID3) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM)   : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT)  : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT) );
+  // //Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_IRAM_8BIT): %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_IRAM_8BIT) );
+  // Serial.printf("heap_caps_get_largest_free_block(MALLOC_CAP_INVALID)  : %6d\n", heap_caps_get_largest_free_block(MALLOC_CAP_INVALID) );
+  // //heap_caps_get_minimum_free_size()指定された機能を持つすべての領域の合計最小空きメモリを取得します。
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_EXEC)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_EXEC) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_32BIT)     : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_32BIT) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_DMA)       : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_DMA) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID2)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID2) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID3)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID3) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID3)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID4) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID4)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID5) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID5)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID6) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID6)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID7) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_PID7)      : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_PID3) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM)    : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL)  : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT)   : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT) );
+  // //Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_IRAM_8BIT) : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_IRAM_8BIT) );
+  // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID)   : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID) );
     }
 
   }
@@ -227,31 +218,48 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd)
   Serial.println("[UI_ID information]");
 }
 
-void LovyanGFX_DentaroUI::runTouchCalibration(LGFX& _lcd){
+void LovyanGFX_DentaroUI::showSavedCalData(LGFX& _lcd){
 
-    if (_lcd.touch())
-    {
-      //renameFile(SPIFFS, "/config.txt", fileName);
-      if (_lcd.width() < _lcd.height()) _lcd.setRotation(_lcd.getRotation() ^ 1);
-
-      // 画面に案内文章を描画します。
-      _lcd.setTextDatum(textdatum_t::middle_center);
-      _lcd.drawString("touch the arrow marker.", _lcd.width()>>1, _lcd.height() >> 1);
-      _lcd.setTextDatum(textdatum_t::top_left);
-
-      // タッチを使用する場合、キャリブレーションを行います。画面の四隅に表示される矢印の先端を順にタッチしてください。
-      uint16_t fg = TFT_WHITE;
-      uint16_t bg = TFT_BLACK;
-
-      if (_lcd.isEPD()) swap(fg, bg);
-      _lcd.calibrateTouch(nullptr, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
-
-    }
+  // タッチが使用可能な場合のキャリブレーション値の可視化を行います。（省略可）
+  if(touchCalibrationF == true){
+  if (!SPIFFS.begin()) {
+   _lcd.println("Formating file system"); 
+   SPIFFS.format(); 
+   SPIFFS.begin(); 
   }
+  File f = SPIFFS.open(CALIBRATION_FILE, "w");
+  if (f) {
+    f.write((const unsigned char *)calData, 14);
+    f.close();
+  }
+  
+  _lcd.fillRect(0, 0, 128, 128, TFT_GREEN); 
+  _lcd.setTextSize(1); 
+  _lcd.setTextColor(TFT_WHITE, TFT_BLUE); 
+  _lcd.setCursor(0, 0); 
+  _lcd.println(calData[0]); 
+  _lcd.println(calData[1]); 
+  _lcd.println(calData[2]); 
+  _lcd.println(calData[3]); 
+  _lcd.println(calData[4]); 
+  _lcd.println(calData[5]); 
+  _lcd.println(calData[6]); 
+  _lcd.println(calData[7]);
+  // delay(2000);
+  }
+  _lcd.setTouchCalibrate(calData);
+}
+
+void LovyanGFX_DentaroUI::setConstantGetF(bool _constantGetF){
+  constantGetF = _constantGetF;
+}
 
 void LovyanGFX_DentaroUI::update( LGFX& _lcd )
 {
+  // constantGetF = true;
   _lcd.getTouch(&tp);
+  
+  
   for(int i = 0; i < 4; i++)
   {
     clist[i+1] = clist[i];
@@ -352,12 +360,29 @@ void LovyanGFX_DentaroUI::update( LGFX& _lcd )
     clist[0] = TFT_DARKGREEN;
   }
 
+  // if(eventState == RELEASE){//リリース時に、btnidを-1に
+  // //   obj_ret.reset();
+  //   obj_ret.setBtnID_ret(-1);
+  // }
+  
+  
   for(int i = 0; i < uiBoxes_num; i++){
     for(int j = 0; j<uiBoxes[i].b_num; j++){
-      addHandler(uiBoxes[i].b_sNo + j, j, ret0_DG, uiBoxes[i].eventNo, uiBoxes[i].parentID);
-      addHandler(uiBoxes[i].b_sNo + j, j, ret1_DG, uiBoxes[i].eventNo, uiBoxes[i].parentID);
+      addHandler(uiBoxes[i].b_sNo + j, j, setBtnID_ret_DG, uiBoxes[i].eventNo, uiBoxes[i].parentID, constantGetF);
+      addHandler(uiBoxes[i].b_sNo + j, j, setBtnNO_ret_DG, uiBoxes[i].eventNo, uiBoxes[i].parentID, constantGetF);
     }
   }
+
+  if(constantGetF){
+    if(getEvent() == NO_EVENT){
+      obj_ret.setBtnID_ret(-1);//‐１（ボタンが離れている状態）にクリア
+    }
+
+    // if(getEvent() != TOUCH)obj_ret.setBtnID_ret(-1);//‐１（ボタンが離れている状態）にクリア
+  }
+
+  
+  // constantBtnID = obj_ret.btnID;
 }
 
 void LovyanGFX_DentaroUI::updateSelectBtnID(int _selectBtnID){
@@ -390,6 +415,17 @@ void LovyanGFX_DentaroUI::createBtns(//修正中
     touchZoom = 1;
     createBtns(_x, _y, _w, _h, _row, _col, _eventNo, touchZoom);
   }
+
+int LovyanGFX_DentaroUI::getTouchBtnNum(){
+  return touch_btn_list.size();
+}
+
+void LovyanGFX_DentaroUI::clearAddBtns(int _ctrlBtnNum){
+  for(int i = _ctrlBtnNum; i < touch_btn_list.size(); i++){//ボタンは４つ残す。
+   touch_btn_list.pop_back();
+  }
+
+}
 
 void LovyanGFX_DentaroUI::createBtns(
   int _x, int _y,
@@ -452,7 +488,7 @@ for(int j= 0; j < uiBoxes[uiID].col; j++)
   }
 
   uiBoxes[uiID].b_num =  btnID - uiBoxes[uiID].b_sNo;//UIのボタン数をセット
-  Serial.println("e");
+  // Serial.println("e");
 
   uiBoxes_num++;
   uiID++;
@@ -679,14 +715,21 @@ bool LovyanGFX_DentaroUI::isAvailable( int _btnID ){
   return touch_btn_list[_btnID]->getAvailableF();
 }
 
-void LovyanGFX_DentaroUI::addHandler( int _btnID, int _btnNo, DelegateBase2* _func, uint16_t _runEventNo, int _parentID){
+void LovyanGFX_DentaroUI::addHandler( int _btnID, int _btnNo, DelegateBase2* _func, uint16_t _runEventNo, int _parentID, bool _constantGetF){
   runEventNo = _runEventNo;
   _parentID = 0;//ベータ版ではとりあえず強制的にLCDのみのイベントをとる
+  
 
   touch_btn_list[_btnID]->addHandler(_func);
 
-  if( parentID == PARENT_LCD ) touch_btn_list[_btnID]->run2( _btnID, _btnNo, sp, tp, eventState, runEventNo);//ボタン内のイベントかチェック
-  else if( parentID == PARENT_SPRITE ) touch_btn_list[_btnID]->run2( _btnID, _btnNo, sp, tp, eventState, runEventNo);//ボタン内のイベントかチェック
+  if(!_constantGetF){
+         if( parentID == PARENT_LCD )    touch_btn_list[_btnID]->run2( _btnID, _btnNo, sp, tp, eventState, runEventNo);//ボタン内のイベントかチェック
+    else if( parentID == PARENT_SPRITE ) touch_btn_list[_btnID]->run2( _btnID, _btnNo, sp, tp, eventState, runEventNo);//ボタン内のイベントかチェック
+  }
+  else if(_constantGetF){//spにtpを入れて、常時取得モードにする
+         if( parentID == PARENT_LCD )    touch_btn_list[_btnID]->run2( _btnID, _btnNo, tp, tp, eventState, runEventNo);//ボタン内のイベントかチェック
+    else if( parentID == PARENT_SPRITE ) touch_btn_list[_btnID]->run2( _btnID, _btnNo, tp, tp, eventState, runEventNo);//ボタン内のイベントかチェック
+  }
 
   touch_btn_list[_btnID]->delHandlers2();
 }
@@ -756,13 +799,26 @@ int LovyanGFX_DentaroUI::getTouchBtnID(){
   return obj_ret.btnID;
 }
 
-int LovyanGFX_DentaroUI::getTouchBtnNo(){
-  // return getTouchBtnID() - getUiFirstNo(FlickUiID);
+bool LovyanGFX_DentaroUI::switchToggleVal(int _btnID, int _tbmode){
+
+  return touch_btn_list[_btnID]->switchToggleVal(_tbmode);
+  
 }
+
+bool LovyanGFX_DentaroUI::getToggleVal(int _btnID){
+  return touch_btn_list[_btnID]->getToggleVal();
+}
+
+// int LovyanGFX_DentaroUI::getTouchBtnNo(){
+//   // return getTouchBtnID() - getUiFirstNo(FlickUiID);
+//   return 1;
+// }
 
 int LovyanGFX_DentaroUI::getEvent(){
   return eventState;
 }
+
+
 
 int LovyanGFX_DentaroUI::getFlickEvent(){
   return flickState;
@@ -846,6 +902,9 @@ int LovyanGFX_DentaroUI::getUiID( const char* _uiLabel){
     i++;
   }
   return i;
+}
+void LovyanGFX_DentaroUI::setBtnID(int _btnID){
+  obj_ret.setBtnID_ret(_btnID);
 }
 
 lgfx::v1::touch_point_t LovyanGFX_DentaroUI::getBtnPos(int _btnID){

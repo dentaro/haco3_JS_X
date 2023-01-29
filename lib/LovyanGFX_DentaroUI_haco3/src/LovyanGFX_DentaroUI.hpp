@@ -116,12 +116,12 @@ public:
     sp.y = 0;
   }
 
-  int ret0(int _btnID){
+  int setBtnID_ret(int _btnID){
     btnID = _btnID;
     return btnID;
   }
 
-  int ret1(int _btnNo){
+  int setBtnNO_ret(int _btnNo){
     btnNo = _btnNo;
     return btnNo;
   }
@@ -153,6 +153,7 @@ public:
       if(_eventState == 7)Serial.println(String("WAIT"));
       if(_eventState == 8)Serial.println(String("MOVE"));
       if(_eventState == 9)Serial.println(String("RELEASE"));
+      
       
     }
   }
@@ -318,6 +319,8 @@ class LovyanGFX_DentaroUI {
     int dist_thre = 40;
     int uiID = -1;
     int btnID = 0;
+    uint constantBtnID = 9999;
+    bool constantGetF = false;
     int selectBtnID = -1;
     int selectBtnBoxID = -1;
     int runEventNo =  -1;
@@ -345,7 +348,13 @@ class LovyanGFX_DentaroUI {
 
     int touchZoom = 1;
 
+  
     PhysicBtn phbs;
+
+    // uint16_t calData[8] = {442,3556,432,322,3662,3523,3543,293};
+    // uint16_t calData[8] = {3811,3853,345,3789,3711,403,1086,430};
+    uint16_t calData[8] = {558,3648,447,396,3599,3622,3625,324};
+    uint16_t calDataOK = 0;
 
 public:
     LGFX_Sprite layoutSprite_list[BUF_PNG_NUM];
@@ -357,9 +366,11 @@ public:
     void begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _calibF );
     void begin(LGFX& _lcd);
     void touchCalibration(bool _calibUseF);
-    void runTouchCalibration(LGFX& _lcd);
+    void showSavedCalData(LGFX& _lcd);
+    // void runTouchCalibration(LGFX& _lcd);
     bool isAvailable(int _btnID);
-    void addHandler(int _btnID, int _btnNo, DelegateBase2* _func, uint16_t _runEventNo, int parentID = 0);
+    void setConstantGetF(bool _constantGetF);
+    void addHandler(int _btnID, int _btnNo, DelegateBase2* _func, uint16_t _runEventNo, int parentID = 0, bool _constantGetF = false);
     void circle(LovyanGFX* _lgfx, uint16_t c, int fillF);
     void rect(LovyanGFX* _lgfx, uint16_t c, int fillF);
     float getAngle(lgfx::v1::touch_point_t a, lgfx::v1::touch_point_t b );
@@ -371,8 +382,8 @@ public:
     lgfx::v1::touch_point_t getPos();//タッチしている座標を取得
     void setPos(int _x, int _y);
     void setStartPos(int _x, int _y);
-    DelegateBase2 *ret0_DG = Delegate2<RetClass>::createDelegator2( &obj_ret, &RetClass::ret0 );//型式が違うプロトタイプ関数
-    DelegateBase2 *ret1_DG = Delegate2<RetClass>::createDelegator2( &obj_ret, &RetClass::ret1 );//型式が違うプロトタイプ関数
+    DelegateBase2 *setBtnID_ret_DG = Delegate2<RetClass>::createDelegator2( &obj_ret, &RetClass::setBtnID_ret );//型式が違うプロトタイプ関数
+    DelegateBase2 *setBtnNO_ret_DG = Delegate2<RetClass>::createDelegator2( &obj_ret, &RetClass::setBtnNO_ret );//型式が違うプロトタイプ関数
     void setLayoutPos( int _x, int _y );
     void createLayout( int _layoutSprite_x, int _layoutSprite_y, int _layoutSprite_w, int _layoutSprite_h, LGFX_Sprite& _layoutSprite, int _eventNo);
     void setLayoutSpritePos( int _LayoutSpritePosx, int _LayoutSpritePosy );
@@ -382,6 +393,7 @@ public:
     void setQWERTY(int _uiID, String _btnsString, LGFX_Sprite& _sprite);
     void createBtns( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, int _eventNo);//縦方向に並ぶ等倍
     void createBtns( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, int _eventNo, int _touchZoom);//縦方向に並ぶ（2倍以上）
+    void clearAddBtns(int _ctrlBtnNum);
     void createToggles( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, LGFX_Sprite& _uiSprite, int _eventNo);//縦方向に並ぶ
     void createSliders( int _x, int _y, int _w, int _h,  int _row, int _col, LGFX_Sprite& _uiSprite, int _visible_mode, int _eventNo);
     void drawBtns(int _uiID, LovyanGFX* _lgfx, LGFX_Sprite& _uiSprite);
@@ -392,8 +404,10 @@ public:
     void drawSliders(int _uiID, LovyanGFX* _lgfx, LGFX_Sprite& _uiSprite);
     void drawLayOut(LGFX_Sprite& _layoutSprite);
     void drawSelectBtn(int _id);
-    int getTouchBtnNo();//タッチされたボタンオブジェクトの番号を取得
-    int getTouchBtnID();//タッチされたボタンオブジェクトのIDを取得
+    // int getTouchBtnNo();//タッチされたボタンオブジェクトの番号を取得
+    int getTouchBtnNum();//現在のタッチボタンの数を取得
+    //int getTouchBtnID();//タッチされたボタンオブジェクトのIDを取得
+    int getTouchBtnID();
     int getEvent();
     int getFlickEvent();
     void showTouchEventInfo(LovyanGFX& _lgfx, int _x, int _y);
@@ -403,6 +417,9 @@ public:
     Vec2 getSliderVec2( int uiID, int _btnNo );
     void setSliderVal(int uiID, int _btnNo, float _x, float _y);
     bool getToggleVal(int _uiID, int _btnID);
+    bool getToggleVal(int _btnID);
+    bool switchToggleVal(int _btnID, int _tbmode);
+
     void setAllBtnAvailableF(int uiID, bool _available);
     void setAvailableF(int uiID, int _btnID, bool _available);
     void setAllBtnVisibleF(int uiID, bool _visible);
@@ -416,15 +433,16 @@ public:
     int getAllBtnNum();
     int getParentID();
     int getUiID( const char* _uiLabel );
+    void setBtnID(int _btnID);
 
     lgfx::v1::touch_point_t getBtnPos(int _btnID);
     void showInfo( LovyanGFX& _lgfx, int _infox, int _infoy);
     std::vector<std::string> split_mb(const char* src, const char* del);
 
-    void setupPhBtns(LovyanGFX& _lcd, int pfbNo0, int pfbNo1, int pfbNo2 );
+    void setupPhBtns(int pfbNo0, int pfbNo1, int pfbNo2 );
     void updatePhBtns();
     const bits_btn_t*  getStack();
     std::uint32_t getHitValue();
-    void drawPhBtns(LovyanGFX& _lcd);
+    void drawPhBtns(LovyanGFX& _lcd, int _x, int _y);
 
 };

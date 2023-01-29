@@ -5,6 +5,11 @@ TouchBtn::TouchBtn(LGFX* _lcd)
   lcd = _lcd;
 }
 
+TouchBtn::~TouchBtn()
+{
+
+}
+
 void TouchBtn::setlayoutSpritePos(lgfx::v1::touch_point_t _layoutSpritePos)
 {
   layoutSpritePos = _layoutSpritePos;
@@ -217,7 +222,7 @@ void TouchBtn::run2(int _btnID, int _btnNo, int _sx, int _sy, int _tx, int _ty, 
             (*ptr)( _btnID );    // 関数を実行！
           }
             // if(eventState == runEventNo)this->switchToggleVal();
-            if(eventState == runEventNo && eventState != NO_EVENT)this->switchToggleVal();
+            if(eventState == runEventNo && eventState != NO_EVENT)this->switchToggleVal(true);
           }
         }
         else if(btn_mode == TOUCH_FLICK_MODE)//FLICK_MODEもこちらで処理
@@ -231,7 +236,7 @@ void TouchBtn::run2(int _btnID, int _btnNo, int _sx, int _sy, int _tx, int _ty, 
             (*ptr)( _btnID );    // 関数を実行！
           }
             // if(eventState == runEventNo)this->switchToggleVal();
-            if(eventState == runEventNo && eventState != NO_EVENT)this->switchToggleVal();
+            if(eventState == runEventNo && eventState != NO_EVENT)this->switchToggleVal(true);
           }
         }
         else if(btn_mode == TOUCH_SLIDER_MODE)
@@ -283,8 +288,16 @@ lgfx::v1::touch_point_t TouchBtn::getTouchPoint(int _x, int _y){
   return tp;
 }
 
-void TouchBtn::switchToggleVal(){
-  this->toggleVal = !this->toggleVal;
+bool TouchBtn::switchToggleVal(int _tbmode){
+  // if(this->toggleVal == true){
+  //   this->toggleVal = false;
+  // }else if(this->toggleVal == false){
+  //   this->toggleVal = true;
+  // }
+  if(_tbmode==1)this->toggleVal = !this->toggleVal;
+  else if(_tbmode==2)this->toggleVal = true;
+  else if(_tbmode==3)this->toggleVal = false;
+  return this->toggleVal;
 }
 
 float TouchBtn::getSliderValx(){

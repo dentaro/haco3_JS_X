@@ -118,6 +118,7 @@ class Delegate2 : public DelegateBase2 {
 class TouchBtn {
   private:
     std::list<DelegateBase2*> lim2;
+
     int b_x = 0;
     int b_y = 0;
     int b_w = 0;
@@ -136,7 +137,6 @@ class TouchBtn {
 
     float b_str_hw = 4;//文字列の半分の長さを計算
 
-    
     int sliderPosx = 0;
     int sliderPosy = 0;
     int xy_mode = XY_VAL;
@@ -144,7 +144,7 @@ class TouchBtn {
     uint8_t bgColorIndex;
     LGFX_Sprite divSprite0;
     uint16_t color = TFT_WHITE;
-    int btnID = 0;
+    int btnID = -1;
     String btnIDlabel = "";//ボタン番号
     bool selectBtnF = false;
     String btn_name = "";//ボタンの名前
@@ -172,6 +172,7 @@ class TouchBtn {
 public:
 
     TouchBtn( LGFX* _lcd );
+    ~TouchBtn();
 
     LGFX* lcd;
     void initBtn(int _btnId, String _btnIDlabel, int _x, int _y, int _w, int _h, String _name,
@@ -213,7 +214,7 @@ public:
     lgfx::v1::touch_point_t getBtnPos();
     
     void setSelectBtnF(bool _selectBtnF);
-    void switchToggleVal();
+    bool switchToggleVal(int _tbmode);
     //private対策
     float getSliderValx();
     float getSliderValy();
@@ -225,5 +226,6 @@ public:
 
     void setDrawFinishF(bool _drawFinishF);
     bool getDrawFinishF();
+
 
 };
