@@ -19,11 +19,14 @@ loop = function(){
         }
     }
     ff = 1;
-    pretbtnid = tbtnid
+
     // x = tp(0)
     // y = tp(1)
     // color(8)
     // fillrect(x,y,5,5)
     // color(255,255,255)
     // text(str(tbtnid), x+10, y)
+
+    pretbtnid = tbtnid
+    
 }

@@ -9,6 +9,7 @@ extern bool isWifiDebug();
 extern void reboot();
 extern Tunes tunes;
 extern int pressedBtnID;
+extern LovyanGFX_DentaroUI ui;
 
 // extern int oskF;
 
@@ -747,6 +748,17 @@ int RunLuaGame::run(int _remainTime){
     exitRequest = false;
     
     return 1; // exit(1になるとゲームから離脱)
+  }
+
+  //ボタンの経過時間分足す
+  
+
+  for(int i = 0; i < CTRLBTNNUM; i ++){
+    if(ui.getEvent()==NO_EVENT){
+      buttonState[i] = 0;
+    }else{
+      buttonState[i] ++;
+    }
   }
 
   if(wifiMode == NONE || wifiMode == RUN){

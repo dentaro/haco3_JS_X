@@ -262,7 +262,7 @@ void setup()
 
   timerA = timerBegin(0, 80, true);//カウント時間は1マイクロ秒//hw_timer_t*オブジェクト(タイマーハンドラ）がかえってくる
   timerAttachInterrupt(timerA, &onTimerA, true);//タイマー割り込みが発生したときに実行する関数を登録する。timerA =フレームタイマー
-  timerAlarmWrite(timerA, 1000000, true);//タイマーの設定値(割り込みのタイミング)を設定する。1/30秒　＝ 33333uSec　1/15秒　＝ 66666uSec
+  timerAlarmWrite(timerA, 1000000, true);//タイマーの設定値(割り込みのタイミング)を設定する。1ui.be/30秒　＝ 33333uSec　1/15秒　＝ 66666uSec
   timerAlarmEnable(timerA);
   delay(10);
 
@@ -272,8 +272,8 @@ void setup()
     return;
   }
 
-  // ui.begin( screen, 16, 1, false);
-  ui.begin( screen, 16, 1, true);
+  ui.begin( screen, 16, 1, false);
+  // ui.begin( screen, 16, 1, true);
   // ui.setupPhBtns(36, 39, 34);//物理ボタンをセットアップ
 
   drawLogo();//ロゴを表示
@@ -301,13 +301,6 @@ void setup()
   tft.setPsram( false );//DMA利用のためPSRAMは切る
   tft.createSprite( 128, 128 );
   tft.startWrite();//CSアサート開始
-
-  // game =  new BaseGame();//これしか通らない
-  // game->pause();
-  // free(game);
-  // game = new RunJsGame();//JS版リセットしてからだと通る
-  // game->init();
-  // tunes.init();
   
   tft.setTextSize(2);
   tft.setFont(&lgfxJapanGothicP_8);
