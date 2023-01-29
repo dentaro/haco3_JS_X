@@ -134,6 +134,10 @@ ui.begin( screen, 16, 1, false);
  色について
   
   基本色は、color(0~15)までの16色です。
+
+![colorNo](https://user-images.githubusercontent.com/77978725/215329561-b157ce6d-9d23-4f74-b0eb-3451bcc89fd8.png)
+
+ホントはcolor(r,g,b)でフルカラーが使えるのはヒミツです。
   
   
  ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
