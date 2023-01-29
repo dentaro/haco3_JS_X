@@ -1,42 +1,42 @@
+#include <LovyanGFX_DentaroUI.hpp>
+#include <SPI.h>
+#include <Wire.h>
+// #include <SD.h>
+
+#include <WiFi.h>
+#include <WiFiAP.h>
+#include <WiFiClient.h>
+#include <WiFiGeneric.h>
+#include <WiFiMulti.h>
+#include <WiFiSTA.h>
+#include <WiFiScan.h>
+#include <WiFiServer.h>
+#include <WiFiType.h>
+#include <WiFiUdp.h>
+
+#include <JPEGDecoder.h>
+
 #include <Arduino.h>
 #include <FS.h>
-#include <SPI.h>
-#include "SD.h"
 #include "SPIFFS.h"
-#include <LovyanGFX_DentaroUI.hpp>
+#include "runJsGame.h"
+#include "runLuaGame.h"
+
 #include "Tunes.h"
 #include "runJsGame.h"
+#include "wifiGame.h"
+
+WifiGame* wifiGame = NULL;
+Tunes tunes;
 
 uint8_t xpos, ypos = 0;
-// int bgSpriteNo = 0;
 uint8_t colValR = 0;
 uint8_t colValG = 0;
 uint8_t colValB = 0;
 
 uint8_t charSpritex = 0;
 uint8_t charSpritey = 0;
-
-uint8_t mapsx = 0;
-uint8_t mapsy = 0;
-
-String mapFileName = "";
-int readmapno = 0;
-
-int divnum = 128;
-bool readMapF = true;
-//divnumが大きいほど少ない領域で展開できる(2の乗数)
-
-File fw;
-File fr;
-String readStr = "";
-String wrfile;	// ④読み書きするファイル名を設定
-String writeStr;
-
-#define LOG_FILE_NAME "/config.csv"
-static File s_myFile;
-
 int pressedBtnID = -1;//この値をタッチボタン、物理ボタンの両方から操作してbtnStateを間接的に操作している
-
 
 //2倍拡大表示用のパラメータ
 float matrix_side[6] = {2.0,   // 横2倍
@@ -48,7 +48,7 @@ float matrix_side[6] = {2.0,   // 横2倍
                     };
 
 //2倍拡大表示用のパラメータ
-float matrix_bg[6] = {2.0,   // 横2倍
+float matrix_game[6] = {2.0,   // 横2倍
                      -0.0,  // 横傾き
                      0.0,   // X座標
                      0.0,   // 縦傾き
@@ -59,30 +59,130 @@ float matrix_bg[6] = {2.0,   // 横2倍
 LGFX screen;//LGFXを継承
 
 LovyanGFX_DentaroUI ui(&screen);
-
+LGFX_Sprite tft(&screen);
+LGFX_Sprite sprite88_roi = LGFX_Sprite(&tft);
+LGFX_Sprite sprite64 = LGFX_Sprite();
 static LGFX_Sprite sideSprite( &screen );//背景スプライトはディスプレイに出力
-LGFX_Sprite layoutSprite(&screen);//LGFX_Spriteを継承 2倍するため
-LGFX_Sprite tft = LGFX_Sprite(&layoutSprite);//LGFX_Spriteを継承
-
-LGFX_Sprite spriteRoi = LGFX_Sprite(&tft);
-
+static LGFX_Sprite logoSprite( &screen );//背景スプライトはディスプレイに出力
+// LGFX_Sprite tft(&screen);
+// LGFX_Sprite layoutSprite(&screen);//LGFX_Spriteを継承 2倍するため
+// LGFX_Sprite tft = LGFX_Sprite(&layoutSprite);//LGFX_Spriteを継承
+// LGFX_Sprite spriteRoi = LGFX_Sprite(&tft);
 LGFX_Sprite sprite88_0 = LGFX_Sprite(&tft);
-
-LGFX_Sprite spritebg[16];//16種類のスプライトを背景で使えるようにする
-LGFX_Sprite spriteMap;
-
-uint8_t mapArray[256][256];
-// RGBColor mapArray[256][256];
-
-bool mapready = false;
-
-// RunLuaGame*　game;
+// LGFX_Sprite spritebg[16];//16種類のスプライトを背景で使えるようにする
 BaseGame* game;
-// String fileName = "/init/main.lua";
-String fileName = "/init/main.js";
-// WifiGame* wifiGame = NULL;
-Tunes tunes;
+// String fileName = "/init/main.js";
+String fileName = "/init/main.lua";
+// Tunes tunes;
 
+// bool constantGetF = false;
+
+char buf[MAX_CHAR];
+char str[100];//情報表示用
+
+// #define BUZZER_PIN 25
+//音階名と周波数の対応
+
+float TONES[14] = 
+{ 261.6//C4
+, 277.18//C_4
+, 293.665//D4
+, 311.127//D_4
+, 329.63//E4
+, 349.228//F4
+, 369.994//F_4
+, 391.995//G4
+, 415.305//G_4
+, 440//A4
+, 466.164//A_4
+, 493.883//B4
+, 523.251//C5
+, 0//NOTONE
+};
+
+enum struct FileType {
+  LUA,
+  JS,
+  BMP,
+  PNG,
+  OTHER
+};
+
+void drawLogo(){
+  logoSprite.setPsram(false);
+  logoSprite.setColorDepth(16);                // 子スプライトの色深度
+  logoSprite.createSprite(30, 10); // ゲーム画面用スプライトメモリ確保
+  //  //SDからの読み込みは４Gb以下じゃないとうまく動作しないかも
+  //PNGをバッファに書いて2倍出力
+  logoSprite.drawPngFile(SPIFFS, "/init/logo.png", 0, 0); // 4ボタン
+  // logoSprite.drawPngFile(SPIFFS, "/haco3/util/side0.png", 0, 0);//
+  logoSprite.pushAffine(matrix_side);
+  logoSprite.deleteSprite(); // 描画したらメモリを解放する
+
+  screen.setTextSize(2);
+  // screen.setFont(&lgfxJapanGothicP_8);
+  screen.setTextColor( TFT_WHITE , TFT_DARKGRAY );
+  screen.setCursor( 258,0 );
+  
+  for(int i=0;i<4;i++){
+    screen.fillRoundRect(258,55*i+20,60,53,2,TFT_DARKGRAY);
+    // screen.fillTriangle()
+    // screen.println("<");
+    // screen.println("^");
+    // screen.println("V");
+  }
+}
+
+bool isWifiDebug(){
+  return wifiGame != NULL;
+}
+void reboot(){
+  wifiGame->pause();
+  ESP.restart();
+}
+
+FileType detectFileType(String *fileName){
+  if(fileName->endsWith(".js")){
+    return FileType::JS;
+  }else if(fileName->endsWith(".lua")){
+    return FileType::LUA;
+  }else if(fileName->endsWith(".bmp")){
+    return FileType::BMP;
+  }else if(fileName->endsWith(".png")){
+    return FileType::PNG;
+  }
+  return FileType::OTHER;
+}
+
+BaseGame* nextGameObject(String* fileName){
+  switch(detectFileType(fileName)){
+    case FileType::JS:  game = new RunJsGame(); break;
+    case FileType::LUA: game = new RunLuaGame(); break;
+    case FileType::BMP: // todo: error
+      game = NULL;
+      break;
+    case FileType::PNG: // todo: error
+      game = NULL;
+      break;
+    case FileType::OTHER: // todo: error
+      game = NULL;
+      break;
+  }
+  return game;
+}
+
+void startWifiDebug(bool isSelf){
+  tunes.pause();
+  wifiGame = new WifiGame();
+  wifiGame->init(isSelf);
+  tunes.resume();
+}
+
+void tone(int _toneNo, int _tonelength){
+  ledcWriteTone(1,TONES[_toneNo]);
+  delay(_tonelength);
+  ledcWriteTone(1, 0);    // ならしたら最後に消音
+}
 
 hw_timer_t * timerA = NULL;//スピーカー用
 // extern void onTimerA();
@@ -92,27 +192,18 @@ void IRAM_ATTR onTimerA() {
   timer_flag != timer_flag;
 }
 
-void startWifiDebug(bool isSelf){
-  // tunes.pause();
-  // wifiGame = new WifiGame();
-  // wifiGame->init(isSelf);
-  // tunes.resume();
-}
-char buf[50];
+// char buf[50];
 char *A;
-bool flip = false;
+bool flip = true;
 
 uint32_t preTime;
 void setFileName(String s){
   fileName = s;
 }
-// bool isWifiDebug(){
-//   return wifiGame != NULL;
+
+// void reboot(){
+//   ESP.restart();
 // }
-void reboot(){
-//   wifiGame->pause();
-  ESP.restart();
-}
 
 // タイマー
 hw_timer_t * timer = NULL;
@@ -120,194 +211,30 @@ hw_timer_t * timer = NULL;
 // 画面描画タスクハンドル
 TaskHandle_t taskHandle;
 //描画待ち用セマフォ
-volatile SemaphoreHandle_t semaphore;
+// volatile SemaphoreHandle_t semaphore;
 
 //ボタンイベント用
 // TaskHandle_t taskHandle2;
-volatile SemaphoreHandle_t semaphore2;
-
-
-int readMap(int mn)
-{
-
-  spriteMap.setPsram(false );
-  spriteMap.setColorDepth(16);//子スプライトの色深度
-  spriteMap.createSprite(256, 256/divnum);//マップ展開用スプライトメモリ確保
-
-  mapready = false;
-  readmapno = mn;
-
-  if(readmapno == 0)mapFileName = "/init/town.png";
-  else if(readmapno == 1)mapFileName = "/init/map.png";
-  
-// 外マップ＆スプライト---------------------------------------------
-// divnum回に分けて読み込む
-
-  for(int n = 0; n<divnum; n++){
-
-    spriteMap.drawPngFile( SPIFFS, mapFileName, 0, (int32_t)(-256*n/divnum) );
-
-    for(int j = 0; j<256/divnum; j++){
-      for(int i = 0; i<256; i++){
-
-        int k = j+(256/divnum)*(n);//マップ下部
-        colValR = spriteMap.readPixelRGB(i,j).R8();
-        colValG = spriteMap.readPixelRGB(i,j).G8();
-        colValB = spriteMap.readPixelRGB(i,j).B8();
-
-        if(colValR==0&&colValG==174&&colValB==255){//水色＝0海
-          mapArray[i][k] = 0;//rand() % 7 + 1;
-        }else if(colValR==0&&colValG==235&&colValB==0){//緑＝1草
-          mapArray[i][k] = 1;
-        }else if(colValR==132&&colValG==117&&colValB==156){//紫＝2森
-          mapArray[i][k] = 2;
-        }else if(colValR==0&&colValG==138&&colValB==74){//濃い緑＝3しげみ
-          mapArray[i][k] = 3;
-        }else if(colValR==255&&colValG==239&&colValB==0){//黄色＝4砂地
-          mapArray[i][k] = 4;
-        }else if(colValR==255&&colValG==162&&colValB==0){//オレンジ＝5山
-          mapArray[i][k] = 5;
-        }else if(colValR==99&&colValG==85&&colValB==74){//灰＝6岩山
-          mapArray[i][k] = 6;
-        }else if(colValR==255&&colValG==243&&colValB==231){//白＝7氷
-          mapArray[i][k] = 7;
-        }
-        // if(i==255 && k==255){mapready = true;return 1;}//読み込み終わったら1をリターン
-      }
-    }
-  }
-      
-  spriteMap.deleteSprite();//メモリに格納したら解放する
-
-  mapready = true;
-  return 1;
-
-}
-
-void readMapFsw(bool b){
-  readMapF = b;
-}
+// volatile SemaphoreHandle_t semaphore2;
 
 // 画面描画タスク
-void dispTask(void *pvParameters) {
-  while (1) {
-  xSemaphoreTake(semaphore, portMAX_DELAY);
-  
-  pressedBtnID = -1;//リセット
-  ui.updatePhBtns();//物理ボタンの状態を更新
-  ui.update(screen);//タッチイベントを取るので、LGFXが基底クラスでないといけない
-  if( ui.getEvent() != NO_EVENT ){//何かイベントがあれば
-    if( ui.getEvent() == TOUCH ){//TOUCHの時だけ
-    }
-    if(ui.getEvent() == MOVE){
-      pressedBtnID = ui.getTouchBtnID();
-    }
-    if( ui.getEvent() == RELEASE ){//RELEASEの時だけ
-      pressedBtnID = ui.getTouchBtnID();
-    }
-  }
+// void dispTask(void *pvParameters) {
+//   while (1) {
+//   xSemaphoreTake(semaphore, portMAX_DELAY);
 
-
-    if(readMapF == true){
-
-      fr = SPIFFS.open(wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
-      // while(fr == NULL){};
-      readStr = fr.readStringUntil('\n');// ⑪改行まで１行読み出し
-      fr.close();	// ⑫	ファイルを閉じる
-      // readmapno = atoi(readStr.c_str());
-
-      
-      //マップ番号が変わっている時だけよみこむ
-      if(readmapno != atoi(readStr.c_str()))
-      {
-
-      fw = SPIFFS.open(wrfile.c_str(), FILE_WRITE);// ⑥ファイルを書き込みモードで開く
-      // while(fw == NULL){};
-      fw.println( String(readmapno) );	// ⑦ファイルに書き込み
-      fw.close();	// ⑧ファイルを閉じる
-
-      tunes.pause();//一旦とめてないとできない
-      game->pause();
-      free(game);
-      game = new RunJsGame();//JS版リセットしてからだと通る
-      readMap(readmapno);
-      game->init();
-      tunes.resume();//再開
-      }
-    }
-
-     //ゲーム
-    uint32_t now = millis();
-    uint32_t remainTime = (now - preTime);
-
-    preTime = now;
-
-    // if(readMapF == false){
-      tunes.run();
-      int mode = game->run(remainTime);
-    // }
-
-    //違うゲームが選ばれた時はこの処理を通る？
-    // if(mode != 0){
-      
-    //   tunes.pause();//一旦とめて
-    //   game->pause();
-    //   free(game);
-    //   game = new RunJsGame();//新しいゲームオブジェクトを作る
-    //   game->init();//初期化して
-    //   tunes.resume();//再開
-    // }
-
-
-      if(flip){
-        tft.setTextSize(1);
-        tft.setFont(&lgfxJapanGothicP_8);
-        tft.setTextColor( TFT_WHITE , TFT_BLACK );
-        tft.setCursor( 0,0 );
-
-        tft.print(charSpritex);
-        tft.print(":");
-        tft.println(charSpritey);
-        
-        tft.print(colValR);
-        tft.print(":");
-        tft.print(colValG);
-        tft.print(":");
-        tft.println(colValB);
-
-        tft.print("SPIFFS Read:");	// ⑬シリアルモニタにEEPROM内容表示
-        tft.println(readStr);
-
-        tft.pushSprite(&layoutSprite,0,0);
-
-        // if(readMapF == true){
-        //   readMap(1);
-        //   readMapF = false;
-        // }
-
-        ui.showFPS( layoutSprite, 0, 127 - 28);//タッチイベントを視覚化する
-        // ui.showTouchEventInfo( layoutSprite, 120, 0 );//タッチイベントを視覚化する
-        // ui.showInfo( layoutSprite, 0, 0 );//ボタン情報、フレームレート情報などを表示します。
-        // ui.drawPhBtns( layoutSprite );//物理ボタンの状態を表示
-        layoutSprite.pushAffine(matrix_bg);
-        readMapFsw(false);//描画が終わったら必ずfalse
-      }else{
-
-      }
-      flip = !flip;//描画は2フレにつき１回行う
-    }
-    
-    delay(1);
-}
+//   // playmusic();
+//     }
+//     // delay(1);
+// }
 
 // タイマー割り込み
 void IRAM_ATTR onTimer() {
   xTaskNotifyFromISR(taskHandle, 0, eIncrement, NULL);
 }
 
-
 void setup()
 {
+
   Serial.begin(115200);
   delay(50);
   // タイマー作成(33.333ms)
@@ -316,19 +243,22 @@ void setup()
   timerAlarmWrite(timer, 1000000, true);
   timerAlarmEnable(timer);
 
+  // ledcSetup(1,12000, 8);
+  // ledcAttachPin(BUZZER_PIN,1);
+
   // バイナリセマフォ作成
-  semaphore = xSemaphoreCreateBinary();
+  // semaphore = xSemaphoreCreateBinary();
 
   // 描画用タスク作成APP_CPU
-  xTaskCreateUniversal(
-    dispTask,
-    "dispTask",
-    8192,
-    NULL,
-    2,
-    &taskHandle,
-    APP_CPU_NUM
-  );
+  // xTaskCreateUniversal(
+  //   dispTask,
+  //   "dispTask",
+  //   8192,
+  //   NULL,
+  //   2,
+  //   &taskHandle,
+  //   APP_CPU_NUM
+  // );
 
   timerA = timerBegin(0, 80, true);//カウント時間は1マイクロ秒//hw_timer_t*オブジェクト(タイマーハンドラ）がかえってくる
   timerAttachInterrupt(timerA, &onTimerA, true);//タイマー割り込みが発生したときに実行する関数を登録する。timerA =フレームタイマー
@@ -341,165 +271,216 @@ void setup()
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
-  
-  wrfile = "/config.txt";	// ④読み書きするファイル名を設定
-  // writeStr = "1";	// ⑤書き込み文字列を設定
 
-  fr = SPIFFS.open(wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
-  // while(fr == NULL){};  
-  readStr = fr.readStringUntil('\n');// ⑪改行まで１行読み出し
-  fr.close();	// ⑫	ファイルを閉じる
-  readmapno = atoi(readStr.c_str());
-  
-
-  // fw = SPIFFS.open(wrfile.c_str(), FILE_WRITE);// ⑥ファイルを書き込みモードで開く
-  // // while(fw == NULL){};
-  // fw.println( String(readmapno) );	// ⑦ファイルに書き込み
-  // fw.close();	// ⑧ファイルを閉じる
-
-  // Serial.print("SPIFFS Write:");	// ⑨書き込み完了をモニタに表示
-  // Serial.println(writeStr);
-  // delay(500);
-
-  // tft.print("SPIFFS Read:");	// ⑬シリアルモニタにEEPROM内容表示
-  // tft.println(readStr);
-
-  //screenは16ビットカラー,回転方向１,タッチキャリブレーションtrue
+  // ui.begin( screen, 16, 1, false);
   ui.begin( screen, 16, 1, true);
+  // ui.setupPhBtns(36, 39, 34);//物理ボタンをセットアップ
+
+  drawLogo();//ロゴを表示
+  // ui.begin( screen, 16, 1, true);
 
   sprite88_0.setPsram(false );
   sprite88_0.setColorDepth(16);//子スプライトの色深度
   sprite88_0.createSprite(8, 8);//ゲーム画面用スプライトメモリ確保
   sprite88_0.drawPngFile(SPIFFS, "/init/sprite.png", -8*1, -8*0);
 
-  //maproi
-  spriteRoi.setPsram(false );
-  spriteRoi.setColorDepth(16);//子スプライトの色深度
-  spriteRoi.createSprite(16, 15);//ゲーム画面用スプライトメモリ確保
-  // spriteRoi.drawPngFile(SPIFFS, "/init/map.png", -161, -211);
-
-  //外マップスプライトセット
-  // // setupbg( 5,10, 11,10)//0海、1草
-  // // setupbg(13,10, 10,10)//2森、3茂み
-  // // setupbg( 3,10, 11,11)//4砂、5山
-  // // setupbg(13,11,  9,10)//6岩山、7氷 @
-  // int sx_[8] = { 5,11,13,10, 3,11,13, 9};
-  // int sy_[8] = {10,10,10,10,10,11,11,10};
-
-//町マップスプライトセット
-  // setupbg( 5,10, 11,10)//0水、1草
-  // setupbg(12,11, 10,10)//2木、3茂み
-  // setupbg( 3,10, 12,10)//4砂、5花
-  // setupbg( 2,10,  9,10)//6壁、7なし 
-  // setupbg( 9,11,  9,10)//8道、9マスク 
-
-  int sx_[10] = { 5,11,12,10, 3,12, 2, 9, 9, 9};
-  int sy_[10] = {10,10,11,10,10,10,10,10,11,10};
-
-  for(int i=0;i<sizeof(sx_)/sizeof(sx_[0]);i++)
-  {
-    spritebg[i].setPsram( false );
-    spritebg[i].setColorDepth(16);//子スプライトの色深度
-    spritebg[i].createSprite(8, 8);//ゲーム画面用スプライトメモリ確保
-    spritebg[i].drawPngFile(SPIFFS, "/init/sprite.png", -8*sx_[i], -8*sy_[i]);
-  }
-
-  // spriteMap.setPsram(false );
-  // spriteMap.setColorDepth(16);//子スプライトの色深度
-  // spriteMap.createSprite(256, 256/divnum);//マップ展開用スプライトメモリ確保
-
-  // readMap(0);
-
-  sideSprite.setPsram(false );
-  sideSprite.setColorDepth(16);//子スプライトの色深度
-  sideSprite.createSprite(31, 120);//ゲーム画面用スプライトメモリ確保
-  sideSprite.fillScreen(TFT_RED);
-// //  //SDからの読み込みは４Gb以下じゃないとうまく動作しないかも
-// //PNGをバッファに書いて2倍出力
-  sideSprite.drawPngFile(SPIFFS, "/haco3/util/side.png", 0, 0);//4ボタン
-  // sideSprite.drawPngFile(SPIFFS, "/haco3/util/side0.png", 0, 0);//
-  sideSprite.pushAffine(matrix_side);
-  sideSprite.deleteSprite();//描画したらメモリを解放する
-
-  //sprite（bg1)のボタン配置の時
-  ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
+  sprite64.setPsram(false );
+  sprite64.setColorDepth(16);//子スプライトの色深度
+  sprite64.createSprite(64, 64);//ゲーム画面用スプライトメモリ確保
+  sprite64.drawPngFile(SPIFFS, "/init/initspr.png", 0, 0);
   
+  sprite88_roi.setPsram(false );
+  sprite88_roi.setColorDepth(16);//子スプライトの色深度
+  sprite88_roi.createSprite(8, 8);//ゲーム画面用スプライトメモリ確保
+
   //sprite（bg1)のボタン配置の時
-  // ui.createBtns( 130,  9,  30, 44,  3, 4, TOUCH, 2);//コントローラー
-  // ui.createBtns( 130, 53,  30, 66,  2, 6, TOUCH, 2);//メインメニュー
-
-  // ui.createBtns( 3,   66,  66, 11,  6, 1, TOUCH, 2);//最後の引数でタッチエリアを2倍している
-  // ui.createBtns( 97,  66,  32, 11,  4, 1, TOUCH, 2);//最後の引数でタッチエリアを2倍している
-
-  // ui.createBtns( 1, 77,    128, 32, 16, 4, TOUCH, 2);//最後の引数でタッチエリアを2倍している
-  // ui.createBtns( 1, 1,     64, 64,  8, 8, TOUCH, 2);//最後の引数でタッチエリアを2倍している
-
-  // ui.createBtns( 69, 6,    40, 40,  4, 4, TOUCH, 2);//最後の引数でタッチエリアを2倍している
-  // ui.createBtns( 109, 3,   20, 46,  2, 5, TOUCH, 2);//最後の引数でタッチエリアを2倍している
-  // ui.createBtns( 66, 48,   64, 18,  8, 1, TOUCH, 2);//最後の引数でタッチエリアを2倍している
-
+  ui.createBtns( 130,  0,  30,   8,  1, 1, TOUCH, 2);//ホームボタン
+  ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
   delay(100);
 
-  layoutSprite.setPsram( false );//DMA利用のためPSRAMは切る
-  layoutSprite.createSprite( 128, 128 );
   tft.setPsram( false );//DMA利用のためPSRAMは切る
   tft.createSprite( 128, 128 );
-  // screen.startWrite();//CSアサート開始
-  layoutSprite.startWrite();//CSアサート開始
-  // tft.startWrite();//CSアサート開始
+  tft.startWrite();//CSアサート開始
 
-  fw = SPIFFS.open(wrfile.c_str(), FILE_WRITE);// ⑥ファイルを書き込みモードで開く
-  while(fw == NULL){};
-  fw.println( String( readmapno ) );  // ⑦ファイルに書き込み
-  fw.close(); // ⑧ファイルを閉じる
-
-  game =  new BaseGame();//これしか通らない
-  game->pause();
-  free(game);
-  game = new RunJsGame();//JS版リセットしてからだと通る
+  // game =  new BaseGame();//これしか通らない
+  // game->pause();
+  // free(game);
+  // game = new RunJsGame();//JS版リセットしてからだと通る
+  // game->init();
+  // tunes.init();
   
-  readMap(readmapno);
-  game->init();
-  tunes.init();
+  tft.setTextSize(2);
+  tft.setFont(&lgfxJapanGothicP_8);
+  tft.setTextColor( TFT_WHITE , TFT_BLACK );
+  tft.setCursor( 0,0 );
 
-  // ui.setupPhBtns( screen, 33, 39, 36);//物理ボタンをセットアップ
+  game = nextGameObject(&fileName);
+  game->init();
+
+  tunes.init();
 }
 
 void loop()
 {
-  // pressedBtnID = -1;//リセット
-  // ui.updatePhBtns();//物理ボタンの状態を更新
-  // ui.update(screen);//タッチイベントを取るので、LGFXが基底クラスでないといけない
-  // if( ui.getEvent() != NO_EVENT ){//何かイベントがあれば
-  //   if( ui.getEvent() == TOUCH ){//TOUCHの時だけ
-  //   }
-  //   if(ui.getEvent() == MOVE){
-  //     pressedBtnID = ui.getTouchBtnID();
-  //   }
-  //   if( ui.getEvent() == RELEASE ){//RELEASEの時だけ
-  //     pressedBtnID = ui.getTouchBtnID();
-  //   }
-  // }
+  // ui.setConstantGetF(true);//trueだとタッチポイントのボタンIDを連続取得するモード
+  ui.update(screen);//タッチイベントを取るので、LGFXが基底クラスでないといけない
 
-  switch (ui.getHitValue())
-  {
-  default:  layoutSprite.println("--"); break;
-  case 101: layoutSprite.println("A click");pressedBtnID = 2; break;
-  case 102: layoutSprite.println("B click");pressedBtnID = 0; break;
-  case 103: layoutSprite.println("C click");pressedBtnID = 3; break;
-  case 111: layoutSprite.println("A hold");pressedBtnID = 2; break;
-  case 112: layoutSprite.println("B hold");pressedBtnID = 1; break;
-  case 113: layoutSprite.println("C hold");pressedBtnID = 3; break;
-  case 121: layoutSprite.println("A double click");pressedBtnID = 2; break;
-  case 122: layoutSprite.println("B double click");pressedBtnID = 1; break;
-  case 123: layoutSprite.println("C double click");pressedBtnID = 3; break;
-  case 201: layoutSprite.println("AB hold"); break;
-  case 202: layoutSprite.println("AC hold"); break;
-  case 203: layoutSprite.println("BC hold"); break;
-  case 204: layoutSprite.println("ABC hold"); break;
-  case 301: layoutSprite.println("A->B->C"); break;
+  if( ui.getEvent() != NO_EVENT ){//何かイベントがあれば
+
+    if( ui.getEvent() == TOUCH ){//TOUCHの時だけ
+      
+    }
+    if(ui.getEvent() == MOVE){
+      pressedBtnID = ui.getTouchBtnID();
+    }
+    if( ui.getEvent() == RELEASE ){//RELEASEの時だけ
+      // ui.setBtnID(-1);//タッチボタンIDをリセット
+      // pressedBtnID = ui.getTouchBtnID()+12;//12個分の物理ボタンをタッチボタンIDに足す
+      pressedBtnID = -1;//リセット
+    }
   }
 
+    // if(ui.getTouchBtnID() == RELEASE){//リリースされたら
+    //   pressedBtnID = -1;
+    // }
+    
 
-  xSemaphoreGiveFromISR(semaphore, NULL);
+  
+
+  // tft.setTextSize(1);
+  // tft.setTextColor(TFT_WHITE, TFT_RED);
+  // tft.setCursor(0, 120);
+  // tft.setTextWrap(true);
+  // tft.print(pressedBtnID);
+  // tft.setTextWrap(false);
+
+  tft.setTextSize(1);//元に戻す
+  
+  uint32_t now = millis();
+  uint32_t remainTime= (now - preTime);
+  preTime = now;
+
+  // == wifi task ==
+  if(wifiGame){ // debug mode
+    int r = wifiGame->run(remainTime);
+    if(r != 0){ // reload request
+
+      tunes.pause();
+      game->pause();
+      free(game);
+      game = nextGameObject(&fileName);
+      game->init();
+      tunes.resume();
+    }
+  }
+  // == tune task ==
+  tunes.run();
+
+  // == game task ==
+  int mode = game->run(remainTime);//exit時は1が返ってくる
+
+  //0ボタンで強制終了
+  if (pressedBtnID == 0)
+  { // reload
+    ui.setConstantGetF(false);//初期化処理 タッチポイントの常時取得を切る
+    fileName = "/init/main.lua";
+    mode = 1;//exit
+  }
+
+  if(mode != 0){ // exit request
+    tunes.pause();
+    game->pause();
+    free(game);
+    game = nextGameObject(&fileName);
+    game->init();
+    tunes.resume();
+  }
+
+  // == display update ==
+  tft.setCursor(0,120);
+  tft.setTextColor(0xffff);
+  tft.print(ESP.getFreeHeap());
+
+     //ゲーム
+    // uint32_t now = millis();
+    // uint32_t remainTime = (now - preTime);
+
+    // preTime = now;
+    // tunes.run();
+    // int mode = game->run(remainTime);
+
+    //違うゲームが選ばれた時はこの処理を通る？
+    // if(mode != 0){
+    //   tunes.pause();//一旦とめて
+    //   game->pause();
+    //   free(game);
+    //   game = new RunJsGame();//新しいゲームオブジェクトを作る
+    //   game->init();//初期化して
+    //   tunes.resume();//再開
+    // }
+
+      // if(flip){
+        // tft.setTextSize(1);
+        // tft.setFont(&lgfxJapanGothicP_8);
+        // tft.setTextColor( TFT_WHITE , TFT_BLACK );
+        // tft.setCursor( 0,0 );
+
+        // tft.print(charSpritex);
+        // tft.print(":");
+        // tft.println(charSpritey);
+        
+        // tft.print(colValR);
+        // tft.print(":");
+        // tft.print(colValG);
+        // tft.print(":");
+        // tft.println(colValB);
+
+        // tft.print("SPIFFS Read:");	// ⑬シリアルモニタにEEPROM内容表示
+        // tft.println(readStr);
+
+        // tft.pushSprite(&layoutSprite,0,0);
+
+        // ui.showFPS( tft, 0, 127 - 28);//タッチイベントを視覚化する
+        ui.showTouchEventInfo( tft, 0, 100 );//タッチイベントを視覚化する
+        ui.showInfo( tft, 0, 100+8 );//ボタン情報、フレームレート情報などを表示します。
+        //ui.drawPhBtns( tft, 0, 90+16 );//物理ボタンの状態を表示
+
+        // tft.pushSprite(&screen,0,0);//ゲーム画面を描画する
+        tft.pushAffine(matrix_game);
+
+        // delay(4);//120FPS スプライトが少ない、速度の速いモード描画ぶん待つ
+        delay(10);//30FPS メニュー、パズルなど
+
+  // int wait = 1000/60 - remainTime;//フレームレートを60FPS合わせる
+  // if(wait > 0){
+  //   delay(wait);
+  // }
+  // xSemaphoreGiveFromISR(semaphore, NULL);
+
 }
+
+// #include <LovyanGFX_DentaroUI.hpp>
+
+// static LGFX tft;
+// LovyanGFX_DentaroUI ui(&tft);
+// static LGFX_Sprite sideSprite( &tft );//背景スプライトはディスプレイに出力
+// static LGFX_Sprite canvas(&tft);
+// static bool isCanvasCreated = false;
+// static int canvasX;
+// static int canvasY;
+
+// void setup() {
+
+//   ui.begin( tft, 16, 1, true);
+//   ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
+
+// }
+
+// void loop() { 
+//   ui.update(tft);
+   
+//    ui.showTouchEventInfo( tft, 0, 100 );//タッチイベントを視覚化する
+//    ui.showInfo( tft, 0, 100+8 );//ボタン情報、フレームレート情報などを表示します。
+  
+//   // delay(1000); 
+//   }
