@@ -29,6 +29,8 @@ platformIOプロジェクトのフォルダをコピーした「コード」だ�
 
 /lib/LovyanGFX_DentaroUI_haco3/src/TouchBtn.hppの15行目にあるカスタム設定で、ピンアサインなどをカスタムできます。
 
+LGFX_ESP32_custom_2432S028R.hppにしてください。（違うものになっている場合があります。
+
 １，platformIOでesp32のプロジェクトを作る
 
 ２，ダウンロードした「platformio.ini」「src」「lib」「data」をプロジェクトフォルダに置き換えコピー
