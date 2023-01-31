@@ -12,7 +12,8 @@
 //M5stackなどの製品で使用するときはAUTODETECTを使って下さい。
 //#include <LGFX_AUTODETECT.hpp>
 //自作基板などで、AUTODETECTの代わりにカスタム設定を使いたいときはこちらを編集して下さい。
-#include "LGFX_ESP32_custom_sample.hpp"
+#include "LGFX_ESP32_custom_y.hpp"
+// #include "LGFX_ESP32_custom_sample.hpp"
 
 using namespace std;
 
