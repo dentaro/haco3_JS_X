@@ -351,10 +351,11 @@ class LovyanGFX_DentaroUI {
   
     PhysicBtn phbs;
 
-    // uint16_t calData[8] = {442,3556,432,322,3662,3523,3543,293};
-    // uint16_t calData[8] = {3811,3853,345,3789,3711,403,1086,430};
-    uint16_t calData[8] = {558,3648,447,396,3599,3622,3625,324};
+    // uint16_t calData[8] = {422,3624,358,251,3749,3637,3716,220};//y
+    uint16_t calData[8] = {3811,3853,345,3789,3711,403,1086,430};//daiso
+    //uint16_t calData[8] = {558,3648,447,396,3599,3622,3625,324};
     uint16_t calDataOK = 0;
+    
 
 public:
     LGFX_Sprite layoutSprite_list[BUF_PNG_NUM];
@@ -366,7 +367,11 @@ public:
     void begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _calibF );
     void begin(LGFX& _lcd);
     void touchCalibration(bool _calibUseF);
+    void calibrationRun( LGFX& _lcd);
     void showSavedCalData(LGFX& _lcd);
+    int getCalData(int _calNo);
+    // uint16_t rCalData(int _calNo);//ファイルから読み込む
+    String rCalData(String _wrfile);//ファイルから読み込む
     // void runTouchCalibration(LGFX& _lcd);
     bool isAvailable(int _btnID);
     void setConstantGetF(bool _constantGetF);

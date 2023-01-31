@@ -3,7 +3,7 @@ using namespace std;
 
 #define FLICK_DIST 3
 
-#define CALIBRATION_FILE "/config.txt"
+#define CALIBRATION_FILE "/init/caldata.txt"
 #define REPEAT_CAL false
 
 LovyanGFX_DentaroUI::LovyanGFX_DentaroUI(LGFX* _lcd)
@@ -120,23 +120,56 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _c
   // }
 }
 
-void LovyanGFX_DentaroUI::begin( LGFX& _lcd)
-{
-  lcdPos.x = 0;
-  lcdPos.y = 0;
-  if(uiMode == TOUCH_MODE){
-  }else if(uiMode == PHYSICAL_MODE){
-    selectBtnID = 0;
-  }
-  // タッチが使用可能な場合のキャリブレーションを行います。（省略可）
-  if(touchCalibrationF == true){
+String LovyanGFX_DentaroUI::rCalData(String _wrfile){
+  File fr = SPIFFS.open(_wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
+  String _readStr = fr.readStringUntil('\n');// ⑪改行まで１行読み出し
+  fr.close();	// ⑫	ファイルを閉じる
+  return _readStr;
+}
+
+#include <iostream>
+#include <string>
+#include <vector>
+ 
+std::vector<std::string> split(std::string str, char del) {
+    int first = 0;
+    int last = str.find_first_of(del);
+ 
+    std::vector<std::string> result;
+ 
+    while (first < str.size()) {
+        std::string subStr(str, first, last - first);
+ 
+        result.push_back(subStr);
+ 
+        first = last + 1;
+        last = str.find_first_of(del, first);
+ 
+        if (last == std::string::npos) {
+            last = str.size();
+        }
+    }
+ 
+    return result;
+}
+
+void LovyanGFX_DentaroUI::calibrationRun( LGFX& _lcd){
+// タッチが使用可能な場合のキャリブレーションを行います。（省略可）
+  
     if (_lcd.touch())
     {
       if (_lcd.width() < _lcd.height()) _lcd.setRotation(_lcd.getRotation() ^ 1);
 
+      _lcd.fillScreen(TFT_BLACK);
+      _lcd.setColorDepth(COL_DEPTH);
+
+      _lcd.setTextSize(1);
+      _lcd.setFont(&lgfxJapanGothicP_8);
+      // _lcd.setTextColor(TFT_WHITE, TFT_BLACK);
+
       // 画面に案内文章を描画します。
       _lcd.setTextDatum(textdatum_t::middle_center);
-      _lcd.drawString("touch the arrow marker.", _lcd.width()>>1, _lcd.height() >> 1);
+      _lcd.drawString("矢印をタッチしてください。", _lcd.width()>>1, _lcd.height() >> 1);
       _lcd.setTextDatum(textdatum_t::top_left);
 
       // タッチを使用する場合、キャリブレーションを行います。画面の四隅に表示される矢印の先端を順にタッチしてください。
@@ -144,12 +177,19 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd)
       uint16_t bg = TFT_BLACK;
 
       if (_lcd.isEPD()) swap(fg, bg);
-      _lcd.calibrateTouch(nullptr, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
-      // _lcd.calibrateTouch(calData, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
-      // _lcd.setTouchCalibrate(calData);
 
-      _lcd.fillScreen(TFT_BLACK);
-      _lcd.setColorDepth(COL_DEPTH);
+      // _lcd.calibrateTouch(nullptr, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
+
+      String readStr = rCalData(CALIBRATION_FILE);
+      char del = ',';
+      for (const auto subStr : split(readStr.c_str(), del)) {//csv形式のStringから数値文字を取り出し
+        int calval = atoi(subStr.c_str());//c_strでconst char*に変換してからatoiで整数値に
+        calData[calval];
+      }
+
+
+      _lcd.calibrateTouch(calData, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
+      _lcd.setTouchCalibrate(calData);
 
   // Serial.printf("===============================================================\n");
   // Serial.printf("Mem Test\n");
@@ -213,45 +253,69 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd)
   // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID)   : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID) );
     }
 
+    
+  
   }
+
+void LovyanGFX_DentaroUI::begin( LGFX& _lcd)
+{
+  lcdPos.x = 0;
+  lcdPos.y = 0;
+  if(uiMode == TOUCH_MODE){
+  }else if(uiMode == PHYSICAL_MODE){
+    selectBtnID = 0;
+  }
+
+  if(touchCalibrationF == true){
+    calibrationRun(_lcd);
+  }
+  
   Serial.println("");
   Serial.println("[UI_ID information]");
 }
 
+#include "FS.h"
+#include "SPIFFS.h"
+#define FORMAT_SPIFFS_IF_FAILED true
+
 void LovyanGFX_DentaroUI::showSavedCalData(LGFX& _lcd){
 
   // タッチが使用可能な場合のキャリブレーション値の可視化を行います。（省略可）
-  if(touchCalibrationF == true){
-  if (!SPIFFS.begin()) {
-   _lcd.println("Formating file system"); 
-   SPIFFS.format(); 
-   SPIFFS.begin(); 
-  }
-  File f = SPIFFS.open(CALIBRATION_FILE, "w");
-  if (f) {
-    f.write((const unsigned char *)calData, 14);
-    f.close();
-  }
-  
-  _lcd.fillRect(0, 0, 128, 128, TFT_GREEN); 
-  _lcd.setTextSize(1); 
-  _lcd.setTextColor(TFT_WHITE, TFT_BLUE); 
-  _lcd.setCursor(0, 0); 
-  _lcd.println(calData[0]); 
-  _lcd.println(calData[1]); 
-  _lcd.println(calData[2]); 
-  _lcd.println(calData[3]); 
-  _lcd.println(calData[4]); 
-  _lcd.println(calData[5]); 
-  _lcd.println(calData[6]); 
-  _lcd.println(calData[7]);
-  // delay(2000);
+  if(touchCalibrationF == true)
+  {
+    if (!SPIFFS.begin()) {
+    _lcd.println("Formating file system"); 
+    SPIFFS.format(); 
+    SPIFFS.begin(); 
+    }
+    File f = SPIFFS.open(CALIBRATION_FILE, "w");
+    if (f) {
+      f.write((const unsigned char *)calData, 14);
+      f.close();
+    }
+    _lcd.fillRect(0, 0, 128, 128, TFT_GREEN); 
+    _lcd.setTextSize(1); 
+    _lcd.setTextColor(TFT_WHITE, TFT_BLUE); 
+    _lcd.setCursor(0, 0); 
+    _lcd.println(calData[0]); 
+    _lcd.println(calData[1]); 
+    _lcd.println(calData[2]); 
+    _lcd.println(calData[3]); 
+    _lcd.println(calData[4]); 
+    _lcd.println(calData[5]); 
+    _lcd.println(calData[6]); 
+    _lcd.println(calData[7]);
   }
   _lcd.setTouchCalibrate(calData);
 }
 
 void LovyanGFX_DentaroUI::setConstantGetF(bool _constantGetF){
   constantGetF = _constantGetF;
+}
+
+
+int LovyanGFX_DentaroUI::getCalData(int _calNo){
+  return calData[_calNo];
 }
 
 void LovyanGFX_DentaroUI::update( LGFX& _lcd )
