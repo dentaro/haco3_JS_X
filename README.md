@@ -11,7 +11,7 @@ https://inajob.github.io/o-bako-simulator/index.html
 
 o-bakoのプログラムに互換性があります。
 
-JavaScript言語(Duktape)とLua5.3が動いていて、それぞれの言語で開発できます。
+JavaScript言語(Duktape)とLua5.3が動いていて、
 
 JavaScriptを充実させていくつもりですが、JavaScript & Luaどちらでも開発ができます。（data内のサンプルゲーム.jsと.luaを参照してください。）
 
