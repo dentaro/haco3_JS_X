@@ -9,7 +9,7 @@ ina_aniさんのo-bakoをlovyanGFXに移植し、タッチパネル対応にす�
 
 https://inajob.github.io/o-bako-simulator/index.html
 
-o-bakoのプログラムに互換性があります。
+o-bakoのプログラムに互換性があります。（つまり、こちらのサイトで開発したゲームは動かせます）
 
 JavaScript言語(Duktape)とLua5.3が動いていて、
 
