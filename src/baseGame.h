@@ -2,6 +2,7 @@
 #define BASE_GAME_H
 
 #define CTRLBTNNUM 5//ゲームに使える再度ボタン数を決めます
+#define CALIBRATION_FILE "/init/caldata.txt"
 
 class BaseGame
 {
@@ -11,6 +12,8 @@ class BaseGame
   virtual int run(int remainTime){return 0;};
   virtual void pause(){};
   virtual void resume(){};
+
+  
   
 };
 

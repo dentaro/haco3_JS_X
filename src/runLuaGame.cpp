@@ -341,17 +341,17 @@ int RunLuaGame::l_wifiserve(lua_State* L){
   self->wifiDebugRequest = true;
   return 0;
 }
-int RunLuaGame::l_run(lua_State* L){
+int RunLuaGame::l_run(lua_State* L){//ファイル名を取得して、そのファイルを実行runする
 
   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
   const char* file = lua_tostring(L, 1);
 
-  setFileName(file);
-  self->exitRequest = true;
+  setFileName(file);//次のゲームのパスをセット
+  self->exitRequest = true;//次のゲームを立ち上げるフラグを立てる
   return 0;
 }
 
-int RunLuaGame::l_list(lua_State* L){
+int RunLuaGame::l_list(lua_State* L){//
   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
   File f;
 
@@ -362,7 +362,7 @@ int RunLuaGame::l_list(lua_State* L){
   int i = 0;
   while(f){
     Serial.println(f.path());
-    lua_pushstring(L, f.path());
+    lua_pushstring(L, f.path());//パスを文字列にしてリターン
     lua_rawseti(L, -2, i);
     f = root.openNextFile();
     i ++;
@@ -593,7 +593,7 @@ void RunLuaGame::init(){
 void RunLuaGame::pause(){
   lua_close(L);
 }
-void RunLuaGame::resume(){
+void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（setupのようなもの)
   char buf[MAX_CHAR];
   char str[100];
 
@@ -692,36 +692,41 @@ void RunLuaGame::resume(){
   lua_pushcclosure(L, l_savebmp, 1);
   lua_setglobal(L, "savebmp");
 
-  SPIFFS.begin(true);
+  SPIFFS.begin(true);//SPIFFSを利用可能にする
 
   if(SPIFFS.exists(getPngName(fileName))){
     sprite64.drawPngFile(SPIFFS, fileName, 0, 0);
   }
+  //後でSDからもファイルを読めるようにする
 
   File fp = SPIFFS.open(fileName, FILE_READ);
 
   tft.fillScreen(TFT_BLACK);
+
   struct LoadF lf;
   lf.f = fp;
+
   char cFileName[32];
-  fileName.toCharArray(cFileName, 32);
-  if(lua_load(L, getF, &lf, cFileName, NULL)){
+  fileName.toCharArray(cFileName, 32);//char変換
+  
+  if(lua_load(L, getF, &lf, cFileName, NULL)){//Luaに渡してファイル読み込みに成功したかチェック（成功すると0）
     printf("error? %s\n", lua_tostring(L, -1));
     Serial.printf("error? %s\n", lua_tostring(L, -1));
-    runError = true;
+    runError = true;//エラーが発生
     errorString = lua_tostring(L, -1);
   }
+
   fp.close();
 
-  if(runError == false){
-    if(lua_pcall(L, 0, 0,0)){
+  if(runError == false){//エラーが発生していなくても
+    if(lua_pcall(L, 0, 0,0)){//LUAの関数呼び出しに成功したかチェック（成功すると0）
       Serial.printf("init error? %s\n", lua_tostring(L, -1));
-      runError = true;
+      runError = true;//エラーが発生
       errorString = lua_tostring(L, -1);
     }
   }
 
-  Serial.println("finish");
+  Serial.println("lua chack finish");
 
   for(int i = 0; i < CTRLBTNNUM; i ++){//初期化
       buttonState[i] = false;
@@ -744,10 +749,9 @@ int RunLuaGame::run(int _remainTime){
     wifiMode = SHOW;
     wifiDebugRequest = false;
   }
-  if(exitRequest){
-    exitRequest = false;
-    
-    return 1; // exit(1になるとゲームから離脱)
+  if(exitRequest){//次のゲームを起動するフラグがたったら
+    exitRequest = false;//フラグをリセットして、
+    return 1; // exit(1をリターンすることで、main.cppの変数modeを１にする)
   }
 
   //ボタンの経過時間分足す

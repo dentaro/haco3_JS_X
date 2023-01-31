@@ -2,7 +2,7 @@
 
 #ifndef TUNES_H
 #define TUNES_H
-#define SPEAKER_PIN 26
+#define SPEAKER_PIN 25
 
 class Tunes
 {

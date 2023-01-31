@@ -3,6 +3,7 @@
 #include <Wire.h>
 // #include <SD.h>
 
+
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WiFiClient.h>
@@ -25,6 +26,8 @@
 #include "Tunes.h"
 #include "runJsGame.h"
 #include "wifiGame.h"
+
+#define FORMAT_SPIFFS_IF_FAILED true
 
 WifiGame* wifiGame = NULL;
 Tunes tunes;
@@ -72,9 +75,10 @@ LGFX_Sprite sprite88_0 = LGFX_Sprite(&tft);
 // LGFX_Sprite spritebg[16];//16種類のスプライトを背景で使えるようにする
 BaseGame* game;
 // String fileName = "/init/main.js";
-String fileName = "/init/main.lua";
-// Tunes tunes;
+String fileName = "/init/main.lua";//実行されるファイル名
+String caldatafile = "/init/caldata.txt";
 
+// Tunes tunes;
 // bool constantGetF = false;
 
 char buf[MAX_CHAR];
@@ -105,6 +109,7 @@ enum struct FileType {
   JS,
   BMP,
   PNG,
+  TXT,
   OTHER
 };
 
@@ -124,7 +129,7 @@ void drawLogo(){
   screen.setTextColor( TFT_WHITE , TFT_DARKGRAY );
   screen.setCursor( 258,0 );
   
-  for(int i=0;i<4;i++){
+  for(int i=0;i<CTRLBTNNUM-1;i++){
     screen.fillRoundRect(258,55*i+20,60,53,2,TFT_DARKGRAY);
     // screen.fillTriangle()
     // screen.println("<");
@@ -150,14 +155,29 @@ FileType detectFileType(String *fileName){
     return FileType::BMP;
   }else if(fileName->endsWith(".png")){
     return FileType::PNG;
+  }else if(fileName->endsWith(".txt")){
+    return FileType::TXT;
   }
   return FileType::OTHER;
 }
+
+String *targetfileName;
 
 BaseGame* nextGameObject(String* fileName){
   switch(detectFileType(fileName)){
     case FileType::JS:  game = new RunJsGame(); break;
     case FileType::LUA: game = new RunLuaGame(); break;
+    case FileType::TXT: 
+      game = new RunJsGame(); 
+      //ファイル名がもし/init/caldata.cxtなら
+      if(*fileName == CALIBRATION_FILE){
+        ui.calibrationRun(screen);//キャリブレーション実行してcaldata.txtファイルを更新して
+        drawLogo();//サイドボタンを書き直して
+      }
+      *fileName = "/init/txt/main.js";//txtエディタで開く
+      
+      break; //txteditorを立ち上げてtxtを開く
+
     case FileType::BMP: // todo: error
       game = NULL;
       break;
@@ -232,6 +252,34 @@ void IRAM_ATTR onTimer() {
   xTaskNotifyFromISR(taskHandle, 0, eIncrement, NULL);
 }
 
+//ファイル書き込み
+void writeFile(fs::FS &fs, const char * path, const char * message){
+    File file = fs.open(path, FILE_WRITE);
+    if(!file){
+        return;
+    }
+    file.print(message);
+}
+
+void wCalData(String _wrfile){
+  char numStr[64];
+  sprintf(numStr, "%d,%d,%d,%d,%d,%d,%d,%d", 
+    ui.getCalData(0),ui.getCalData(1),ui.getCalData(2),ui.getCalData(3),
+    ui.getCalData(4),ui.getCalData(5),ui.getCalData(6),ui.getCalData(7)
+  );
+  String writeStr = numStr;	// ⑤書き込み文字列を設定
+  File fw = SPIFFS.open(_wrfile.c_str(), "w");// ⑥ファイルを書き込みモードで開く
+  fw.println( writeStr );	// ⑦ファイルに書き込み
+  fw.close();	// ⑧ファイルを閉じる
+}
+
+String rCalData(String _wrfile){
+  File fr = SPIFFS.open(_wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
+  String _readStr = fr.readStringUntil('\n');// ⑪改行まで１行読み出し
+  fr.close();	// ⑫	ファイルを閉じる
+  return _readStr;
+}
+
 void setup()
 {
 
@@ -272,9 +320,27 @@ void setup()
     return;
   }
 
-  ui.begin( screen, 16, 1, false);
-  // ui.begin( screen, 16, 1, true);
+  if(rCalData(CALIBRATION_FILE) == NULL){//タッチキャリブレーションデータがなければ
+    ui.begin( screen, 16, 1, true);//立ち上げ時にキャリブレーションする
+  }else{
+    ui.begin( screen, 16, 1, false);
+  }
+  wCalData(CALIBRATION_FILE);//SPIFFSのファイルにキャリブレーションデータを書き込む
+
   // ui.setupPhBtns(36, 39, 34);//物理ボタンをセットアップ
+
+  char text[32];
+
+  sprintf(text, "%d", ui.getCalData(0));sprintf(text, "%d", ",");
+  sprintf(text, "%d", ui.getCalData(1));sprintf(text, "%d", ",");
+  sprintf(text, "%d", ui.getCalData(2));sprintf(text, "%d", ",");
+  sprintf(text, "%d", ui.getCalData(3));sprintf(text, "%d", ",");
+  sprintf(text, "%d", ui.getCalData(4));sprintf(text, "%d", ",");
+  sprintf(text, "%d", ui.getCalData(5));sprintf(text, "%d", ",");
+  sprintf(text, "%d", ui.getCalData(6));sprintf(text, "%d", ",");
+  sprintf(text, "%d", ui.getCalData(7));sprintf(text, "%d", ",");
+
+  // writeFile(SPIFFS, "/init/caldata.txt",text);
 
   drawLogo();//ロゴを表示
   // ui.begin( screen, 16, 1, true);
@@ -307,9 +373,8 @@ void setup()
   tft.setTextColor( TFT_WHITE , TFT_BLACK );
   tft.setCursor( 0,0 );
 
-  game = nextGameObject(&fileName);
+  game = nextGameObject(&fileName);//ホームゲームを立ち上げる
   game->init();
-
   tunes.init();
 }
 
@@ -336,9 +401,6 @@ void loop()
     // if(ui.getTouchBtnID() == RELEASE){//リリースされたら
     //   pressedBtnID = -1;
     // }
-    
-
-  
 
   // tft.setTextSize(1);
   // tft.setTextColor(TFT_WHITE, TFT_RED);
@@ -370,7 +432,7 @@ void loop()
   tunes.run();
 
   // == game task ==
-  int mode = game->run(remainTime);//exit時は1が返ってくる
+  int mode = game->run(remainTime);//exitは1が返ってくる　mode=１ 次のゲームを起動
 
   //0ボタンで強制終了
   if (pressedBtnID == 0)
@@ -380,12 +442,12 @@ void loop()
     mode = 1;//exit
   }
 
-  if(mode != 0){ // exit request
+  if(mode != 0){ // exit request//次のゲームを立ち上げるフラグがた値、modeが１次のゲームを起動であれば
     tunes.pause();
     game->pause();
     free(game);
-    game = nextGameObject(&fileName);
-    game->init();
+    game = nextGameObject(&fileName);//ファイルの種類を判別して適したゲームオブジェクトを生成
+    game->init();//resume()（再開処理）を呼び出し、ゲームで利用する関数などを準備
     tunes.resume();
   }
 
@@ -439,7 +501,8 @@ void loop()
         //ui.drawPhBtns( tft, 0, 90+16 );//物理ボタンの状態を表示
 
         // tft.pushSprite(&screen,0,0);//ゲーム画面を描画する
-        tft.pushAffine(matrix_game);
+
+        tft.pushAffine(matrix_game);//ゲーム画面を最終描画する
 
         // delay(4);//120FPS スプライトが少ない、速度の速いモード描画ぶん待つ
         delay(10);//30FPS メニュー、パズルなど

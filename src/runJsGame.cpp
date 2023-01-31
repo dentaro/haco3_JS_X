@@ -7,6 +7,10 @@ extern String fileName;
 extern void setFileName(String s);
 extern void reboot();
 extern void tone(int _toneNo , int _tonelength);
+
+extern void wCalData(String _wrfile);
+extern String rCalData(String _wrfile);
+
 // extern Tunes tunes;
 extern int pressedBtnID;
 extern uint8_t charSpritex;
@@ -26,11 +30,14 @@ extern char str[100];
 
 extern LGFX screen;
 extern LovyanGFX_DentaroUI ui;
+extern String *targetfileName;
+
 
 // extern bool constantGetF;
 
 char chr;
 char numStr[4];
+char fileStr[100];
 bool tbtnSetupF = true;
 
 int prebtnid = -1;
@@ -320,6 +327,23 @@ int RunJsGame::l_tp(duk_context* ctx){
   return 1;//１にしないといけない（duk_pushでJSに値をリターンできる
 }
 
+int RunJsGame::l_gtx(duk_context* ctx){
+  duk_push_global_object(ctx);          // push global
+  duk_get_prop_string(ctx, -1, "obako");// push obako
+  RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+  duk_pop_2(ctx); // obako, global
+  int n = duk_get_int(ctx, 0);
+
+  wCalData(CALIBRATION_FILE);
+
+  String readStr = rCalData(CALIBRATION_FILE);
+  const char* text = readStr.c_str();
+
+  // const char* text = rCalData(wrfile).c_str();
+  duk_push_string(ctx, text);//duk_pushでJSに値をリターンできる
+  return 1;
+}
+
 int RunJsGame::l_str(duk_context* ctx){
   duk_push_global_object(ctx);          // push global
   duk_get_prop_string(ctx, -1, "obako");// push obako
@@ -411,10 +435,15 @@ void RunJsGame::resume(){
 
   fidx = duk_push_c_function(ctx, l_str, 1);
   duk_put_prop_string(ctx, -2, "str");
+
+  fidx = duk_push_c_function(ctx, l_gtx, 1);
+  duk_put_prop_string(ctx, -2, "gtx");
+
   
   duk_pop(ctx); // pop global
 
   SPIFFS.begin(true);
+
   Serial.println("SPIFFS begin");
 
   // if(SPIFFS.exists(getBitmapName(fileName))){
@@ -425,10 +454,10 @@ void RunJsGame::resume(){
   // }
 
   // Serial.println("loaded bitmap");
+
   if(SPIFFS.exists(getPngName(fileName))){
   sprite64.drawPngFile(SPIFFS, fileName, 0, 0);
   }
-
   Serial.println("loaded png");
 
   File fp = SPIFFS.open(fileName, FILE_READ);
@@ -458,9 +487,9 @@ void RunJsGame::resume(){
 
   duk_pop(ctx); // remove result
 
-  Serial.println("finish");
+  Serial.println("js check finish");
 
-  for(int i = 0; i < 16; i ++){//初期化
+  for(int i = 0; i < CTRLBTNNUM; i ++){//初期化
     buttonState[i] = 0;
   }
 
@@ -482,7 +511,7 @@ int RunJsGame::run(int _remainTime){
     return 1; // exit(ゲームから離脱)
   }
 
-  for(int i = 0; i < CTRLBTNNUM; i ++){//初期化
+  for(int i = 0; i <CTRLBTNNUM; i ++){//初期化
       buttonState[i] = false;
       if(pressedBtnID ==  i){buttonState[i]  = true;}
   }
