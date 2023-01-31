@@ -74,9 +74,10 @@ static LGFX_Sprite logoSprite( &screen );//背景スプライトはディスプ�
 LGFX_Sprite sprite88_0 = LGFX_Sprite(&tft);
 // LGFX_Sprite spritebg[16];//16種類のスプライトを背景で使えるようにする
 BaseGame* game;
-// String fileName = "/init/main.js";
-String fileName = "/init/main.lua";//実行されるファイル名
+// String appfileName = "/init/main.js";
+String appfileName = "/init/main.lua";//実行されるファイル名
 String caldatafile = "/init/caldata.txt";
+String txtName = "/init/txt/sample.txt";//実行されるファイル名
 
 // Tunes tunes;
 // bool constantGetF = false;
@@ -146,16 +147,16 @@ void reboot(){
   ESP.restart();
 }
 
-FileType detectFileType(String *fileName){
-  if(fileName->endsWith(".js")){
+FileType detectFileType(String *appfileName){
+  if(appfileName->endsWith(".js")){
     return FileType::JS;
-  }else if(fileName->endsWith(".lua")){
+  }else if(appfileName->endsWith(".lua")){
     return FileType::LUA;
-  }else if(fileName->endsWith(".bmp")){
+  }else if(appfileName->endsWith(".bmp")){
     return FileType::BMP;
-  }else if(fileName->endsWith(".png")){
+  }else if(appfileName->endsWith(".png")){
     return FileType::PNG;
-  }else if(fileName->endsWith(".txt")){
+  }else if(appfileName->endsWith(".txt")){
     return FileType::TXT;
   }
   return FileType::OTHER;
@@ -163,18 +164,18 @@ FileType detectFileType(String *fileName){
 
 String *targetfileName;
 
-BaseGame* nextGameObject(String* fileName){
-  switch(detectFileType(fileName)){
+BaseGame* nextGameObject(String* _appfileName){
+  switch(detectFileType(_appfileName)){
     case FileType::JS:  game = new RunJsGame(); break;
     case FileType::LUA: game = new RunLuaGame(); break;
     case FileType::TXT: 
       game = new RunJsGame(); 
-      //ファイル名がもし/init/caldata.cxtなら
-      if(*fileName == CALIBRATION_FILE){
+      //ファイル名がもし/init/caldata.txtなら
+      if(*_appfileName == CALIBRATION_FILE){
         ui.calibrationRun(screen);//キャリブレーション実行してcaldata.txtファイルを更新して
         drawLogo();//サイドボタンを書き直して
       }
-      *fileName = "/init/txt/main.js";//txtエディタで開く
+      appfileName = "/init/txt/main.js";//txtエディタで開く
       
       break; //txteditorを立ち上げてtxtを開く
 
@@ -218,7 +219,7 @@ bool flip = true;
 
 uint32_t preTime;
 void setFileName(String s){
-  fileName = s;
+  appfileName = s;
 }
 
 // void reboot(){
@@ -373,7 +374,7 @@ void setup()
   tft.setTextColor( TFT_WHITE , TFT_BLACK );
   tft.setCursor( 0,0 );
 
-  game = nextGameObject(&fileName);//ホームゲームを立ち上げる
+  game = nextGameObject(&appfileName);//ホームゲームを立ち上げる
   game->init();
   tunes.init();
 }
@@ -423,7 +424,8 @@ void loop()
       tunes.pause();
       game->pause();
       free(game);
-      game = nextGameObject(&fileName);
+      txtName = appfileName;
+      game = nextGameObject(&appfileName);
       game->init();
       tunes.resume();
     }
@@ -438,7 +440,7 @@ void loop()
   if (pressedBtnID == 0)
   { // reload
     ui.setConstantGetF(false);//初期化処理 タッチポイントの常時取得を切る
-    fileName = "/init/main.lua";
+    appfileName = "/init/main.lua";
     mode = 1;//exit
   }
 
@@ -446,7 +448,8 @@ void loop()
     tunes.pause();
     game->pause();
     free(game);
-    game = nextGameObject(&fileName);//ファイルの種類を判別して適したゲームオブジェクトを生成
+    txtName = appfileName;
+    game = nextGameObject(&appfileName);//ファイルの種類を判別して適したゲームオブジェクトを生成
     game->init();//resume()（再開処理）を呼び出し、ゲームで利用する関数などを準備
     tunes.resume();
   }

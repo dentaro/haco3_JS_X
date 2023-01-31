@@ -3,7 +3,8 @@
 extern MyTFT_eSprite tft;
 extern LGFX_Sprite sprite64;
 extern LGFX_Sprite sprite88_roi;
-extern String fileName;
+extern String appfileName;
+extern String txtName;
 extern void setFileName(String s);
 extern void reboot();
 extern void tone(int _toneNo , int _tonelength);
@@ -334,13 +335,16 @@ int RunJsGame::l_gtx(duk_context* ctx){
   duk_pop_2(ctx); // obako, global
   int n = duk_get_int(ctx, 0);
 
-  wCalData(CALIBRATION_FILE);
-
-  String readStr = rCalData(CALIBRATION_FILE);
-  const char* text = readStr.c_str();
-
-  // const char* text = rCalData(wrfile).c_str();
-  duk_push_string(ctx, text);//duk_pushでJSに値をリターンできる
+  if(appfileName == CALIBRATION_FILE){
+    wCalData(CALIBRATION_FILE);//
+    String readStr = rCalData(CALIBRATION_FILE);
+    const char* text = readStr.c_str();
+    duk_push_string(ctx, text);//duk_pushでJSに値をリターンできる
+  }else{
+    String readStr = rCalData(txtName);
+    const char* text = readStr.c_str();
+    duk_push_string(ctx, text);//duk_pushでJSに値をリターンできる
+  }
   return 1;
 }
 
@@ -446,8 +450,8 @@ void RunJsGame::resume(){
 
   Serial.println("SPIFFS begin");
 
-  // if(SPIFFS.exists(getBitmapName(fileName))){
-  //   File bmpFile = SPIFFS.open(getBitmapName(fileName) , FILE_READ);
+  // if(SPIFFS.exists(getBitmapName(appappfileName))){
+  //   File bmpFile = SPIFFS.open(getBitmapName(appfileName) , FILE_READ);
   //   Serial.println("bitmap load begin");
   //   Serial.println("bitmap load end");
   //   bmpFile.close();
@@ -455,12 +459,12 @@ void RunJsGame::resume(){
 
   // Serial.println("loaded bitmap");
 
-  if(SPIFFS.exists(getPngName(fileName))){
-  sprite64.drawPngFile(SPIFFS, fileName, 0, 0);
+  if(SPIFFS.exists(getPngName(appfileName))){
+  sprite64.drawPngFile(SPIFFS, appfileName, 0, 0);
   }
   Serial.println("loaded png");
 
-  File fp = SPIFFS.open(fileName, FILE_READ);
+  File fp = SPIFFS.open(appfileName, FILE_READ);
   Serial.println("open file");
 
   tft.fillScreen(TFT_BLACK);

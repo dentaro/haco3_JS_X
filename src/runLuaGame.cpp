@@ -2,7 +2,7 @@
 extern MyTFT_eSprite tft;
 extern LGFX_Sprite sprite64;
 extern LGFX_Sprite sprite88_roi;
-extern String fileName;
+extern String appfileName;
 extern void startWifiDebug(bool isSelf);
 extern void setFileName(String s);
 extern bool isWifiDebug();
@@ -378,7 +378,7 @@ int RunLuaGame::l_require(lua_State* L){
   struct LoadF lf;
   lf.f = fp;
   char cFileName[32];
-  fileName.toCharArray(cFileName, 32);
+  appfileName.toCharArray(cFileName, 32);
   if(lua_load(L, getF, &lf, cFileName, NULL)){
     printf("error? %s\n", lua_tostring(L, -1));
     Serial.printf("error? %s\n", lua_tostring(L, -1));
@@ -694,12 +694,12 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
 
   SPIFFS.begin(true);//SPIFFSを利用可能にする
 
-  if(SPIFFS.exists(getPngName(fileName))){
-    sprite64.drawPngFile(SPIFFS, fileName, 0, 0);
+  if(SPIFFS.exists(getPngName(appfileName))){
+    sprite64.drawPngFile(SPIFFS, appfileName, 0, 0);
   }
   //後でSDからもファイルを読めるようにする
 
-  File fp = SPIFFS.open(fileName, FILE_READ);
+  File fp = SPIFFS.open(appfileName, FILE_READ);
 
   tft.fillScreen(TFT_BLACK);
 
@@ -707,7 +707,7 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
   lf.f = fp;
 
   char cFileName[32];
-  fileName.toCharArray(cFileName, 32);//char変換
+  appfileName.toCharArray(cFileName, 32);//char変換
   
   if(lua_load(L, getF, &lf, cFileName, NULL)){//Luaに渡してファイル読み込みに成功したかチェック（成功すると0）
     printf("error? %s\n", lua_tostring(L, -1));
