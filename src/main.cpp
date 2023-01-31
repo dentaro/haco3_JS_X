@@ -183,7 +183,8 @@ BaseGame* nextGameObject(String* _appfileName){
       game = NULL;
       break;
     case FileType::PNG: // todo: error
-      game = NULL;
+      game = new RunJsGame(); 
+      appfileName = "/init/png/main.js";//pngエディタで開く
       break;
     case FileType::OTHER: // todo: error
       game = NULL;

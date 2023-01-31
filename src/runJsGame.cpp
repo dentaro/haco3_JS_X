@@ -87,6 +87,8 @@ int RunJsGame::l_spr(duk_context* ctx){
   return 0;
 }
 
+
+
 duk_ret_t RunJsGame::l_color(duk_context* ctx){
   duk_push_global_object(ctx);          // push global
   duk_get_prop_string(ctx, -1, "obako");// push obako
@@ -376,6 +378,40 @@ String RunJsGame::getPngName(String s){
   return s.substring(0, p) + "/sprite.png";
 }
 
+int RunJsGame::l_bg(duk_context* ctx){
+  duk_push_global_object(ctx);          // push global
+  duk_get_prop_string(ctx, -1, "obako");// push obako
+  RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+  duk_pop_2(ctx); // obako, global
+
+  int x = duk_get_int(ctx, 0);
+  int y = duk_get_int(ctx, 1);
+
+  duk_size_t len;
+  const char* src = duk_get_lstring(ctx, 2, &len);
+
+  String bgName = src;
+
+  // String bgname = duk_get_int(ctx, 1);
+
+  // txtName = "/init/logo.png";
+
+  if(src != NULL){
+    // if(SPIFFS.exists(txtName)){
+      tft.drawPngFile(SPIFFS, txtName, 0, 0);
+    // }
+  }else{
+    // if(SPIFFS.exists(bgName)){
+      tft.drawPngFile(SPIFFS, bgName, 0, 0);
+    // }
+  }
+
+  // sprite64.pushSprite(&tft, x, y);
+
+  return 0;
+}
+
+
 void RunJsGame::init(){
   this->resume();
 }
@@ -400,6 +436,9 @@ void RunJsGame::resume(){
 
   fidx = duk_push_c_function(ctx, l_spr, 6);
   duk_put_prop_string(ctx, -2, "spr");
+
+  fidx = duk_push_c_function(ctx, l_bg, 3);
+  duk_put_prop_string(ctx, -2, "bg");
   
   fidx = duk_push_c_function(ctx, l_pset, 2);
   duk_put_prop_string(ctx, -2, "pset");
@@ -460,9 +499,9 @@ void RunJsGame::resume(){
   // Serial.println("loaded bitmap");
 
   if(SPIFFS.exists(getPngName(appfileName))){
-  sprite64.drawPngFile(SPIFFS, appfileName, 0, 0);
+    sprite64.drawPngFile(SPIFFS, appfileName, 0, 0);
   }
-  Serial.println("loaded png");
+    Serial.println("loaded png");
 
   File fp = SPIFFS.open(appfileName, FILE_READ);
   Serial.println("open file");

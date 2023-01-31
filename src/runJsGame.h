@@ -48,6 +48,7 @@ class RunJsGame: public BaseGame
     int loadSurface(File* fp, uint8_t* buf);
     static int l_tone(duk_context* ctx);
     static int l_spr(duk_context* ctx);
+    static int l_bg(duk_context* ctx);
     static int l_pset(duk_context* ctx);
     static int l_gcn(duk_context* ctx);
     static int l_color(duk_context* ctx);
@@ -82,8 +83,9 @@ class RunJsGame: public BaseGame
   //  String l_intToString(int _val);
    //haco3Lib
 
-    String getBitmapName(String s);
-    String getPngName(String s);
+    static String getBitmapName(String s);
+    static String getPngName(String s);
+    
     void init();
     int run(int remainTime);
     void pause();
