@@ -27,9 +27,11 @@ platformIOプロジェクトのフォルダをコピーした「コード」だ�
 
 基板に対応させる
 
-/lib/LovyanGFX_DentaroUI_haco3/src/TouchBtn.hppの15行目にあるカスタム設定で、ピンアサインなどをカスタムできます。
+/lib/LovyanGFX_DentaroUI_haco3/src/TouchBtn.hppの15行目にある
 
-LGFX_ESP32_custom_2432S028R.hppにしてください。（違うものになっている場合があります。
+LGFX_ESP32_custom_2432S028R.hppにしてください。（違うものになっている場合があります。）
+
+カスタム設定で、自作のピンアサインなどにカスタムできます。
 
 １，platformIOでesp32のプロジェクトを作る
 
