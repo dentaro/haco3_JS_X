@@ -13,7 +13,7 @@ o-bakoのプログラムに互換性があります。（つまり、こちら�
 
 JavaScript言語(Duktape)とLua5.3が動いていて、
 
-JavaScriptを充実させていくつもりですが、JavaScript & Luaどちらでも開発ができます。（data内のサンプルゲーム.jsと.luaを参照してください。）
+JavaScriptを充実させていくつもりですが、JavaScript & Luaのどちらでも開発ができます。（data内のサンプルゲーム.jsと.luaを参照してください。）
 
 下のサイトで紹介されている、2432S028Rというタッチパネルでうごく設定を公開しています。
 
