@@ -1,1 +1,1 @@
-/init/main.lua
+/drawing/main.js

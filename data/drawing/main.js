@@ -2,10 +2,12 @@ row = 8
 col = 8
 r = 120/row/2
 ff = 0
+
 setup = function(){
 }
 pretbtnid = -1
 loop = function(){
+    
     tbtnid = tbtns( 0,  0,  120, 120,  row, col, true);//タッチボタン生成（一回）、表示、ID取得まで一括して行う。trueによりボタンIDを連続取得するタッチビットに
     if(pretbtnid - tbtnid != 0 && tbtnid != -1 ){//同じボタンを押していない　かつ //-1（ボタンが押されていない）状態ではない
         for(j=0; j<col; j++){
