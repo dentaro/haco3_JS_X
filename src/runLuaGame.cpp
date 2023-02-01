@@ -10,6 +10,7 @@ extern void reboot();
 extern Tunes tunes;
 extern int pressedBtnID;
 extern LovyanGFX_DentaroUI ui;
+extern int outputMode;
 
 // extern int oskF;
 
@@ -267,6 +268,13 @@ int RunLuaGame::l_text(lua_State* L){
   tft.setCursor(x,y);
   tft.setTextColor(lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
   tft.print(text);
+  return 0;
+}
+
+int RunLuaGame::l_opmode(lua_State* L){//FAST,WIDE
+  RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+  int _n = lua_tointeger(L, 1);
+  outputMode = _n;
   return 0;
 }
 
@@ -629,6 +637,10 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
   lua_setglobal(L, "text");
 
   lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_opmode, 1);
+  lua_setglobal(L, "opmode");
+
+  lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_drawrect, 1);
   lua_setglobal(L, "drawrect");
 
@@ -876,4 +888,6 @@ int RunLuaGame::run(int _remainTime){
   }
   return 0;
 }
+
+
 

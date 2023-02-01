@@ -8,10 +8,8 @@ extern String txtName;
 extern void setFileName(String s);
 extern void reboot();
 extern void tone(int _toneNo , int _tonelength);
-
 extern void wCalData(String _wrfile);
 extern String rCalData(String _wrfile);
-
 // extern Tunes tunes;
 extern int pressedBtnID;
 extern uint8_t charSpritex;
@@ -32,6 +30,8 @@ extern char str[100];
 extern LGFX screen;
 extern LovyanGFX_DentaroUI ui;
 extern String *targetfileName;
+
+extern int outputMode;
 
 
 // extern bool constantGetF;
@@ -90,8 +90,6 @@ int RunJsGame::l_spr(duk_context* ctx){
   }
   return 0;
 }
-
-
 
 duk_ret_t RunJsGame::l_color(duk_context* ctx){
   duk_push_global_object(ctx);          // push global
@@ -210,6 +208,16 @@ int RunJsGame::l_fillcircle(duk_context* ctx){
   return 0;
 }
 
+
+int RunJsGame::l_opmode(duk_context* ctx){
+  duk_push_global_object(ctx);
+  duk_get_prop_string(ctx, -1, "obako");
+  RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
+  duk_pop_2(ctx); // pointer, obako, global
+  outputMode = duk_get_int(ctx, 0);
+  return 0;
+}
+
 int RunJsGame::l_drawrect(duk_context* ctx){
   duk_push_global_object(ctx);
   duk_get_prop_string(ctx, -1, "obako");
@@ -243,7 +251,9 @@ duk_ret_t RunJsGame::l_tbtns(duk_context* ctx){
   bool congetF = duk_get_boolean(ctx, 6);
 
   if(tbtnSetupF == true){//resume時に一回だけ処理
-    ui.createBtns( x, y, w, h, nx, ny, TOUCH, 2);
+         if(outputMode == WIDE_MODE)ui.createBtns( x, y, w, h, nx, ny, TOUCH, 2);//ゲーム画面を最終描画した時のタッチの位置　最後の引数で2倍面積4倍
+    else if(outputMode == FAST_MODE)ui.createBtns( x+TFT_OFFSET_X, y+TFT_OFFSET_Y, w, h, nx, ny, TOUCH);//ゲーム画面を小さく高速描画した時のタッチの位置
+    // ui.createBtns( x, y, w, h, nx, ny, TOUCH, 2);
     // tft.drawRect((rand() % 10)*12,60,10,10,TFT_BLUE);
     tbtnSetupF = false;
   }
@@ -277,19 +287,6 @@ duk_ret_t RunJsGame::l_rwtb(duk_context* ctx){
       }else{
         duk_push_boolean(ctx, (duk_bool_t)ui.getToggleVal(btnid));
       }
-
-  return 1;
-}
-
-duk_ret_t RunJsGame::l_tbstate(duk_context* ctx){
-  // duk_push_global_object(ctx);
-  // duk_get_prop_string(ctx, -1, "obako");
-  // RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
-  // duk_pop_2(ctx); // pointer, obako, global
-  // int btnid = duk_get_int(ctx, 0);
-  // // duk_push_boolean(ctx, (duk_bool_t)true);//TouchBtnIDをリターン
-
-  // duk_push_boolean(ctx, (duk_bool_t)ui.getToggleVal(btnid));//TouchBtnIDをリターン
 
   return 1;
 }
@@ -469,9 +466,6 @@ void RunJsGame::resume(){
   fidx = duk_push_c_function(ctx, l_tbtns, 7);
   duk_put_prop_string(ctx, -2, "tbtns");
 
-  fidx = duk_push_c_function(ctx, l_tbstate, 1);
-  duk_put_prop_string(ctx, -2, "tbstate");
-
   fidx = duk_push_c_function(ctx, l_rwtb, 2);
   duk_put_prop_string(ctx, -2, "rwtb");
 
@@ -576,26 +570,6 @@ int RunJsGame::run(int _remainTime){
       }
     }
   }
-
-//物理ボタン
-// if(pressedBtnID ==  0){buttonState[0]  = true;}//ホーム
-// if(pressedBtnID ==  1){buttonState[1]  = true;}//左
-// if(pressedBtnID ==  2){buttonState[2]  = true;}//右
-// if(pressedBtnID ==  3){buttonState[3]  = true;}//上
-// if(pressedBtnID ==  4){buttonState[4]  = true;}//下
-// if(pressedBtnID ==  5){buttonState[5]  = true;}//b
-// if(pressedBtnID ==  6){buttonState[6]  = true;}//c
-// if(pressedBtnID ==  7){buttonState[7]  = true;}//d
-// if(pressedBtnID ==  8){buttonState[8]  = true;}//return
-// //物理ボタン
-// if(pressedBtnID ==  9){buttonState[9]  = true;}//中央
-// if(pressedBtnID == 10){buttonState[10] = true;}//A
-// if(pressedBtnID == 11){buttonState[11] = true;}//B
-
-// if(pressedBtnID == 12){buttonState[12] = true;}//左
-// if(pressedBtnID == 13){buttonState[13] = true;}//右
-// if(pressedBtnID == 14){buttonState[14] = true;}//上
-// if(pressedBtnID == 15){buttonState[15] = true;}//下
 
 // pressedBtnID = -1;
 

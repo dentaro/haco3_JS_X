@@ -54,6 +54,7 @@ class RunJsGame: public BaseGame
     static int l_color(duk_context* ctx);
     static int l_text(duk_context* ctx);
     static int l_gtx(duk_context* ctx);
+    static int l_opmode(duk_context* ctx);
     static int l_drawrect(duk_context* ctx);
     static int l_fillrect(duk_context* ctx);
     static int l_drawcircle(duk_context* ctx);
@@ -63,7 +64,6 @@ class RunJsGame: public BaseGame
     static int l_str(duk_context* ctx);
     static int l_tbtns(duk_context* ctx);
     static int l_rwtb(duk_context* ctx);
-    static int l_tbstate(duk_context* ctx);
 
     /*
     static int l_getip(duk_context* ctx);

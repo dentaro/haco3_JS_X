@@ -60,6 +60,7 @@ class RunLuaGame: public BaseGame
     static int l_pget(lua_State* L);
     static int l_color(lua_State* L);
     static int l_text(lua_State* L);
+    static int l_opmode(lua_State* L);
     static int l_drawrect(lua_State* L);
     static int l_fillrect(lua_State* L);
     static int l_fillcircle(lua_State* L);
