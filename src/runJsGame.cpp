@@ -56,7 +56,11 @@ duk_ret_t RunJsGame::l_tone(duk_context* ctx){
   int n = duk_get_int(ctx, 0);
   int f = duk_get_int(ctx, 1);
 
-  tone(n,f);
+  // tone(n,f);
+
+  portENTER_CRITICAL(&Tunes::timerMux);
+  Tunes::d[n] = (uint16_t)(3.2768*f);
+  portEXIT_CRITICAL(&Tunes::timerMux);
 
   // portENTER_CRITICAL(&Tunes::timerMux);
   // Tunes::d[n] = (uint16_t)(3.2768*f);
@@ -305,12 +309,13 @@ int RunJsGame::l_fillrect(duk_context* ctx){
   return 0;
 }
 
-duk_ret_t RunJsGame::l_btn(duk_context* ctx){
+int RunJsGame::l_btn(duk_context* ctx){
   duk_push_global_object(ctx);          // push global
   duk_get_prop_string(ctx, -1, "obako");// push obako
   RunJsGame* self = (RunJsGame*)duk_get_pointer(ctx,-1);
   duk_pop_2(ctx); // obako, global
   int n = duk_get_int(ctx, 0);
+  // Serial.println((lua_Integer)self->buttonState[n]);
   duk_push_int(ctx, (lua_Integer)self->buttonState[n]);
   
   return 1;
@@ -549,15 +554,29 @@ int RunJsGame::run(int _remainTime){
     ui.clearAddBtns(CTRLBTNNUM);//最初に生成する4つのコントロールボタン以外は消して初期化する
   }
 
-  if(exitRequest){
-    exitRequest = false;
-    return 1; // exit(ゲームから離脱)
+  if(exitRequest){//次のゲームを起動するフラグがたったら
+    exitRequest = false;//フラグをリセットして
+    return 1; // exit(1をリターンすることで、main.cppの変数modeを１にする)
   }
 
-  for(int i = 0; i <CTRLBTNNUM; i ++){//初期化
-      buttonState[i] = false;
-      if(pressedBtnID ==  i){buttonState[i]  = true;}
+  // for(int i = 0; i <CTRLBTNNUM; i ++){//初期化
+  //     buttonState[i] = false;
+  //     if(pressedBtnID ==  i){
+  //       buttonState[i]  = true;
+  //     }
+  // }
+
+  //ボタンを押してからの経過フレームを返すための処理
+  for(int i = 0; i < CTRLBTNNUM; i ++){
+    if(ui.getEvent()==NO_EVENT){
+      buttonState[i] = 0;
+    }else{
+      if(pressedBtnID ==  i){//押されたものだけの値をあげる
+      buttonState[i] ++;
+      }
+    }
   }
+
 //物理ボタン
 // if(pressedBtnID ==  0){buttonState[0]  = true;}//ホーム
 // if(pressedBtnID ==  1){buttonState[1]  = true;}//左

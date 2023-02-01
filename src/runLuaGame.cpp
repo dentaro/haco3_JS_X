@@ -304,7 +304,7 @@ int RunLuaGame::l_fillcircle(lua_State* L){
 int RunLuaGame::l_btn(lua_State* L){
   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
   int n = lua_tointeger(L, 1);
-
+  // Serial.println((lua_Integer)self->buttonState[n]);
   lua_pushinteger(L, (lua_Integer)self->buttonState[n]);
   return 1;
 }
@@ -738,10 +738,10 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
 int RunLuaGame::run(int _remainTime){
   char str[12];
   // char key;
-  for(int i = 0; i < CTRLBTNNUM; i ++){//初期化
-      buttonState[i] = false;
-      if(pressedBtnID ==  i){buttonState[i]  = true;}//左
-  }
+  // for(int i = 0; i < CTRLBTNNUM; i ++){//初期化
+  //     buttonState[i] = false;
+  //     if(pressedBtnID ==  i){buttonState[i]  = true;}//左
+  // }
 // pressedBtnID = -1;
 
   if(wifiDebugRequest){
@@ -749,19 +749,29 @@ int RunLuaGame::run(int _remainTime){
     wifiMode = SHOW;
     wifiDebugRequest = false;
   }
+
   if(exitRequest){//次のゲームを起動するフラグがたったら
     exitRequest = false;//フラグをリセットして、
     return 1; // exit(1をリターンすることで、main.cppの変数modeを１にする)
   }
 
-  //ボタンの経過時間分足す
-  
+  //ボタンを押してからの経過フレームを返すための処理
+  // for(int i = 0; i < CTRLBTNNUM; i ++){
+  //   if(ui.getEvent()==NO_EVENT){
+  //     buttonState[i] = 0;
+  //   }else{
+  //     buttonState[i] ++;
+  //   }
+  // }
 
+  //ボタンを押してからの経過時間を返すための処理
   for(int i = 0; i < CTRLBTNNUM; i ++){
     if(ui.getEvent()==NO_EVENT){
       buttonState[i] = 0;
     }else{
+      if(pressedBtnID ==  i){//押されたものだけの値をあげる
       buttonState[i] ++;
+      }
     }
   }
 

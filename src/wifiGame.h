@@ -38,7 +38,7 @@ class WifiGame
     WiFiServer server;
     WifiGame():server(80){
     }
-    int buttonState[4];
+    int buttonState[CTRLBTNNUM];
     void init(bool);
     int initSTA();
     String randomString(String prefix, int n);

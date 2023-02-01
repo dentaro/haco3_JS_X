@@ -75,7 +75,9 @@ LGFX_Sprite sprite88_0 = LGFX_Sprite(&tft);
 // LGFX_Sprite spritebg[16];//16種類のスプライトを背景で使えるようにする
 BaseGame* game;
 // String appfileName = "/init/main.js";
-String appfileName = "/init/main.lua";//実行されるファイル名
+// String appfileName = "/init/main.lua";//最初に実行されるファイル名
+String appfileName = "/soundjs/main.js";//最初に実行されるファイル名
+
 String caldatafile = "/init/caldata.txt";
 String txtName = "/init/txt/sample.txt";//実行されるファイル名
 
@@ -282,9 +284,15 @@ String rCalData(String _wrfile){
   return _readStr;
 }
 
+String rFirstAppName(String _wrfile){
+  File fr = SPIFFS.open(_wrfile.c_str(), "r");// ⑩ファイルを読み込みモードで開く
+  String _readStr = fr.readStringUntil('\n');// ⑪改行まで１行読み出し
+  fr.close();	// ⑫	ファイルを閉じる
+  return _readStr;
+}
+
 void setup()
 {
-
   Serial.begin(115200);
   delay(50);
   // タイマー作成(33.333ms)
@@ -328,6 +336,7 @@ void setup()
     ui.begin( screen, 16, 1, false);
   }
   wCalData(CALIBRATION_FILE);//SPIFFSのファイルにキャリブレーションデータを書き込む
+  appfileName = rFirstAppName("/init/firstAppName.txt");//最初に立ち上げるゲームのパスをSPIFFSのファイルfirstAppName.txtから読み込む
 
   // ui.setupPhBtns(36, 39, 34);//物理ボタンをセットアップ
 
