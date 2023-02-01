@@ -84,20 +84,21 @@ function drawFile()
 
    for i = scroll,#fs do
      if i - scroll >= 0 and i - scroll <= showmax then
-       v = fs[i]
-       text(i .. v, 10, 20 + lineheight * (i-scroll))
+       v = fs[i] --パス名
+       --text(i .. v, 10, 20 + lineheight * (i-scroll))--先頭数字
+       text(v, 10, 20 + lineheight * (i-scroll))--先頭数字なし
      end
    end
    spr(0, 20 + (cursor-scroll)*lineheight, 8, 8, 32, 16, 8, 8)
 
-   if btn(3) == 2 then
+   if btn(3) > 2 then
      cursor = cursor - 1
      if cursor < 0 then
        cursor = #fs
      end
    end
 
-   if btn(4) == 2 then
+   if btn(4) > 2 then
      cursor = cursor + 1
      if cursor > #fs then
        cursor = 0
@@ -132,14 +133,14 @@ function drawUtil()
    --fillrect(0, 20 + cursor * 10, 10, 10)
    spr(0, 20 + cursor*10, 8, 8, 32, 16, 8, 8)
 
-   if btn(3) == 2 then
+   if btn(3) > 2 then
      cursor = cursor - 1
      if cursor < 0 then
        cursor = #utilMenu - 1
      end
    end
 
-   if btn(4) == 2 then
+   if btn(4) > 2 then
      cursor = cursor + 1
      if cursor >= #utilMenu then
        cursor = 0
