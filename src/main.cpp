@@ -20,13 +20,15 @@
 #include <FS.h>
 #include "SPIFFS.h"
 #include "runJsGame.h"
-#include "runLuaGame.h"
+// #include "runLuaGame.h"
+#include "haco8/runHaco8Game.h"
 
 #include "Tunes.h"
 #include "runJsGame.h"
 #include "wifiGame.h"
 
 #define FORMAT_SPIFFS_IF_FAILED true
+// #define MAPWH 16//マップのpixelサイズ
 
 //outputmode最終描画の仕方
 // int outputMode = FAST_MODE;//50FPS程度128*128 速いけど小さい画面　速度が必要なモード
@@ -43,7 +45,6 @@ uint8_t colValB = 0;
 uint8_t charSpritex = 0;
 uint8_t charSpritey = 0;
 int pressedBtnID = -1;//この値をタッチボタン、物理ボタンの両方から操作してbtnStateを間接的に操作している
-
 
 //2倍拡大表示用のパラメータ
 float matrix_side[6] = {2.0,   // 横2倍
@@ -63,6 +64,15 @@ float matrix_game[6] = {2.0,   // 横2倍
                      0.0    // Y座標
                     };
 
+// //スプライト表示用のパラメータ
+// float matrix_spr[6] = {2.0,   // 横2倍
+//                      -0.0,  // 横傾き
+//                      0.0,   // X座標
+//                      0.0,   // 縦傾き
+//                      2.0,   // 縦2倍
+//                      0.0    // Y座標
+//                     };
+
 LGFX screen;//LGFXを継承
 
 LovyanGFX_DentaroUI ui(&screen);
@@ -80,10 +90,42 @@ LGFX_Sprite sprite88_0 = LGFX_Sprite(&tft);
 BaseGame* game;
 // String appfileName = "/init/main.js";
 // String appfileName = "/init/main.lua";//最初に実行されるファイル名
-String appfileName = "/soundjs/main.js";//最初に実行されるファイル名
 
 String caldatafile = "/init/caldata.txt";
+String appfileName = "/soundjs/main.js";//最初に実行されるアプリ名
 String txtName = "/init/txt/sample.txt";//実行されるファイル名
+
+
+uint8_t mapsx = 0;
+uint8_t mapsy = 0;
+String mapFileName = "";
+int readmapno = 0;
+int divnum = 1;
+bool readMapF = false;
+//divnumが大きいほど少ない領域で展開できる(2の乗数)
+LGFX_Sprite spritebg[16];//16種類のスプライトを背景で使えるようにする
+LGFX_Sprite spriteMap;
+
+uint8_t mapArray[MAPWH][MAPWH];
+// int mapArray[16][16] = {
+//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+//     {2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1},
+//     {3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1},
+//     {4,4,4,4,4,4,4,1,1,1,1,1,1,1,1,1},
+//     {5,5,5,5,5,5,5,1,1,1,1,1,1,1,1,1},
+//     {6,6,6,6,6,6,6,1,1,1,1,1,1,1,1,1},
+//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+//     {2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1},
+//     {3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1},
+//     {4,4,4,4,4,4,4,1,1,1,1,1,1,1,1,1},
+//     {5,5,5,5,5,5,5,1,1,1,1,1,1,1,1,1},
+//     {6,6,6,6,6,6,6,1,1,1,1,1,1,1,1,1},
+//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+//   };
+bool mapready = false;
 
 // Tunes tunes;
 // bool constantGetF = false;
@@ -191,21 +233,11 @@ void drawLogo(){
   //  //SDからの読み込みは４Gb以下じゃないとうまく動作しないかも
   //PNGをバッファに書いて2倍出力
   logoSprite.drawPngFile(SPIFFS, "/init/logo.png", 0, 0); // 4ボタン
-  // logoSprite.drawPngFile(SPIFFS, "/haco3/util/side0.png", 0, 0);//
   logoSprite.pushAffine(matrix_side);
   logoSprite.deleteSprite(); // 描画したらメモリを解放する
-
-  screen.setTextSize(2);
-  // screen.setFont(&lgfxJapanGothicP_8);
-  screen.setTextColor( TFT_WHITE , TFT_DARKGRAY );
-  screen.setCursor( 258,0 );
   
   for(int i=0;i<CTRLBTNNUM-1;i++){
     screen.fillRoundRect(258,55*i+20,60,53,2,TFT_DARKGRAY);
-    // screen.fillTriangle()
-    // screen.println("<");
-    // screen.println("^");
-    // screen.println("V");
   }
 }
 
@@ -237,7 +269,9 @@ String *targetfileName;
 BaseGame* nextGameObject(String* _appfileName){
   switch(detectFileType(_appfileName)){
     case FileType::JS:  game = new RunJsGame(); break;
-    case FileType::LUA: game = new RunLuaGame(); break;
+    case FileType::LUA: 
+      game = new RunHaco8Game();
+      break;
     case FileType::TXT: 
       game = new RunJsGame(); 
       //ファイル名がもし/init/caldata.txtなら
@@ -359,6 +393,69 @@ String rFirstAppName(String _wrfile){
   return _readStr;
 }
 
+
+int readMap(int mn)
+{
+  mapready = false;
+  // readmapno = mn;
+
+  // if(readmapno == 0)mapFileName = "/init/map/0.png";
+  // if(readmapno == 1)mapFileName = "/init/map/1.png";
+
+  mapFileName = "/init/map/1.png";
+
+// 外マップ＆スプライト---------------------------------------------
+// divnum回に分けて読み込む
+
+  for(int n = 0; n<divnum; n++)
+  {
+    spriteMap.drawPngFile( SPIFFS, mapFileName, 0, (int32_t)(-MAPWH*n/divnum) );
+    for(int j = 0; j<MAPWH/divnum; j++){
+      for(int i = 0; i<MAPWH; i++){
+
+        int k = j+(MAPWH/divnum)*(n);//マップ下部
+        colValR = spriteMap.readPixelRGB(i,j).R8();
+        colValG = spriteMap.readPixelRGB(i,j).G8();
+        colValB = spriteMap.readPixelRGB(i,j).B8();
+        // Serial.print(colValR);
+        // Serial.print(":");
+        // Serial.print(colValG);
+        // Serial.print(":");
+        // Serial.println(colValB);
+
+        if(colValR==0&&colValG==174&&colValB==255){//水色＝海
+          mapArray[i][k] = 5*8+4;
+        }else if(colValR==0&&colValG==235&&colValB==0){//緑＝草源
+          mapArray[i][k] = 5*8+1;
+        }else if(colValR==132&&colValG==117&&colValB==156){//赤＝レンガ
+          mapArray[i][k] = 6*8+1;
+        }else if(colValR==0&&colValG==138&&colValB==74){//濃い緑＝花
+          mapArray[i][k] = 5*8;
+        }else if(colValR==255&&colValG==239&&colValB==0){//黄色＝砂地
+          mapArray[i][k] = 5*8+5;
+        }else if(colValR==255&&colValG==0&&colValB==66){//赤＝タイル
+          mapArray[i][k] = 6*8+3;
+        }else if(colValR==99&&colValG==85&&colValB==74){//灰＝レンガ前
+          mapArray[i][k] = 6*8;
+        }else if(colValR==255&&colValG==243&&colValB==231){//白＝木
+          mapArray[i][k] = 3*8+7;
+        }
+        // Serial.
+        if(i==MAPWH-1 && k==MAPWH-1){mapready = true;return 1;}//読み込み終わったら1をリターン
+      }
+    }
+
+    
+
+    // mapready = true;
+    // return 1;
+  }
+      
+  // spriteMap.deleteSprite();//メモリに格納したら解放する
+
+  // return 1;
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -442,6 +539,10 @@ void setup()
   sprite88_roi.setColorDepth(16);//子スプライトの色深度
   sprite88_roi.createSprite(8, 8);//ゲーム画面用スプライトメモリ確保
 
+  spriteMap.setPsram(false );
+  spriteMap.setColorDepth(16);//子スプライトの色深度
+  spriteMap.createSprite(MAPWH, MAPWH/divnum);//マップ展開用スプライトメモリ確保
+
   //sprite（bg1)のボタン配置の時
   ui.createBtns( 130,  0,  30,   8,  1, 1, TOUCH, 2);//ホームボタン
   ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
@@ -451,18 +552,31 @@ void setup()
   tft.createSprite( 128, 128 );
   tft.startWrite();//CSアサート開始
   
-  tft.setTextSize(2);
+  tft.setTextSize(1);
   tft.setFont(&lgfxJapanGothicP_8);
   tft.setTextColor( TFT_WHITE , TFT_BLACK );
   tft.setCursor( 0,0 );
 
+  // mapready = false;
+  // while(mapready == false){
+  //   readMap(1);
+  // };//マップ番号を指定し、読み込み終わるまで待機
+
+  readMap(1);
+
+  delay(1000);
+
   game = nextGameObject(&appfileName);//ホームゲームを立ち上げる
   game->init();
   tunes.init();
+
+  
 }
+
 
 void loop()
 {
+
   // ui.setConstantGetF(true);//trueだとタッチポイントのボタンIDを連続取得するモード
   ui.update(screen);//タッチイベントを取るので、LGFXが基底クラスでないといけない
 
@@ -484,19 +598,16 @@ void loop()
     // if(ui.getTouchBtnID() == RELEASE){//リリースされたら
     //   pressedBtnID = -1;
     // }
-
-  // tft.setTextSize(1);
-  // tft.setTextColor(TFT_WHITE, TFT_RED);
-  // tft.setCursor(0, 120);
-  // tft.setTextWrap(true);
-  // tft.print(pressedBtnID);
-  // tft.setTextWrap(false);
-
-  tft.setTextSize(1);//元に戻す
   
   uint32_t now = millis();
   uint32_t remainTime= (now - preTime);
   preTime = now;
+
+  //ゲーム内のprint時の文字設定をしておく
+  tft.setTextSize(1);//サイズ
+  tft.setFont(&lgfxJapanGothicP_8);//日本語可
+  tft.setCursor(0, 0);//位置
+  tft.setTextWrap(true);
 
   // == wifi task ==
   if(wifiGame){ // debug mode
@@ -537,9 +648,9 @@ void loop()
   }
 
   // == display update ==
-  tft.setCursor(0,120);
-  tft.setTextColor(0xffff);
-  tft.print(ESP.getFreeHeap());
+  // tft.setCursor(0,120);
+  // tft.setTextColor(0xffff);
+  // tft.print(ESP.getFreeHeap());
 
      //ゲーム
     // uint32_t now = millis();
@@ -552,10 +663,6 @@ void loop()
 
 
       // if(flip){
-        // tft.setTextSize(1);
-        // tft.setFont(&lgfxJapanGothicP_8);
-        // tft.setTextColor( TFT_WHITE , TFT_BLACK );
-        // tft.setCursor( 0,0 );
 
         // tft.print(charSpritex);
         // tft.print(":");
@@ -577,8 +684,16 @@ void loop()
         ui.showInfo( tft, 0, 100+8 );//ボタン情報、フレームレート情報などを表示します。
         //ui.drawPhBtns( tft, 0, 90+16 );//物理ボタンの状態を表示
 
-        if(outputMode == WIDE_MODE)tft.pushAffine(matrix_game);//ゲーム画面を最終描画する
-        else if(outputMode == FAST_MODE)tft.pushSprite(&screen,TFT_OFFSET_X,TFT_OFFSET_Y);//ゲーム画面を小さく高速描画する
+        if(outputMode == WIDE_MODE)
+        {
+          tft.pushAffine(matrix_game);//ゲーム画面を最終描画する
+          //Affineを使わない書き方
+          // tft.setPivot(0, 0);
+          // tft.pushRotateZoom(&screen, 0, 0, 0, 2, 2);
+        }
+        else if(outputMode == FAST_MODE){
+          tft.pushSprite(&screen,TFT_OFFSET_X,TFT_OFFSET_Y);//ゲーム画面を小さく高速描画する
+        }
         
         // delay(4);//120FPS スプライトが少ない、速度の速いモード描画ぶん待つ
         delay(10);//30FPS メニュー、パズルなど

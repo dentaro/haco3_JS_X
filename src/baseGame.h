@@ -18,8 +18,6 @@ class BaseGame
   virtual void pause(){};
   virtual void resume(){};
 
-  
-  
 };
 
 

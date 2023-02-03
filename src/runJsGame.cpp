@@ -413,7 +413,6 @@ int RunJsGame::l_bg(duk_context* ctx){
   return 0;
 }
 
-
 void RunJsGame::init(){
   this->resume();
 }
@@ -542,6 +541,8 @@ void RunJsGame::resume(){
 }
 
 int RunJsGame::run(int _remainTime){
+    
+
   char str[100];
   char key;
   if(ui.getTouchBtnNum()>CTRLBTNNUM){
