@@ -37,6 +37,7 @@ class RunHaco8Game: public RunLuaGame
 {
   public:
 
+//24bitRGB
   uint8_t clist[16][3] =
   {
   { 0,0,0},//0: 黒色
@@ -95,6 +96,7 @@ class RunHaco8Game: public RunLuaGame
   static int l_print(lua_State* L);
   static int l_fillcircle2(lua_State* L);
   static int l_map(lua_State* L);
+  static int l_mget(lua_State* L);
   static int l_spr8(lua_State* L);
 
   uint16_t getColor(int _cn, int _rgb);

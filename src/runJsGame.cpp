@@ -480,7 +480,6 @@ void RunJsGame::resume(){
   fidx = duk_push_c_function(ctx, l_gtx, 1);
   duk_put_prop_string(ctx, -2, "gtx");
 
-  
   duk_pop(ctx); // pop global
 
   SPIFFS.begin(true);

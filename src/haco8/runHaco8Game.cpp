@@ -14,7 +14,8 @@ extern int outputMode;
 
 extern uint8_t mapArray[MAPWH][MAPWH];
 
-void RunHaco8Game::haco8resume(){
+void RunHaco8Game::haco8resume()
+{
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_cls, 1);
   lua_setglobal(L, "cls");
@@ -30,6 +31,10 @@ void RunHaco8Game::haco8resume(){
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_map, 1);
   lua_setglobal(L, "map");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_mget, 1);
+  lua_setglobal(L, "mget");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_spr8, 1);
@@ -62,8 +67,15 @@ void RunHaco8Game::haco8resume(){
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_print, 1);
   lua_setglobal(L, "print");
-
   
+}
+
+int RunHaco8Game::l_mget(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int celx = lua_tointeger(L, 1);
+  int cely = lua_tointeger(L, 2);
+  lua_pushinteger(L, mapArray[celx][cely]);
+  return 1;
 }
 
 int RunHaco8Game::l_spr8(lua_State* L){
@@ -95,31 +107,7 @@ int RunHaco8Game::l_spr8(lua_State* L){
   int sx = ((n-1)%spr8numX); //0~7
   int sy = ((n-1)/spr8numY); //整数の割り算は自動で切り捨てされる
 
-  // self->matrix_spr[0] = scalex; //Xスケール
-  // self->matrix_spr[4] = scaley; //Yスケール
-
-  for(int j=0;j<=sy;j++){
-      for(int i=0;i<=sx;i++){
-
-      sprite64.pushSprite(&sprite88_roi, -(sx*8+(i*8)), -(sy*8+(j*8)));//128*128のpngデータを指定位置までずらす
-      // sprite88_roi.pushSprite(&tft, x+(i*8), y+(j*8), TFT_BLACK);
-
-      // self->matrix_spr[2] = x; //X位置
-      // self->matrix_spr[5] = y; //Y位置
-
-      // sprite88_roi.setPivot(w/2.0, h/2.0);
-      
-
-      // if(scalex ==1 && scaley == 1)
-      // {
-      //   sprite88_roi.pushSprite(&tft, x+(i*8), y+(j*8), TFT_BLACK);//16*16で切り抜き&tftに書き出し：黒を透明に
-      // }else{
-        
-      //   sprite88_roi.pushAffine(self->matrix_spr, TFT_BLACK);//16*16で切り抜き&tftに書き出し：黒を透明に
-      // }
-
-      }
-  }
+  sprite64.pushSprite(&sprite88_roi, -(sx*8), -(sy*8));//64*64のpngデータを指定位置までずらす
 
   sprite88_roi.setPivot(w/2.0, h/2.0);
 
@@ -133,57 +121,6 @@ int RunHaco8Game::l_spr8(lua_State* L){
 
   return 0;
 
-  // int n = lua_tointeger(L, 1);
-  // int x = lua_tointeger(L, 2);
-  // int y = lua_tointeger(L, 3);
-  // int w = lua_tointeger(L, 4);
-  // int h = lua_tointeger(L, 5);
-  // int fx = lua_tointeger(L, 6);//bool値にしたほうがいいかも
-  // int fy = lua_tointeger(L, 7);//bool値にしたほうがいいかも
-
-  // //スプライトの縦横番号　0~7までの値に変換
-  // int spr8numX = 8;//スプライトシートに並ぶｘ、ｙの個数
-  // int spr8numY = 8;
-
-  // x = ((n-1)%spr8numX) ;
-  // y = ((n-1)/spr8numY) ;//整数の割り算は自動で切り捨てされる
-
-  // //スプライトシート上の座標0~64に変換
-  // int sx = x*8;
-  // int sy = y*8;
-
-  //   w = 8;
-  //   h = 8;
-
-  //   fx = 0;//反転しない
-  //   fy = 0;//反転しない
-
-  // if(x ==NULL&&y==NULL){//スプライトの縦横番号　0~7までの値に変換
-  //   x = (n-1)%spr8numX;
-  //   y = (n-1)/spr8numY;//整数の割り算は自動で切り捨てされる
-  // }
-
-
-  // int sx = x*8;//スプライトシート上の座標0~64に変換
-  // int sy = y*8;
-
-  // if(w == NULL&& h == NULL){
-  //   w = 8;
-  //   h = 8;
-  // }
-
-  // if(fx ==NULL&&fy==NULL){//反転処理
-  //   fx = 0;//反転しない
-  //   fy = 0;//反転しない
-  // }
-
-  // for(int j=0;j<h/8;j++){
-  //     for(int i=0;i<w/8;i++){
-  //     sprite64.pushSprite(&sprite88_roi, -(sx+(i*8)), -(sy+(j*8)));//64*64のpngデータを指定位置までずらす
-  //     sprite88_roi.pushSprite(&tft, sx+(i*8), sy+(j*8), TFT_BLACK);//16*16で切り抜き&tftに書き出し：黒を透明に
-  //     }
-  // }
-  // return 0;
 }
 
 int RunHaco8Game::l_map(lua_State* L){
@@ -197,17 +134,6 @@ int RunHaco8Game::l_map(lua_State* L){
   // int lyr = lua_tointeger(L, 7);
   // int mn = lua_tointeger(L, 8);
 
-  // int mapArray[8][8] = {
-  //   {1,1,1,1,1,1,1,1},
-  //   {2,2,2,2,2,2,2,1},
-  //   {3,3,3,3,3,3,3,1},
-  //   {4,4,4,4,4,4,4,1},
-  //   {5,5,5,5,5,5,5,1},
-  //   {6,6,6,6,6,6,6,1},
-  //   {1,1,1,1,1,1,1,1},
-  //   {1,1,1,1,1,1,1,1},
-  // };
-
   sprite88_roi.clear();//指定の大きさにスプライトを作り直す
   sprite88_roi.createSprite(8,8);
 
@@ -218,10 +144,12 @@ int RunHaco8Game::l_map(lua_State* L){
       for(int n=0;n<roiW;n++){
           int sprno = mapArray[my+n][mx+m];
           
-          int sx = ((sprno)%spr8numX); //0~7
-          int sy = ((sprno)/spr8numY); //整数の割り算は自動で切り捨てされる
-          sprite64.pushSprite(&sprite88_roi, -8*(sx), -8*(sy));//128*128のpngデータを指定位置までずらす
-          sprite88_roi.pushRotateZoom(&tft, roix+n*8+4, roiy+m*8+4, 0, 1, 1, TFT_BLACK);//なぜか４を足さないとずれる要修正
+            int sx = ((sprno-1)%spr8numX); //0~7
+            int sy = ((sprno-1)/spr8numY); //整数の割り算は自動で切り捨てされる
+            
+            sprite64.pushSprite(&sprite88_roi, -8*(sx), -8*(sy));//128*128のpngデータを指定位置までずらす
+            sprite88_roi.pushRotateZoom(&tft, roix+n*8+4, roiy+m*8+4, 0, 1, 1, TFT_BLACK);//なぜか４を足さないとずれる要修正
+          
       }
   }
   return 0;

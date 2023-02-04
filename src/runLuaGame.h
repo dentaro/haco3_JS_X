@@ -111,8 +111,7 @@ class RunLuaGame: public BaseGame
     void init();
     int run(int _remainTime);
     void pause();
-    
-
+  
     protected://継承先でも使えるもの
 };
 

@@ -26,6 +26,8 @@
 #include "Tunes.h"
 #include "runJsGame.h"
 #include "wifiGame.h"
+using namespace std;
+
 
 #define FORMAT_SPIFFS_IF_FAILED true
 // #define MAPWH 16//マップのpixelサイズ
@@ -45,6 +47,8 @@ uint8_t colValB = 0;
 uint8_t charSpritex = 0;
 uint8_t charSpritey = 0;
 int pressedBtnID = -1;//この値をタッチボタン、物理ボタンの両方から操作してbtnStateを間接的に操作している
+
+int mapsprnos[16];
 
 //2倍拡大表示用のパラメータ
 float matrix_side[6] = {2.0,   // 横2倍
@@ -91,9 +95,10 @@ BaseGame* game;
 // String appfileName = "/init/main.js";
 // String appfileName = "/init/main.lua";//最初に実行されるファイル名
 
-String caldatafile = "/init/caldata.txt";
+// String caldatafile = "/init/caldata.txt";
 String appfileName = "/soundjs/main.js";//最初に実行されるアプリ名
 String txtName = "/init/txt/sample.txt";//実行されるファイル名
+// String mapsprnosfile = "/init/param/mapsprnos.txt";//実行されるファイル名
 
 
 uint8_t mapsx = 0;
@@ -107,24 +112,6 @@ LGFX_Sprite spritebg[16];//16種類のスプライトを背景で使えるよう
 LGFX_Sprite spriteMap;
 
 uint8_t mapArray[MAPWH][MAPWH];
-// int mapArray[16][16] = {
-//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-//     {2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1},
-//     {3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1},
-//     {4,4,4,4,4,4,4,1,1,1,1,1,1,1,1,1},
-//     {5,5,5,5,5,5,5,1,1,1,1,1,1,1,1,1},
-//     {6,6,6,6,6,6,6,1,1,1,1,1,1,1,1,1},
-//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-//     {2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1},
-//     {3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1},
-//     {4,4,4,4,4,4,4,1,1,1,1,1,1,1,1,1},
-//     {5,5,5,5,5,5,5,1,1,1,1,1,1,1,1,1},
-//     {6,6,6,6,6,6,6,1,1,1,1,1,1,1,1,1},
-//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-//     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
-//   };
 bool mapready = false;
 
 // Tunes tunes;
@@ -417,28 +404,67 @@ int readMap(int mn)
         colValR = spriteMap.readPixelRGB(i,j).R8();
         colValG = spriteMap.readPixelRGB(i,j).G8();
         colValB = spriteMap.readPixelRGB(i,j).B8();
-        // Serial.print(colValR);
-        // Serial.print(":");
-        // Serial.print(colValG);
-        // Serial.print(":");
-        // Serial.println(colValB);
 
-        if(colValR==0&&colValG==174&&colValB==255){//水色＝海
-          mapArray[i][k] = 5*8+4;
-        }else if(colValR==0&&colValG==235&&colValB==0){//緑＝草源
-          mapArray[i][k] = 5*8+1;
-        }else if(colValR==132&&colValG==117&&colValB==156){//赤＝レンガ
-          mapArray[i][k] = 6*8+1;
-        }else if(colValR==0&&colValG==138&&colValB==74){//濃い緑＝花
-          mapArray[i][k] = 5*8;
-        }else if(colValR==255&&colValG==239&&colValB==0){//黄色＝砂地
-          mapArray[i][k] = 5*8+5;
-        }else if(colValR==255&&colValG==0&&colValB==66){//赤＝タイル
-          mapArray[i][k] = 6*8+3;
-        }else if(colValR==99&&colValG==85&&colValB==74){//灰＝レンガ前
-          mapArray[i][k] = 6*8;
-        }else if(colValR==255&&colValG==243&&colValB==231){//白＝木
-          mapArray[i][k] = 3*8+7;
+        Serial.print(colValR);
+        Serial.print(":");
+        Serial.print(colValG);
+        Serial.print(":");
+        Serial.println(colValB);
+
+//24ビットRGB
+  // { 0,0,0},//0: 黒色
+  // { 27,42,86 },//1: 暗い青色
+  // { 137,24,84 },//2: 暗い紫色
+  // { 0,139,75 },//3: 暗い緑色
+  // { 183,76,45 },//4: 茶色
+  // { 97,87,78 },//5: 暗い灰色
+  // { 194,195,199 },//6: 明るい灰色
+  // { 255,241,231 },//7: 白色
+  // { 255,0,70 },//8: 赤色
+  // { 255,160,0 },//9: オレンジ
+  // { 255,238,0 },//10: 黄色
+  // { 0,234,0 },//11: 緑色
+  // { 0,173,255 },//12: 水色
+  // { 134,116,159 },//13: 藍色
+  // { 255,107,169 },//14: ピンク
+  // { 255,202,165}//15: 桃色
+
+// mapsprno.txt
+// 20,11,32,44,53,49,54,32,52,41,46,42,45,50,43,38
+
+  //16ビットRGB（24ビットRGB）
+        if(colValR==0&&colValG==0&&colValB==0){//0: 黒色=なし
+          mapArray[i][k] = mapsprnos[0];//20;
+        }else if(colValR==0&&colValG==174&&colValB==255){//{ 27,42,86 },//1: 暗い青色
+          mapArray[i][k] = mapsprnos[1];//11;//5*8+5;
+        }else if(colValR==140&&colValG==24&&colValB==82){//{ 137,24,84 },//2: 暗い紫色
+          mapArray[i][k] = mapsprnos[2];//32;//5*8+5;
+        }else if(colValR==0&&colValG==138&&colValB==74){//{ 0,139,75 },//3: 暗い緑色
+          mapArray[i][k] = mapsprnos[3];//44;//5*8+5;
+        }else if(colValR==181&&colValG==77&&colValB==41){//{ 183,76,45 },//4: 茶色 
+          mapArray[i][k] = mapsprnos[4];//53;//5*8+5;
+        }else if(colValR==99&&colValG==85&&colValB==74){//{ 97,87,78 },//5: 暗い灰色
+          mapArray[i][k] = mapsprnos[5];//49;
+        }else if(colValR==198&&colValG==195&&colValB==198){//{ 194,195,199 },//6: 明るい灰色
+          mapArray[i][k] = mapsprnos[6];//54;//5*8+5;
+        }else if(colValR==255&&colValG==243&&colValB==231){//{ 255,241,231 },//7: 白色
+          mapArray[i][k] = mapsprnos[7];//32;
+        }else if(colValR==255&&colValG==0&&colValB==66){//{ 255,0,70 },//8: 赤色
+          mapArray[i][k] = mapsprnos[8];//52;
+        }else if(colValR==255&&colValG==162&&colValB==0){//{ 255,160,0 },//9: オレンジ
+          mapArray[i][k] = mapsprnos[9];//41;//5*8+5;
+        }else if(colValR==255&&colValG==239&&colValB==0){//{ 255,238,0 },//10: 黄色
+          mapArray[i][k] = mapsprnos[10];//46;
+        }else if(colValR==0&&colValG==235&&colValB==0){//{ 0,234,0 },//11: 緑色
+          mapArray[i][k] = mapsprnos[11];//42;
+        }else if(colValR==0&&colValG==174&&colValB==255){//{ 0,173,255 },//12: 水色
+          mapArray[i][k] = mapsprnos[12];//45;//5*8+5;
+        }else if(colValR==132&&colValG==117&&colValB==156){//{ 134,116,159 },//13: 藍色
+          mapArray[i][k] = mapsprnos[13];//50;
+        }else if(colValR==255&&colValG==105&&colValB==173){//{ 255,107,169 },//14: ピンク
+          mapArray[i][k] = mapsprnos[14];//43;//5*8+5;
+        }else if(colValR==255&&colValG==203&&colValB==165){//{ 255,202,165}//15: 桃色
+          mapArray[i][k] = mapsprnos[15];//38;//5*8+5;
         }
         // Serial.
         if(i==MAPWH-1 && k==MAPWH-1){mapready = true;return 1;}//読み込み終わったら1をリターン
@@ -453,7 +479,53 @@ int readMap(int mn)
       
   // spriteMap.deleteSprite();//メモリに格納したら解放する
 
-  // return 1;
+  return 1;
+}
+
+using namespace std;
+#include <iostream>
+#include <string>
+#include <vector>
+#include <stdio.h>
+
+ 
+// std::vector<std::string> split(std::string str, char del) {
+//     int first = 0;
+//     int last = str.find_first_of(del);
+ 
+//     std::vector<std::string> result;
+ 
+//     while (first < str.size()) {
+//         std::string subStr(str, first, last - first);
+ 
+//         result.push_back(subStr);
+ 
+//         first = last + 1;
+//         last = str.find_first_of(del, first);
+ 
+//         if (last == std::string::npos) {
+//             last = str.size();
+//         }
+//     }
+//     return result;
+// }
+
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <vector>
+
+using namespace std;
+
+vector<string> split(string& input, char delimiter)
+{
+    istringstream stream(input);
+    string field;
+    vector<string> result;
+    while (getline(stream, field, delimiter)) {
+        result.push_back(field);
+    }
+    return result;
 }
 
 void setup()
@@ -465,25 +537,6 @@ void setup()
   timerAttachInterrupt(timer, &onTimer, true);
   timerAlarmWrite(timer, 1000000, true);
   timerAlarmEnable(timer);
-
-  // showRam();
-
-  // ledcSetup(1,12000, 8);
-  // ledcAttachPin(BUZZER_PIN,1);
-
-  // バイナリセマフォ作成
-  // semaphore = xSemaphoreCreateBinary();
-
-  // 描画用タスク作成APP_CPU
-  // xTaskCreateUniversal(
-  //   dispTask,
-  //   "dispTask",
-  //   8192,
-  //   NULL,
-  //   2,
-  //   &taskHandle,
-  //   APP_CPU_NUM
-  // );
 
   timerA = timerBegin(0, 80, true);//カウント時間は1マイクロ秒//hw_timer_t*オブジェクト(タイマーハンドラ）がかえってくる
   timerAttachInterrupt(timerA, &onTimerA, true);//タイマー割り込みが発生したときに実行する関数を登録する。timerA =フレームタイマー
@@ -497,6 +550,13 @@ void setup()
     return;
   }
 
+  File fr = SPIFFS.open(MAPSPRNOS_FILE, "r");// ⑩ファイルを読み込みモードで開く
+  for(int i= 0;i<16;i++){//マップを描くときに使うスプライト番号リストを読み込む
+    String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
+    mapsprnos[i] = atoi(_readStr.c_str());
+  }
+  fr.close();	// ⑫	ファイルを閉じる
+
   if(rCalData(CALIBRATION_FILE) == NULL){//タッチキャリブレーションデータがなければ
     ui.begin( screen, 16, 1, true);//立ち上げ時にキャリブレーションする
   }else{
@@ -506,7 +566,6 @@ void setup()
 
   appfileName = rFirstAppName("/init/firstAppName.txt");//最初に立ち上げるゲームのパスをSPIFFSのファイルfirstAppName.txtから読み込む
 
-  
   // ui.setupPhBtns(36, 39, 34);//物理ボタンをセットアップ
 
   char text[32];

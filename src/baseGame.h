@@ -3,6 +3,8 @@
 
 #define CTRLBTNNUM 5//ゲームに使える再度ボタン数を決めます
 #define CALIBRATION_FILE "/init/caldata.txt"
+#define MAPSPRNOS_FILE "/init/param/mapsprnos.txt"
+
 #define FAST_MODE 1
 #define WIDE_MODE 2 //倍率になっています。
 

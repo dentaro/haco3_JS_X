@@ -11,6 +11,7 @@ extern Tunes tunes;
 extern int pressedBtnID;
 extern LovyanGFX_DentaroUI ui;
 extern int outputMode;
+extern int mapsprnos[16];
 
 // extern int oskF;
 
@@ -54,6 +55,7 @@ extern "C" {
     return ret;
   }
 }
+
 int RunLuaGame::loadSurface(File *fp, uint8_t* buf){
   uint8_t c;
   unsigned long offset;
