@@ -443,6 +443,7 @@ public:
     lgfx::v1::touch_point_t getBtnPos(int _btnID);
     void showInfo( LovyanGFX& _lgfx, int _infox, int _infoy);
     std::vector<std::string> split_mb(const char* src, const char* del);
+    // std::vector<std::string> split(std::string str, char del);
 
     void setupPhBtns(int pfbNo0, int pfbNo1, int pfbNo2 );
     void updatePhBtns();
