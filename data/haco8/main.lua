@@ -40,6 +40,9 @@ end
 x=60
 y=60
 r = 0
+cnt = 0
+celx= 0
+cely= 0
 function _init()
   -- ここに書いてもグローバル変数になるようにしたい
   -- x=60
@@ -54,16 +57,30 @@ end
 function _draw()
   cls(1)
   -- map(0,0,32,30,8,8)
-  map(16,0,16,16,8,8)
+  map(0,0,0,0,8,8)
   -- spr(x, y, 8,8, 1*8,1*8)--o-bakoライクなスプライトの書き方
-  -- spr8(1,tp(0),tp(1),2,3,-1,1, r)--pico8ライクなスプライトの書き方
-  spr8(1,tp(0),tp(1),1,1)--pico8ライクなスプライトの書き方
+  spr8(1,tp(0),tp(1),2,3,-2,2, r)--pico8ライクなスプライトの書き方
+
+  if r%3 == 0 then celx = celx + 1 end
+  if celx%16 == 0 then cely = cely + 1 end
+  
+  if celx == 16 then celx = 0 end
+  if cely == 16 then cely = 0 end
+  --cntは0～64まで回る
+
+  -- spr8(1,tp(0),tp(1),1,1)--pico8ライクなスプライトの書き方
+  spr8(mget(celx,cely),110,8,1,1)
+
+  -- spr8(9,110,8,1,1)--第1引数に正しいスプライト番号を入れても適切なスプライトが返らない
 
    -- map( マップセルX, マップセルY, 表示画面X, 表示画面Y, セルの横の幅, セルの縦の数, レイヤー )
   --  map(0,0,tp(0),tp(1),16,16)
   -- map(1,tp(0),tp(1),1,1,1,1,0)
-  -- r = r+1
-  -- if r == 360 then r = 0 end
+  r = r+1
+  if r == 360 then r = 0 end
+
+  -- cnt = cnt + 1
+  -- if cnt > 128 then cnt = 0 end
 
   -- pico()
 end
