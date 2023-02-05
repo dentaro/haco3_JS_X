@@ -11,12 +11,11 @@ modegame = 1
 modeover = 2
 mode = modetitle
 
-oA=[[24,8,0],[36,16,0],[48,8,0],[56,16,0]];
+oA=[[24,8,0],[36,16,0],[48,8,0],[56,16,0],[24,16,0],[36,24,0],[48,16,0],[56,24,0]];
 setup = function(){
     color(1)
     fillrect(0,0,128,128)
 }
-
 
 //loop内はモードの切り替え
 loop = function(){
@@ -79,7 +78,7 @@ game = function(){
     ty = ty + tvy
     spr(tx, ty, 8, 8, 8*6, 8*5);
     getnum = 0
-    for(i =0;i<4;i++){//ブロックの数
+    for(i =0;i<8;i++){//ブロックの数
         if(tx < oA[i][0] + 8 && tx > oA[i][0] - 8 && ty < oA[i][1] +8 && ty > oA[i][1] - 8)//当たったか判定
         {
             oA[i][2] = 1
@@ -95,3 +94,4 @@ game = function(){
         mode = modeover;
     }
 }
+

@@ -150,11 +150,13 @@ function drawUtil()
    if btn(1) == 2 then
      if cursor == 0 then
        run("/init/main.lua")
-     elseif cursor == 2 then
+     elseif cursor == 1 then
+      --ATPモード：共有のWifiに入るモード（通常はこちら/init/param/wifipass.txtを書き換えることで設定できる）
        if not(iswifidebug()) then
          wifiserve()
        end
      elseif cursor == 2 then
+      --APモード：ESP32自体がアクセスポイントになるモード
        if not(iswifidebug()) then
          wifiserve("ap")
        end
