@@ -28,7 +28,6 @@
 #include "wifiGame.h"
 using namespace std;
 
-
 #define FORMAT_SPIFFS_IF_FAILED true
 // #define MAPWH 16//マップのpixelサイズ
 
@@ -95,11 +94,8 @@ BaseGame* game;
 // String appfileName = "/init/main.js";
 // String appfileName = "/init/main.lua";//最初に実行されるファイル名
 
-// String caldatafile = "/init/caldata.txt";
-String appfileName = "/soundjs/main.js";//最初に実行されるアプリ名
+String appfileName = "";//最初に実行されるアプリ名
 String txtName = "/init/txt/sample.txt";//実行されるファイル名
-// String mapsprnosfile = "/init/param/mapsprnos.txt";//実行されるファイル名
-
 
 uint8_t mapsx = 0;
 uint8_t mapsy = 0;
@@ -261,7 +257,7 @@ BaseGame* nextGameObject(String* _appfileName){
       break;
     case FileType::TXT: 
       game = new RunJsGame(); 
-      //ファイル名がもし/init/caldata.txtなら
+      //ファイル名がもし/init/param/caldata.txtなら
       if(*_appfileName == CALIBRATION_FILE){
         ui.calibrationRun(screen);//キャリブレーション実行してcaldata.txtファイルを更新して
         drawLogo();//サイドボタンを書き直して
@@ -487,33 +483,8 @@ using namespace std;
 #include <string>
 #include <vector>
 #include <stdio.h>
-
- 
-// std::vector<std::string> split(std::string str, char del) {
-//     int first = 0;
-//     int last = str.find_first_of(del);
- 
-//     std::vector<std::string> result;
- 
-//     while (first < str.size()) {
-//         std::string subStr(str, first, last - first);
- 
-//         result.push_back(subStr);
- 
-//         first = last + 1;
-//         last = str.find_first_of(del, first);
- 
-//         if (last == std::string::npos) {
-//             last = str.size();
-//         }
-//     }
-//     return result;
-// }
-
-#include <fstream>
-#include <string>
+// #include <fstream>
 #include <sstream>
-#include <vector>
 
 using namespace std;
 
@@ -564,7 +535,7 @@ void setup()
   }
   wCalData(CALIBRATION_FILE);//SPIFFSのファイルにキャリブレーションデータを書き込む
 
-  appfileName = rFirstAppName("/init/firstAppName.txt");//最初に立ち上げるゲームのパスをSPIFFSのファイルfirstAppName.txtから読み込む
+  appfileName = rFirstAppName("/init/param/firstAppName.txt");//最初に立ち上げるゲームのパスをSPIFFSのファイルfirstAppName.txtから読み込む
 
   // ui.setupPhBtns(36, 39, 34);//物理ボタンをセットアップ
 
@@ -628,10 +599,7 @@ void setup()
   game = nextGameObject(&appfileName);//ホームゲームを立ち上げる
   game->init();
   tunes.init();
-
-  
 }
-
 
 void loop()
 {
@@ -693,6 +661,8 @@ void loop()
   { // reload
     ui.setConstantGetF(false);//初期化処理 タッチポイントの常時取得を切る
     appfileName = "/init/main.lua";
+    // game->setWifiDebugRequest(false);//外部ファイルから書き換えてWifiモードにできる
+    // game->setWifiDebugSelf(false);
     mode = 1;//exit
   }
 

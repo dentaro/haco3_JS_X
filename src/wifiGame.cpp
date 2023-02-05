@@ -6,6 +6,7 @@ extern Tunes tunes;
 extern MyTFT_eSprite tft;
 // extern LGFX_Sprite tft;
 extern int* buttonState;
+// extern wifiDebugRequest;
 
 Preferences preferences;
 
@@ -21,11 +22,23 @@ void WifiGame::init(bool isSelf){
   this->resume();
 }
 
-  
 int WifiGame::initSTA(){
-  preferences.begin("wifi-config");
-  String ssid = "WIFIID";//preferences.getString("WIFI_SSID");
-  String password = "WIFIPASS";//preferences.getString("WIFI_PASSWD");
+  String ssid = preferences.getString("WIFI_SSID");
+  String password = preferences.getString("WIFI_PASSWD");
+
+  File fr = SPIFFS.open(WIFIPASS_FILE, "r");// ⑩ファイルを読み込みモードで開く
+  for(int i= 0;i<2;i++){//
+  String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
+    if(i==0){
+      ssid = _readStr;
+      // preferences.putString("WIFI_SSID", ssid);
+      }else if(i==1){
+      password = _readStr;
+      // preferences.putString("WIFI_PASSWD", password);
+      }
+  }
+  fr.close();	// ⑫	ファイルを閉じる
+  
   preferences.end();
 
   WiFi.disconnect(true);
@@ -133,7 +146,7 @@ void WifiGame::getHandler(WiFiClient *c, String path){
     c->println("HTTP/1.1 200 OK");
     c->println("Content-type: text/html");
     c->println();
-    c->println("<h1>o-bako file list</h1>");
+    c->println("<h1>haco3 file list</h1>");
 
     while(f){
       if(f.isDirectory()){
@@ -191,7 +204,7 @@ void WifiGame::getHandler(WiFiClient *c, String path){
 
     if(isEdit){
       c->print("<form method='POST' action='");
-      c->print("/file");
+      c->print("/file/");
       c->print(path);
       c->print("'><textarea style='width:100%;height:100%;' name='body'>");
     }
@@ -440,7 +453,22 @@ int WifiGame::run(int remainTime){
             assignSetting(&key, &value, &ssid, &password);
 
             preferences.begin("wifi-config");
+
+            // File fr = SPIFFS.open(WIFIPASS_FILE, "r");// ⑩ファイルを読み込みモードで開く
+            // for(int i= 0;i<2;i++){//
+            // String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
+            //   if(i==0){
+            //     ssid = _readStr;
+            //     preferences.putString("WIFI_SSID", ssid);
+            //     }else if(i==1){
+            //     password = _readStr;
+            //     preferences.putString("WIFI_PASSWD", password);
+            //     }
+            // }
+            // fr.close();	// ⑫	ファイルを閉じる
+
             preferences.putString("WIFI_SSID", ssid);
+
             preferences.putString("WIFI_PASSWD", password);
 
             client.println(ssid);

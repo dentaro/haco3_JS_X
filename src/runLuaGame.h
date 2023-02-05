@@ -46,8 +46,10 @@ class RunLuaGame: public BaseGame
     int buttonState[CTRLBTNNUM];//ボタンの個数未定
     int tp[2] ={0,0};
     uint16_t palette[256];
-    bool wifiDebugRequest = false;
-    bool wifiDebugSelf = false;
+
+    // bool wifiDebugRequest = true;//外部ファイルから書き換えテifiモードにできる
+    // bool wifiDebugSelf = false;
+
     WifiPhase wifiMode = NONE;
     int modeSelect = 0;
     bool exitRequest = false;

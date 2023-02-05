@@ -372,12 +372,19 @@ String RunJsGame::getBitmapName(String s){
   return s.substring(0, p) + "/sprite.bmp";
 }
 
+// String RunJsGame::getPngName(String s){
+//   int p = s.lastIndexOf("/");
+//   if(p == -1){
+//     p = 0;
+//   }
+//   return s.substring(0, p) + "/sprite.png";
+// }
 String RunJsGame::getPngName(String s){
   int p = s.lastIndexOf("/");
   if(p == -1){
     p = 0;
   }
-  return s.substring(0, p) + "/sprite.png";
+  return s.substring(0, p) + "/initspr.png";
 }
 
 int RunJsGame::l_bg(duk_context* ctx){
@@ -482,9 +489,12 @@ void RunJsGame::resume(){
 
   duk_pop(ctx); // pop global
 
-  SPIFFS.begin(true);
-
-  Serial.println("SPIFFS begin");
+  
+  SPIFFS.begin(true);//SPIFFSを利用可能にする
+  if(SPIFFS.exists(getPngName(appfileName))){
+    sprite64.drawPngFile(SPIFFS, appfileName, 0, 0);
+  }
+  // Serial.println("SPIFFS begin");
 
   // if(SPIFFS.exists(getBitmapName(appappfileName))){
   //   File bmpFile = SPIFFS.open(getBitmapName(appfileName) , FILE_READ);
@@ -495,13 +505,13 @@ void RunJsGame::resume(){
 
   // Serial.println("loaded bitmap");
 
-  if(SPIFFS.exists(getPngName(appfileName))){
-    sprite64.drawPngFile(SPIFFS, appfileName, 0, 0);
-  }
-    Serial.println("loaded png");
+  // if(SPIFFS.exists(getPngName(appfileName))){
+  //   sprite64.drawPngFile(SPIFFS, appfileName, 0, 0);
+  // }
+  //   Serial.println("loaded png");
 
   File fp = SPIFFS.open(appfileName, FILE_READ);
-  Serial.println("open file");
+  // Serial.println("open file");
 
   tft.fillScreen(TFT_BLACK);
 

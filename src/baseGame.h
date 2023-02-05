@@ -2,9 +2,9 @@
 #define BASE_GAME_H
 
 #define CTRLBTNNUM 5//ゲームに使える再度ボタン数を決めます
-#define CALIBRATION_FILE "/init/caldata.txt"
-#define MAPSPRNOS_FILE "/init/param/mapsprnos.txt"
-
+#define CALIBRATION_FILE "/init/param/caldata.txt"
+#define MAPSPRNOS_FILE "/init/param/mapsprnos.txt"//色番号に対応するスプライトを登録するファイル
+#define WIFIPASS_FILE "/init/param/wifipass.txt"
 #define FAST_MODE 1
 #define WIDE_MODE 2 //倍率になっています。
 
@@ -14,6 +14,12 @@
 class BaseGame
 {
   public:
+    bool wifiDebugRequest = false;//外部ファイルから書き換えてWifiモードにできる
+    bool wifiDebugSelf = false;
+
+    void setWifiDebugRequest(bool _b){wifiDebugRequest = _b;};//外部ファイルから書き換えてWifiモードにできる
+    void setWifiDebugSelf(bool _b){wifiDebugSelf = _b;};
+
   BaseGame(){}
   virtual void init(){};
   virtual int run(int remainTime){return 0;};

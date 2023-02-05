@@ -737,8 +737,35 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
   Serial.println("lua chack finish");
 
   for(int i = 0; i < CTRLBTNNUM; i ++){//初期化
+
       buttonState[i] = false;
   }
+
+
+  File fr = SPIFFS.open("/init/param/modeset.txt", "r");// ⑩ファイルを読み込みモードで開く
+  for(int i= 0;i<1;i++){//
+    String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
+    modeSelect = atoi(_readStr.c_str());
+  }
+  fr.close();	// ⑫	ファイルを閉じる
+
+  switch(modeSelect){
+        case 0:
+          setFileName("/init/main.lua");
+
+        break;
+        case 1://ASPモード：共有のWiFiに入るモード（通常はこちらでつなぐ）
+          wifiDebugRequest = true;
+          wifiDebugSelf = false;
+
+        break;
+        case 2://APモード：アクセスポイントになるモード（通常は隠してある）
+          wifiDebugRequest = true;
+          wifiDebugSelf = true;
+          
+        break;
+  }
+
 
   tft.pushSprite(0, 0);
 }
@@ -839,30 +866,37 @@ int RunLuaGame::run(int _remainTime){
     //   modeSelect += 1;
     //   modeSelect = modeSelect%3;
     // }
-    // if(buttonState[9]){//ブルーメニュー決定
-    //   switch(modeSelect){
-    //     case 0:
-    //       wifiDebugRequest = true;
-    //       wifiDebugSelf = true;
 
-    //     break;
-    //     case 1:
-    //       wifiDebugRequest = true;
-    //       wifiDebugSelf = false;
 
-    //     break;
-    //     case 2:
-    //       setFileName("/init/main.lua");
-    //       return 1;
-    //   }
-      
-    // }
+    
   }else if(wifiMode == SHOW){
     // if(buttonState[9]){ // reload//ブルーメニューをとじてwifionのまま戻る
     //   wifiMode = RUN;
 
     // }
   }
+
+
+  
+
+  // if(buttonState[9]){//ブルーメニュー決定
+  //     switch(modeSelect){
+  //       case 0:
+  //         wifiDebugRequest = true;
+  //         wifiDebugSelf = true;
+
+  //       break;
+  //       case 1:
+  //         wifiDebugRequest = true;
+  //         wifiDebugSelf = false;
+
+  //       break;
+  //       case 2:
+  //         setFileName("/init/main.lua");
+  //         return 1;
+  //     }
+      
+  //   }
 
   // show FPS
   sprintf(str, "%02dFPS", 1000/_remainTime); // FPS
