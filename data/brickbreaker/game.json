@@ -1,7 +1,1 @@
-{
-  "script": "main.js",
-  "image": "sprite.bmp",
-  "name": "hello world",
-  "authors": ["inajob"],
-  "license": "MIT"
-}
+{"title":"brickbreaker", "files":["main.js", "initspr.png"]}
