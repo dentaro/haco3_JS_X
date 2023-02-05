@@ -31,7 +31,7 @@ title = function(){
   fillrect(0,0,128,128)
   color(44,90,0)
   text("「レンガを破壊せよ！」", 27,42)
-  text("[ｖ]ホールドでグッと前に進むよ",6, 85)
+  text("[ｖ]ホールドでパドルが動くよ",6, 85)
   tvx = Math.random()*2
   tvy = Math.random()*2
   if(btn(4)==true){
