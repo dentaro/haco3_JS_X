@@ -29,6 +29,14 @@ void RunHaco8Game::haco8resume()
   lua_setglobal(L, "flr");
 
   lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_ceil, 1);
+  lua_setglobal(L, "ceil");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_fget, 1);
+  lua_setglobal(L, "fget");
+
+  lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_map, 1);
   lua_setglobal(L, "map");
 
@@ -155,11 +163,30 @@ int RunHaco8Game::l_map(lua_State* L){
   return 0;
 }
 
+int RunHaco8Game::l_fget(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int sprno = lua_tointeger(L, 1);
+  int fbitno = lua_tointeger(L, 2);
+  // int spr42bits = 0b00000001;
+  int n = 1;
+  if(sprno==42)n=0;
+  lua_pushinteger(L, n);
+  return 1;
+  
+}
+
+int RunHaco8Game::l_ceil(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  float n = lua_tonumber(L, 1);//
+  int in =  (int)ceil(n);
+  lua_pushinteger(L, in);
+  return 1;
+}
 
 int RunHaco8Game::l_flr(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
-  int n = lua_tointeger(L, 1);
-  n =  floor(n);
+  int n = lua_tonumber(L, 1);//intに入れた時点でfloorされてる
+  // n =  (int)floor(n);
   lua_pushinteger(L, n);
   return 1;
 }
