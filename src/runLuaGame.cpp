@@ -12,6 +12,7 @@ extern int pressedBtnID;
 extern LovyanGFX_DentaroUI ui;
 extern int outputMode;
 extern int mapsprnos[16];
+extern int8_t sprbits[64];
 
 // extern int oskF;
 
@@ -741,8 +742,23 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
       buttonState[i] = false;
   }
 
+  File fr = SPIFFS.open(SPRBITS_FILE, "r");// ⑩ファイルを読み込みモードで開く
+    for(int i= 0;i<64;i++){//
+    int8_t bdata = 0b00000000;
+      String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
+      for(int j = 0; j < _readStr.length(); ++j){
+        char ch = _readStr[j];
+        Serial.print(ch);
+        int8_t bitfilter = 0b00000000;
+        bitfilter = 0b10000000>>j;
+        bdata |=  bitfilter;//状態を重ね合わせて合成
+      }
+      Serial.println("end");
+      sprbits[i] = bdata;
+    }
+  fr.close();	// ⑫	ファイルを閉じる
 
-  File fr = SPIFFS.open("/init/param/modeset.txt", "r");// ⑩ファイルを読み込みモードで開く
+fr = SPIFFS.open("/init/param/modeset.txt", "r");// ⑩ファイルを読み込みモードで開く
   for(int i= 0;i<1;i++){//
     String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
     modeSelect = atoi(_readStr.c_str());

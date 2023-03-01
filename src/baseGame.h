@@ -5,6 +5,7 @@
 #define CALIBRATION_FILE "/init/param/caldata.txt"
 #define MAPSPRNOS_FILE "/init/param/mapsprnos.txt"//色番号に対応するスプライトを登録するファイル
 #define WIFIPASS_FILE "/init/param/wifipass.txt"
+#define SPRBITS_FILE "/init/param/sprbits.txt"
 #define FAST_MODE 1
 #define WIDE_MODE 2 //倍率になっています。
 

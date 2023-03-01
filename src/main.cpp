@@ -110,6 +110,8 @@ LGFX_Sprite spriteMap;
 uint8_t mapArray[MAPWH][MAPWH];
 bool mapready = false;
 
+int8_t sprbits[64];//fgetでアクセスするスプライト属性を格納するための配列
+
 // Tunes tunes;
 // bool constantGetF = false;
 
@@ -390,6 +392,12 @@ int readMap(int mn)
 // 外マップ＆スプライト---------------------------------------------
 // divnum回に分けて読み込む
 
+// for(int i= 0;i<16;i++){//マップを描くときに使うスプライト番号リストを読み込む
+//   Serial.print("/");
+//   Serial.print(mapsprnos[i]);
+// }
+// Serial.println("");
+
   for(int n = 0; n<divnum; n++)
   {
     spriteMap.drawPngFile( SPIFFS, mapFileName, 0, (int32_t)(-MAPWH*n/divnum) );
@@ -406,32 +414,30 @@ int readMap(int mn)
         Serial.print(colValG);
         Serial.print(":");
         Serial.println(colValB);
-
 //24ビットRGB
-  // { 0,0,0},//0: 黒色
-  // { 27,42,86 },//1: 暗い青色
-  // { 137,24,84 },//2: 暗い紫色
-  // { 0,139,75 },//3: 暗い緑色
-  // { 183,76,45 },//4: 茶色
-  // { 97,87,78 },//5: 暗い灰色
-  // { 194,195,199 },//6: 明るい灰色
-  // { 255,241,231 },//7: 白色
-  // { 255,0,70 },//8: 赤色
-  // { 255,160,0 },//9: オレンジ
-  // { 255,238,0 },//10: 黄色
-  // { 0,234,0 },//11: 緑色
-  // { 0,173,255 },//12: 水色
-  // { 134,116,159 },//13: 藍色
-  // { 255,107,169 },//14: ピンク
-  // { 255,202,165}//15: 桃色
-
+// { 0,0,0},//0: 黒色
+// { 27,42,86 },//1: 暗い青色
+// { 137,24,84 },//2: 暗い紫色
+// { 0,139,75 },//3: 暗い緑色
+// { 183,76,45 },//4: 茶色
+// { 97,87,78 },//5: 暗い灰色
+// { 194,195,199 },//6: 明るい灰色
+// { 255,241,231 },//7: 白色
+// { 255,0,70 },//8: 赤色
+// { 255,160,0 },//9: オレンジ
+// { 255,238,0 },//10: 黄色
+// { 0,234,0 },//11: 緑色
+// { 0,173,255 },//12: 水色
+// { 134,116,159 },//13: 藍色
+// { 255,107,169 },//14: ピンク
+// { 255,202,165}//15: 桃色
 // mapsprno.txt
 // 20,11,32,44,53,49,54,32,52,41,46,42,45,50,43,38
 
   //16ビットRGB（24ビットRGB）
         if(colValR==0&&colValG==0&&colValB==0){//0: 黒色=なし
           mapArray[i][k] = mapsprnos[0];//20;
-        }else if(colValR==0&&colValG==174&&colValB==255){//{ 27,42,86 },//1: 暗い青色
+        }else if(colValR==24&&colValG==40&&colValB==82){//{ 27,42,86 },//1: 暗い青色
           mapArray[i][k] = mapsprnos[1];//11;//5*8+5;
         }else if(colValR==140&&colValG==24&&colValB==82){//{ 137,24,84 },//2: 暗い紫色
           mapArray[i][k] = mapsprnos[2];//32;//5*8+5;
@@ -462,19 +468,13 @@ int readMap(int mn)
         }else if(colValR==255&&colValG==203&&colValB==165){//{ 255,202,165}//15: 桃色
           mapArray[i][k] = mapsprnos[15];//38;//5*8+5;
         }
-        // Serial.
         if(i==MAPWH-1 && k==MAPWH-1){mapready = true;return 1;}//読み込み終わったら1をリターン
       }
     }
-
-    
-
     // mapready = true;
     // return 1;
   }
-      
   // spriteMap.deleteSprite();//メモリに格納したら解放する
-
   return 1;
 }
 

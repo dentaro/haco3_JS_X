@@ -9,6 +9,10 @@
 #include "baseGame.h"
 #include "Tunes.h"
 
+#include <bitset>
+#include <iostream>
+#include <fstream>
+
 extern "C"{
 #include <lua.h>
 #include <lualib.h>

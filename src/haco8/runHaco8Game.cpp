@@ -14,6 +14,8 @@ extern int outputMode;
 
 extern uint8_t mapArray[MAPWH][MAPWH];
 
+extern int8_t sprbits[64];//fgetでアクセスするスプライト属性を格納するための配列
+
 void RunHaco8Game::haco8resume()
 {
   lua_pushlightuserdata(L, this);
@@ -35,6 +37,10 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_fget, 1);
   lua_setglobal(L, "fget");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_fset, 1);
+  lua_setglobal(L, "fset");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_map, 1);
@@ -75,6 +81,12 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_print, 1);
   lua_setglobal(L, "print");
+
+//スプライト属性を設定する
+sprbits[20] = 0b11111111;//黒
+sprbits[42] = 0b00000000;//草原
+sprbits[49] = 0b00000001;//壁上
+sprbits[50] = 0b00000001;//壁横
   
 }
 
@@ -113,7 +125,7 @@ int RunHaco8Game::l_spr8(lua_State* L){
   int spr8numY = 8;
 
   int sx = ((n-1)%spr8numX); //0~7
-  int sy = ((n-1)/spr8numY); //整数の割り算は自動で切り捨てされる
+  int sy = ((n-1)/spr8numY); //整数の割り算はintにいれると切り捨てされる
 
   sprite64.pushSprite(&sprite88_roi, -(sx*8), -(sy*8));//64*64のpngデータを指定位置までずらす
 
@@ -163,15 +175,28 @@ int RunHaco8Game::l_map(lua_State* L){
   return 0;
 }
 
+
 int RunHaco8Game::l_fget(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
   int sprno = lua_tointeger(L, 1);
   int fbitno = lua_tointeger(L, 2);
-  // int spr42bits = 0b00000001;
-  int n = 1;
-  if(sprno==42)n=0;
-  lua_pushinteger(L, n);
+  bool b = (sprbits[sprno]>>fbitno)&1;//fbitnoビットシフトしてから，最下位ビットのみを取り出す
+  lua_pushboolean(L, b);
   return 1;
+}
+
+int RunHaco8Game::l_fset(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int8_t sprno = lua_tointeger(L, 1);
+  int8_t fbitno = lua_tointeger(L, 2);
+  int8_t val = lua_tointeger(L, 3);
+  int8_t bitfilter = 0b00000001<<fbitno;
+       if(val == 0)sprbits[sprno] &= ~bitfilter;//スプライト番号sprnoのfbitno番目を0に
+  else if(val == 1)sprbits[sprno] |=  bitfilter;//スプライト番号sprnoのfbitno番目を1に
+
+  // Serial.println(sprbits[sprno]);
+
+  return 0;
   
 }
 
