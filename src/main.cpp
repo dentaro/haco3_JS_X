@@ -67,15 +67,6 @@ float matrix_game[6] = {2.0,   // 横2倍
                      0.0    // Y座標
                     };
 
-// //スプライト表示用のパラメータ
-// float matrix_spr[6] = {2.0,   // 横2倍
-//                      -0.0,  // 横傾き
-//                      0.0,   // X座標
-//                      0.0,   // 縦傾き
-//                      2.0,   // 縦2倍
-//                      0.0    // Y座標
-//                     };
-
 LGFX screen;//LGFXを継承
 
 LovyanGFX_DentaroUI ui(&screen);
@@ -84,15 +75,8 @@ LGFX_Sprite sprite88_roi = LGFX_Sprite(&tft);
 LGFX_Sprite sprite64 = LGFX_Sprite();
 static LGFX_Sprite sideSprite( &screen );//背景スプライトはディスプレイに出力
 static LGFX_Sprite logoSprite( &screen );//背景スプライトはディスプレイに出力
-// LGFX_Sprite tft(&screen);
-// LGFX_Sprite layoutSprite(&screen);//LGFX_Spriteを継承 2倍するため
-// LGFX_Sprite tft = LGFX_Sprite(&layoutSprite);//LGFX_Spriteを継承
-// LGFX_Sprite spriteRoi = LGFX_Sprite(&tft);
 LGFX_Sprite sprite88_0 = LGFX_Sprite(&tft);
-// LGFX_Sprite spritebg[16];//16種類のスプライトを背景で使えるようにする
 BaseGame* game;
-// String appfileName = "/init/main.js";
-// String appfileName = "/init/main.lua";//最初に実行されるファイル名
 
 String appfileName = "";//最初に実行されるアプリ名
 String txtName = "/init/txt/sample.txt";//実行されるファイル名
@@ -110,7 +94,7 @@ LGFX_Sprite spriteMap;
 uint8_t mapArray[MAPWH][MAPWH];
 bool mapready = false;
 
-int8_t sprbits[64];//fgetでアクセスするスプライト属性を格納するための配列
+int8_t sprbits[128];//fgetでアクセスするスプライト属性を格納するための配列
 
 // Tunes tunes;
 // bool constantGetF = false;
@@ -296,14 +280,12 @@ void tone(int _toneNo, int _tonelength){
 }
 
 hw_timer_t * timerA = NULL;//スピーカー用
-// extern void onTimerA();
 volatile static boolean timer_flag = false;
 //高速
 void IRAM_ATTR onTimerA() {
   timer_flag != timer_flag;
 }
 
-// char buf[50];
 char *A;
 bool flip = true;
 
@@ -312,31 +294,11 @@ void setFileName(String s){
   appfileName = s;
 }
 
-// void reboot(){
-//   ESP.restart();
-// }
-
 // タイマー
 hw_timer_t * timer = NULL;
 
 // 画面描画タスクハンドル
 TaskHandle_t taskHandle;
-//描画待ち用セマフォ
-// volatile SemaphoreHandle_t semaphore;
-
-//ボタンイベント用
-// TaskHandle_t taskHandle2;
-// volatile SemaphoreHandle_t semaphore2;
-
-// 画面描画タスク
-// void dispTask(void *pvParameters) {
-//   while (1) {
-//   xSemaphoreTake(semaphore, portMAX_DELAY);
-
-//   // playmusic();
-//     }
-//     // delay(1);
-// }
 
 // タイマー割り込み
 void IRAM_ATTR onTimer() {
@@ -558,11 +520,11 @@ void setup()
   sprite88_0.setPsram(false );
   sprite88_0.setColorDepth(16);//子スプライトの色深度
   sprite88_0.createSprite(8, 8);//ゲーム画面用スプライトメモリ確保
-  sprite88_0.drawPngFile(SPIFFS, "/init/sprite.png", -8*1, -8*0);
+  //sprite88_0.drawPngFile(SPIFFS, "/init/sprite.png", -8*1, -8*0);
 
   sprite64.setPsram(false );
   sprite64.setColorDepth(16);//子スプライトの色深度
-  sprite64.createSprite(64, 64);//ゲーム画面用スプライトメモリ確保
+  sprite64.createSprite(64, 128);//ゲーム画面用スプライトメモリ確保
   sprite64.drawPngFile(SPIFFS, "/init/initspr.png", 0, 0);
   
   sprite88_roi.setPsram(false );

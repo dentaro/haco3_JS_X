@@ -12,7 +12,7 @@ extern int pressedBtnID;
 extern LovyanGFX_DentaroUI ui;
 extern int outputMode;
 extern int mapsprnos[16];
-extern int8_t sprbits[64];
+extern int8_t sprbits[128];//8*16
 
 // extern int oskF;
 
@@ -743,7 +743,7 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
   }
 
   File fr = SPIFFS.open(SPRBITS_FILE, "r");// ⑩ファイルを読み込みモードで開く
-    for(int i= 0;i<64;i++){//
+    for(int i= 0;i<128;i++){//
     int8_t bdata = 0b00000000;
       String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
       for(int j = 0; j < _readStr.length(); ++j){
