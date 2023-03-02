@@ -19,7 +19,6 @@
 #include <Arduino.h>
 #include <FS.h>
 #include "SPIFFS.h"
-#include "runJsGame.h"
 // #include "runLuaGame.h"
 #include "haco8/runHaco8Game.h"
 
@@ -237,21 +236,22 @@ String *targetfileName;
 
 BaseGame* nextGameObject(String* _appfileName){
   switch(detectFileType(_appfileName)){
-    case FileType::JS:  game = new RunJsGame(); break;
+    case FileType::JS:  
+      game = new RunJsGame(); 
+      break;
     case FileType::LUA: 
       game = new RunHaco8Game();
       break;
     case FileType::TXT: 
       game = new RunJsGame(); 
       //ファイル名がもし/init/param/caldata.txtなら
-      if(*_appfileName == CALIBRATION_FILE){
+      if(*_appfileName == CALIBRATION_FILE)
+      {
         ui.calibrationRun(screen);//キャリブレーション実行してcaldata.txtファイルを更新して
         drawLogo();//サイドボタンを書き直して
       }
       appfileName = "/init/txt/main.js";//txtエディタで開く
-      
       break; //txteditorを立ち上げてtxtを開く
-
     case FileType::BMP: // todo: error
       game = NULL;
       break;
@@ -445,7 +445,6 @@ using namespace std;
 #include <string>
 #include <vector>
 #include <stdio.h>
-// #include <fstream>
 #include <sstream>
 
 using namespace std;
@@ -696,29 +695,3 @@ void loop()
   // xSemaphoreGiveFromISR(semaphore, NULL);
 
 }
-
-// #include <LovyanGFX_DentaroUI.hpp>
-
-// static LGFX tft;
-// LovyanGFX_DentaroUI ui(&tft);
-// static LGFX_Sprite sideSprite( &tft );//背景スプライトはディスプレイに出力
-// static LGFX_Sprite canvas(&tft);
-// static bool isCanvasCreated = false;
-// static int canvasX;
-// static int canvasY;
-
-// void setup() {
-
-//   ui.begin( tft, 16, 1, true);
-//   ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
-
-// }
-
-// void loop() { 
-//   ui.update(tft);
-   
-//    ui.showTouchEventInfo( tft, 0, 100 );//タッチイベントを視覚化する
-//    ui.showInfo( tft, 0, 100+8 );//ボタン情報、フレームレート情報などを表示します。
-  
-//   // delay(1000); 
-//   }

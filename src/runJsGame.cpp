@@ -14,7 +14,6 @@ extern String rCalData(String _wrfile);
 extern int pressedBtnID;
 extern uint8_t charSpritex;
 extern uint8_t charSpritey;
-int bgSpriteNo = 0;
 extern volatile SemaphoreHandle_t semaphore;
 
 extern File fw;
@@ -33,6 +32,8 @@ extern String *targetfileName;
 
 extern int outputMode;
 
+extern int mapsprnos[16];
+extern int8_t sprbits[128];//8*16
 
 // extern bool constantGetF;
 
@@ -40,7 +41,6 @@ char chr;
 char numStr[4];
 char fileStr[100];
 bool tbtnSetupF = true;
-
 int prebtnid = -1;
 
 int RunJsGame::loadSurface(File *fp, uint8_t* buf){
@@ -372,13 +372,6 @@ String RunJsGame::getBitmapName(String s){
   return s.substring(0, p) + "/sprite.bmp";
 }
 
-// String RunJsGame::getPngName(String s){
-//   int p = s.lastIndexOf("/");
-//   if(p == -1){
-//     p = 0;
-//   }
-//   return s.substring(0, p) + "/sprite.png";
-// }
 String RunJsGame::getPngName(String s){
   int p = s.lastIndexOf("/");
   if(p == -1){
