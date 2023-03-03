@@ -37,6 +37,9 @@ class RunHaco8Game: public RunLuaGame
 {
   public:
 
+  
+  
+
 //24bitRGB
   uint8_t clist[16][3] =
   {
@@ -65,9 +68,14 @@ class RunHaco8Game: public RunLuaGame
                      2.0,   // 縦2倍
                      0.0    // Y座標
                     };
+
+  RunHaco8Game(int _gameState, String _mn);//ゲームの状態を立ち上げ時に渡す
+
   static int l_cls(lua_State* L);
   static int l_rnd(lua_State* L);
   static int l_flr(lua_State* L);
+  static int l_go2(lua_State* L);
+  static int l_gstat(lua_State* L);
   static int l_ceil(lua_State* L);
   static int l_fget(lua_State* L);
   static int l_fset(lua_State* L);
@@ -81,62 +89,10 @@ class RunHaco8Game: public RunLuaGame
   static int l_map(lua_State* L);
   static int l_mget(lua_State* L);
   static int l_spr8(lua_State* L);
-
+  
   uint16_t getColor(int _cn, int _rgb);
   void haco8resume();//この関数で基底クラスのダミー関数を置き換えることで、派生クラスの処理を挿入する
   
 };
-  // public:
-  //   enum WifiPhase{
-  //     NONE,
-  //     SELECT,
-  //     SHOW,
-  //     RUN
-  //   };
-
-    // lua_State* L;
-    // byte col[3] = {0,0,0};
-    // int buttonState[CTRLBTNNUM];//ボタンの個数未定
-    // uint16_t palette[256];
-    // bool wifiDebugRequest = false;
-    // bool wifiDebugSelf = false;
-    // WifiPhase wifiMode = NONE;
-    // int modeSelect = 0;
-    // bool exitRequest = false;
-    // bool runError = false;
-    // String errorString;
-
-    // int loadSurface(File* fp, uint8_t* buf);
-    // static int l_tone(lua_State* L);
-    // static int l_spr(lua_State* L);
-    // static int l_scroll(lua_State* L);
-    // static int l_pset(lua_State* L);
-    // static int l_pget(lua_State* L);
-    // static int l_color(lua_State* L);
-    // static int l_text(lua_State* L);
-    // static int l_opmode(lua_State* L);
-    // static int l_drawrect(lua_State* L);
-    // static int l_fillrect(lua_State* L);
-    // static int l_fillcircle(lua_State* L);
-    // static int l_btn(lua_State* L);
-    // static int l_getip(lua_State* L);
-    // static int l_iswifidebug(lua_State* L);
-    // static int l_wifiserve(lua_State* L);
-    // static int l_run(lua_State* L);
-    // static int l_list(lua_State* L);
-    // static int l_require(lua_State* L);
-    // static int l_httpsget(lua_State* L);
-    // static int l_httpsgetfile(lua_State* L);
-    // static int l_savebmp(lua_State* L);
-    // static int l_reboot(lua_State* L);
-    // static int l_debug(lua_State* L);
-
-    // String getBitmapName(String s);
-    // String getPngName(String s);
-    // void init();
-    // int run(int _remainTime);
-    // void pause();
-    // void resume();
-
 
 #endif

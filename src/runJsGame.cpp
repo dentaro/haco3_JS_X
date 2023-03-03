@@ -35,8 +35,6 @@ extern int outputMode;
 extern int mapsprnos[16];
 extern int8_t sprbits[128];//8*16
 
-// extern bool constantGetF;
-
 char chr;
 char numStr[4];
 char fileStr[100];

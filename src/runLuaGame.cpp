@@ -6,6 +6,7 @@ extern String appfileName;
 extern void startWifiDebug(bool isSelf);
 extern void setFileName(String s);
 extern bool isWifiDebug();
+extern void readMap();
 extern void reboot();
 extern Tunes tunes;
 extern int pressedBtnID;
@@ -13,12 +14,9 @@ extern LovyanGFX_DentaroUI ui;
 extern int outputMode;
 extern int mapsprnos[16];
 extern int8_t sprbits[128];//8*16
-
-// extern int oskF;
-
-// int system(const char* c){
-//   //none
-// }
+extern vector<string> split(string& input, char delimiter);
+extern String appNameStr;
+extern String mapFileName;
 
 int cursor = 0;
 
@@ -88,7 +86,6 @@ int RunLuaGame::loadSurface(File *fp, uint8_t* buf){
   fp->read((uint8_t*)&height, 4);
   fp->seek(2, SeekCur); // skip biPlanes
   fp->read((uint8_t*)&bitCount, 2);
-
 
   Serial.println("pre check");
   if(width != 128){
@@ -379,8 +376,6 @@ int RunLuaGame::l_require(lua_State* L){
   if(lua_load(L, getF, &lf, cFileName, NULL)){
     printf("error? %s\n", lua_tostring(L, -1));
     Serial.printf("error? %s\n", lua_tostring(L, -1));
-    //runError = true;
-    //errorString = lua_tostring(L, -1);
     loadError = true;
   }
   fp.close();
@@ -388,8 +383,7 @@ int RunLuaGame::l_require(lua_State* L){
   if(loadError == false){
     if(lua_pcall(L, 0, 1, 0)){
       Serial.printf("init error? %s\n", lua_tostring(L, -1));
-      //runError = true;
-      //errorString = lua_tostring(L, -1);
+
     }
   }
 
@@ -701,6 +695,76 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
 
   haco8resume();//派生クラスでのみこの位置で実行されるダミー関数
 
+   File fr;
+
+  fr = SPIFFS.open(SPRBITS_FILE, "r");// ⑩ファイルを読み込みモードで開く
+    for(int i= 0;i<128;i++){//
+    
+
+      String _readStr = fr.readStringUntil(',');// ,まで１つ読み出し
+      string _readstr = _readStr.c_str();
+      
+      //改行を取り除く処理
+      const char CR = '\r';
+      const char LF = '\n';
+      std::string destStr;
+      for (std::string::const_iterator it = _readstr.begin();
+          it != _readstr.end(); ++it) {
+        if (*it != CR && *it != LF) {
+          destStr += *it;
+        }
+      }
+      _readstr = destStr;
+      // const char* c_readstr = _readstr.c_str();
+
+      uint8_t bdata     = 0b00000000;
+      uint8_t bitfilter = 0b10000000;//書き換え対象ビット指定用
+
+      for(int j = 0; j < _readstr.length(); ++j)
+      {
+        char ch = _readstr[j];
+        Serial.print(ch);
+        if(ch=='1'){bdata |=  bitfilter;}//状態を重ね合わせて合成
+        bitfilter = bitfilter>>1;//書き換え対象ビットを一つずらす
+      }
+      sprbits[i] = bdata;
+      Serial.print(":");
+      Serial.print(bdata);//0～255
+      Serial.print(":");
+      Serial.println("end");
+    }
+  fr.close();	// ⑫	ファイルを閉じる
+
+  //アプリのパスからアプリ名を取得
+  string str1 = appfileName.c_str();
+  int i=0;
+
+  for (string s : split(str1,'/')) {
+    if(i==1){
+      appNameStr = s.c_str();
+      fr = SPIFFS.open("/" + appNameStr + "/mapinfo.txt", "r");// ⑩ファイルを読み込みモードで開く
+    }
+     i++;
+  }
+
+  Serial.println("appNameStr:"+appNameStr);
+  Serial.println("appNameStr:"+appNameStr);
+  Serial.println("appNameStr:"+appNameStr);
+
+  // fr = SPIFFS.open("/haco8stage1/mapinfo.txt", "r");
+
+  for(int i= 0;i<16;i++){//マップを描くときに使うスプライト番号リストを読み込む
+    String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
+    mapsprnos[i] = atoi(_readStr.c_str());
+  }
+
+  String _readStr = fr.readStringUntil(',');// 最後はマップのパス
+  mapFileName = "/init/map/"+_readStr;
+  fr.close();	// ⑫	ファイルを閉じる
+
+  readMap();
+
+
   SPIFFS.begin(true);//SPIFFSを利用可能にする
 
   if(SPIFFS.exists(getPngName(appfileName))){
@@ -742,22 +806,6 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
       buttonState[i] = false;
   }
 
-  File fr = SPIFFS.open(SPRBITS_FILE, "r");// ⑩ファイルを読み込みモードで開く
-    for(int i= 0;i<128;i++){//
-    int8_t bdata = 0b00000000;
-      String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
-      for(int j = 0; j < _readStr.length(); ++j){
-        char ch = _readStr[j];
-        Serial.print(ch);
-        int8_t bitfilter = 0b00000000;
-        bitfilter = 0b10000000>>j;
-        bdata |=  bitfilter;//状態を重ね合わせて合成
-      }
-      Serial.println("end");
-      sprbits[i] = bdata;
-    }
-  fr.close();	// ⑫	ファイルを閉じる
-
 fr = SPIFFS.open("/init/param/modeset.txt", "r");// ⑩ファイルを読み込みモードで開く
   for(int i= 0;i<1;i++){//
     String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
@@ -781,6 +829,14 @@ fr = SPIFFS.open("/init/param/modeset.txt", "r");// ⑩ファイルを読み込�
           
         break;
   }
+
+
+  // // const char* mn = _nm;
+  // // //mapFileName = "/init/map/0.png";//デフォルトは０
+  // // if(mn != NULL){
+  // //   mapFileName = mn;
+  //   readMap();
+  // // }
 
 
   tft.pushSprite(0, 0);

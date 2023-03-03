@@ -76,13 +76,12 @@ static LGFX_Sprite sideSprite( &screen );//背景スプライトはディスプ�
 static LGFX_Sprite logoSprite( &screen );//背景スプライトはディスプレイに出力
 LGFX_Sprite sprite88_0 = LGFX_Sprite(&tft);
 BaseGame* game;
-
 String appfileName = "";//最初に実行されるアプリ名
 String txtName = "/init/txt/sample.txt";//実行されるファイル名
 
 uint8_t mapsx = 0;
 uint8_t mapsy = 0;
-String mapFileName = "";
+String mapFileName = "/init/map/0.png";
 int readmapno = 0;
 int divnum = 1;
 bool readMapF = false;
@@ -120,6 +119,10 @@ float TONES[14] =
 , 523.251//C5
 , 0//NOTONE
 };
+
+int mode = 0;//記号モード //0はrun 1はexit
+int gameState = 0;
+String appNameStr = "init";
 
 enum struct FileType {
   LUA,
@@ -234,13 +237,16 @@ FileType detectFileType(String *appfileName){
 
 String *targetfileName;
 
-BaseGame* nextGameObject(String* _appfileName){
+BaseGame* nextGameObject(String* _appfileName, int _gameState, String _mn){
+  // gameState = _gameState;
+  
+
   switch(detectFileType(_appfileName)){
     case FileType::JS:  
       game = new RunJsGame(); 
       break;
     case FileType::LUA: 
-      game = new RunHaco8Game();
+      game = new RunHaco8Game(_gameState, _mn);
       break;
     case FileType::TXT: 
       game = new RunJsGame(); 
@@ -294,6 +300,15 @@ void setFileName(String s){
   appfileName = s;
 }
 
+void runFileName(String s){
+  
+  ui.setConstantGetF(false);//初期化処理 タッチポイントの常時取得を切る
+  
+  appfileName = s;
+  mode = 1;//exit to run
+
+}
+
 // タイマー
 hw_timer_t * timer = NULL;
 
@@ -341,7 +356,7 @@ String rFirstAppName(String _wrfile){
 }
 
 
-int readMap(int mn)
+int readMap()
 {
   mapready = false;
   // readmapno = mn;
@@ -349,7 +364,7 @@ int readMap(int mn)
   // if(readmapno == 0)mapFileName = "/init/map/0.png";
   // if(readmapno == 1)mapFileName = "/init/map/1.png";
 
-  mapFileName = "/init/map/1.png";
+  // mapFileName = "/init/map/0.png";
 
 // 外マップ＆スプライト---------------------------------------------
 // divnum回に分けて読み込む
@@ -460,6 +475,9 @@ vector<string> split(string& input, char delimiter)
     return result;
 }
 
+
+
+
 void setup()
 {
   Serial.begin(115200);
@@ -482,12 +500,8 @@ void setup()
     return;
   }
 
-  File fr = SPIFFS.open(MAPSPRNOS_FILE, "r");// ⑩ファイルを読み込みモードで開く
-  for(int i= 0;i<16;i++){//マップを描くときに使うスプライト番号リストを読み込む
-    String _readStr = fr.readStringUntil(',');// ⑪,まで１つ読み出し
-    mapsprnos[i] = atoi(_readStr.c_str());
-  }
-  fr.close();	// ⑫	ファイルを閉じる
+
+  
 
   if(rCalData(CALIBRATION_FILE) == NULL){//タッチキャリブレーションデータがなければ
     ui.begin( screen, 16, 1, true);//立ち上げ時にキャリブレーションする
@@ -497,6 +511,7 @@ void setup()
   wCalData(CALIBRATION_FILE);//SPIFFSのファイルにキャリブレーションデータを書き込む
 
   appfileName = rFirstAppName("/init/param/firstAppName.txt");//最初に立ち上げるゲームのパスをSPIFFSのファイルfirstAppName.txtから読み込む
+
 
   // ui.setupPhBtns(36, 39, 34);//物理ボタンをセットアップ
 
@@ -553,11 +568,12 @@ void setup()
   //   readMap(1);
   // };//マップ番号を指定し、読み込み終わるまで待機
 
-  readMap(1);
+  mapFileName = "/init/map/0.png";
+  readMap();
 
   delay(1000);
 
-  game = nextGameObject(&appfileName);//ホームゲームを立ち上げる
+  game = nextGameObject(&appfileName, gameState, mapFileName);//ホームゲームを立ち上げる
   game->init();
   tunes.init();
 }
@@ -606,7 +622,7 @@ void loop()
       game->pause();
       free(game);
       txtName = appfileName;
-      game = nextGameObject(&appfileName);
+      game = nextGameObject(&appfileName, gameState, mapFileName);
       game->init();
       tunes.resume();
     }
@@ -615,7 +631,7 @@ void loop()
   tunes.run();
 
   // == game task ==
-  int mode = game->run(remainTime);//exitは1が返ってくる　mode=１ 次のゲームを起動
+  mode = game->run(remainTime);//exitは1が返ってくる　mode=１ 次のゲームを起動
 
   //0ボタンで強制終了
   if (pressedBtnID == 0)
@@ -627,12 +643,19 @@ void loop()
     mode = 1;//exit
   }
 
+  if (pressedBtnID == 9999)
+  { // reload
+    ui.setConstantGetF(false);//初期化処理 タッチポイントの常時取得を切る
+    mode = 1;//exit
+    pressedBtnID = -1;
+  }
+
   if(mode != 0){ // exit request//次のゲームを立ち上げるフラグがた値、modeが１次のゲームを起動であれば
     tunes.pause();
     game->pause();
     free(game);
     txtName = appfileName;
-    game = nextGameObject(&appfileName);//ファイルの種類を判別して適したゲームオブジェクトを生成
+    game = nextGameObject(&appfileName, gameState, mapFileName);//ファイルの種類を判別して適したゲームオブジェクトを生成
     game->init();//resume()（再開処理）を呼び出し、ゲームで利用する関数などを準備
     tunes.resume();
   }

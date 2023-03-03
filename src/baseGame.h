@@ -17,6 +17,7 @@ class BaseGame
   public:
     bool wifiDebugRequest = false;//外部ファイルから書き換えてWifiモードにできる
     bool wifiDebugSelf = false;
+    // int gameState = 0;
 
     void setWifiDebugRequest(bool _b){wifiDebugRequest = _b;};//外部ファイルから書き換えてWifiモードにできる
     void setWifiDebugSelf(bool _b){wifiDebugSelf = _b;};

@@ -60,6 +60,8 @@ class RunLuaGame: public BaseGame
     bool runError = false;
     String errorString;
 
+    // int gameState = 0;
+
     uint8_t clist[16][3] =
   {
   { 0,0,0},//0: 黒色

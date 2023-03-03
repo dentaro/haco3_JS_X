@@ -5,16 +5,26 @@ extern LGFX_Sprite sprite88_roi;
 extern String appfileName;
 extern void startWifiDebug(bool isSelf);
 extern void setFileName(String s);
+extern void runFileName(String s);
 extern bool isWifiDebug();
 extern void reboot();
 extern Tunes tunes;
 extern int pressedBtnID;
 extern LovyanGFX_DentaroUI ui;
 extern int outputMode;
+extern int mode;
+extern int gameState;
+extern String mapFileName;
+extern void readMap();
 
 extern uint8_t mapArray[MAPWH][MAPWH];
 
-extern int8_t sprbits[64];//fgetでアクセスするスプライト属性を格納するための配列
+extern int8_t sprbits[128];//fgetでアクセスするスプライト属性を格納するための配列
+
+RunHaco8Game::RunHaco8Game(int _gameState, String _mn){
+  gameState = _gameState;
+  mapFileName = _mn;
+}
 
 void RunHaco8Game::haco8resume()
 {
@@ -30,6 +40,14 @@ void RunHaco8Game::haco8resume()
   lua_pushcclosure(L, l_flr, 1);
   lua_setglobal(L, "flr");
 
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_go2, 1);
+  lua_setglobal(L, "go2");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_gstat, 1);
+  lua_setglobal(L, "gstat");
+  
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_ceil, 1);
   lua_setglobal(L, "ceil");
@@ -82,11 +100,13 @@ void RunHaco8Game::haco8resume()
   lua_pushcclosure(L, l_print, 1);
   lua_setglobal(L, "print");
 
-//スプライト属性を設定する
-sprbits[20] = 0b11111111;//黒
-sprbits[42] = 0b00000000;//草原
-sprbits[49] = 0b00000001;//壁上
-sprbits[50] = 0b00000001;//壁横
+  // gameState = _gameState;
+
+  //スプライト属性を設定する
+  // sprbits[20] = 0b11111111;//黒
+  // sprbits[42] = 0b00000000;//草原
+  // sprbits[49] = 0b00000001;//壁上
+  // sprbits[50] = 0b00000001;//壁横
   
 }
 
@@ -138,9 +158,7 @@ int RunHaco8Game::l_spr8(lua_State* L){
   }else  if(scalex != NULL && scaley!=NULL && angle != NULL){
     sprite88_roi.pushRotateZoom(&tft, x, y, angle, scalex, scaley, TFT_BLACK);
   }
-
   return 0;
-
 }
 
 int RunHaco8Game::l_map(lua_State* L){
@@ -151,8 +169,7 @@ int RunHaco8Game::l_map(lua_State* L){
   int roiy = lua_tointeger(L, 4);
   int roiW = lua_tointeger(L, 5);
   int roiH = lua_tointeger(L, 6);
-  // int lyr = lua_tointeger(L, 7);
-  // int mn = lua_tointeger(L, 8);
+
 
   sprite88_roi.clear();//指定の大きさにスプライトを作り直す
   sprite88_roi.createSprite(8,8);
@@ -169,12 +186,10 @@ int RunHaco8Game::l_map(lua_State* L){
             
             sprite64.pushSprite(&sprite88_roi, -8*(sx), -8*(sy));//128*128のpngデータを指定位置までずらす
             sprite88_roi.pushRotateZoom(&tft, roix+n*8+4, roiy+m*8+4, 0, 1, 1, TFT_BLACK);//なぜか４を足さないとずれる要修正
-          
       }
   }
   return 0;
 }
-
 
 int RunHaco8Game::l_fget(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
@@ -193,11 +208,7 @@ int RunHaco8Game::l_fset(lua_State* L){
   int8_t bitfilter = 0b00000001<<fbitno;
        if(val == 0)sprbits[sprno] &= ~bitfilter;//スプライト番号sprnoのfbitno番目を0に
   else if(val == 1)sprbits[sprno] |=  bitfilter;//スプライト番号sprnoのfbitno番目を1に
-
-  // Serial.println(sprbits[sprno]);
-
   return 0;
-  
 }
 
 int RunHaco8Game::l_ceil(lua_State* L){
@@ -216,6 +227,30 @@ int RunHaco8Game::l_flr(lua_State* L){
   return 1;
 }
 
+int RunHaco8Game::l_go2(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  appfileName = lua_tostring(L, 1);
+  int gs = lua_tointeger(L, 2);
+  gameState = 0;
+  if(gs != NULL){
+    gameState = gs;
+  }
+  // appfileName = (String)text;
+  // setFileName(appfileName);
+  // appfileName = text;
+  // runFileName(appfileName);
+  // mode = 1;//appfileNameのゲームを起動させるために1モードを1に
+  // pressedBtnID = 100;
+  pressedBtnID = 9999;
+  return 1;
+}
+
+int RunHaco8Game::l_gstat(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  lua_pushinteger(L, gameState);
+  return 1;
+}
+
 int RunHaco8Game::l_rnd(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
   int n = lua_tointeger(L, 1);
@@ -223,6 +258,7 @@ int RunHaco8Game::l_rnd(lua_State* L){
   lua_pushinteger(L, n);
   return 1;
 }
+
 // uint8_t clist[16][3] =
 //   {
 //   { 0,0,0},//0: 黒色
@@ -255,8 +291,6 @@ int RunHaco8Game::l_print(lua_State* L){
   int x = lua_tointeger(L, 2);
   int y = lua_tointeger(L, 3);
   int cn = lua_tointeger(L, 4);
-  
-  
 
   if(cn != NULL){
     self->col[0] = self->clist[cn][0]; // 5bit
@@ -278,7 +312,6 @@ int RunHaco8Game::l_print(lua_State* L){
     tft.setCursor(x,y);
     tft.setClipRect(x, y, 128-x, 128-y);
   }
-  
   // tft.setCursor(x,y);
   // self->col[0] = self->clist[cn][0]; // 5bit
   // self->col[1] = self->clist[cn][1]; // 6bit
@@ -326,7 +359,6 @@ int RunHaco8Game::l_line(lua_State* L){
   tft.drawLine(xa,ya,xb,yb, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
   return 0;
 }
-
 
 int RunHaco8Game::l_rect(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
@@ -399,7 +431,6 @@ int RunHaco8Game::l_fillcircle2(lua_State* L){
   int x = lua_tointeger(L, 1);
   int y = lua_tointeger(L, 2);
   int r = lua_tointeger(L, 3);
-
   // tft.fillCircle(x, y, r, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
   tft.fillCircle(x, y, r, TFT_YELLOW);
   return 0;
