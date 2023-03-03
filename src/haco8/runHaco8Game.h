@@ -37,9 +37,6 @@ class RunHaco8Game: public RunLuaGame
 {
   public:
 
-  
-  
-
 //24bitRGB
   uint8_t clist[16][3] =
   {

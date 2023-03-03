@@ -207,9 +207,24 @@ void drawLogo(){
   logoSprite.pushAffine(matrix_side);
   logoSprite.deleteSprite(); // 描画したらメモリを解放する
   
-  for(int i=0;i<CTRLBTNNUM-1;i++){
-    screen.fillRoundRect(258,55*i+20,60,53,2,TFT_DARKGRAY);
+  // for(int i=0;i<CTRLBTNNUM-1;i++){
+  //   screen.fillRoundRect(258,55*i+20,60,53,2,TFT_DARKGRAY);
+  // }
+  for(int j=0;j<2;j++){
+    for(int i=0;i<2;i++){
+    screen.fillRoundRect(30*i+258,52*j+20,28,50,2,TFT_DARKGRAY);
+    }
   }
+
+  screen.fillRoundRect(258,124,58,38,2,TFT_LIGHTGRAY);
+
+  screen.fillRoundRect(258,   164,28,38,2,TFT_LIGHTGRAY);
+  screen.fillRoundRect(258+30,164,28,38,2,TFT_LIGHTGRAY);
+
+  screen.fillRoundRect(258,   204,58,38,2,TFT_LIGHTGRAY);
+
+
+
 }
 
 bool isWifiDebug(){
@@ -475,9 +490,6 @@ vector<string> split(string& input, char delimiter)
     return result;
 }
 
-
-
-
 void setup()
 {
   Serial.begin(115200);
@@ -551,7 +563,12 @@ void setup()
 
   //sprite（bg1)のボタン配置の時
   ui.createBtns( 130,  0,  30,   8,  1, 1, TOUCH, 2);//ホームボタン
-  ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
+  // ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
+  ui.createBtns( 130,  81,  30, 20,  2, 1, TOUCH, 2);//コントローラー4ボタン
+  ui.createBtns( 130,  61,  30, 20,  1, 1, TOUCH, 2);//コントローラー4ボタン
+  ui.createBtns( 130,  101, 30, 20,  1, 1, TOUCH, 2);//コントローラー4ボタン
+  ui.createBtns( 130,  9,   30, 52,  2, 2, TOUCH, 2);//コントローラー4ボタン
+
   delay(100);
 
   tft.setPsram( false );//DMA利用のためPSRAMは切る
