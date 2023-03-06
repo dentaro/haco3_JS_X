@@ -172,7 +172,9 @@ fileのうち、拡張子がjsまたは、luaのファイルを選ぶと、ゲ�
 
 （2023.3.7)
 
-music(0)で、BGMが流せるようになりました。（いまのところ1曲のみ）sfx(soundNo)で効果音用の波形を選べるようになりました。
+music(0)で、下のmymelo2で書き出したmymelo.hのBGMが流せるようになりました。（いまのところ1曲のみですが、サクラエディットで作曲ができます）sfx(soundNo)で効果音用の波形を選べるようにしました。/data/init/sound/wave_sfx.txtに波形データが256*8個入っています。
+
+https://koyama.verse.jp/elecraft/mymelo/
 
 （2023.3.1)
 
