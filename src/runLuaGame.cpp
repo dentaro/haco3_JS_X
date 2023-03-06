@@ -303,6 +303,18 @@ int RunLuaGame::l_btn(lua_State* L){
   return 1;
 }
 
+int RunLuaGame::l_btnp(lua_State* L)
+{
+  RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+  int n = lua_tointeger(L, 1);
+  if(self->buttonState[n]%4 == 0){
+    lua_pushboolean(L, false);
+  }else{
+    lua_pushboolean(L, true);
+  }
+  return 1;
+}
+
 int RunLuaGame::l_iswifidebug(lua_State* L){
   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
 
@@ -650,6 +662,10 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
   lua_setglobal(L, "btn");
 
   lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_btnp, 1);
+  lua_setglobal(L, "btnp");
+
+  lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_getip, 1);
   lua_setglobal(L, "getip");
 
@@ -728,10 +744,10 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
         bitfilter = bitfilter>>1;//書き換え対象ビットを一つずらす
       }
       sprbits[i] = bdata;
-      Serial.print(":");
-      Serial.print(bdata);//0～255
-      Serial.print(":");
-      Serial.println("end");
+      // Serial.print(":");
+      // Serial.print(bdata);//0～255
+      // Serial.print(":");
+      // Serial.println("end");
     }
   fr.close();	// ⑫	ファイルを閉じる
 
@@ -802,8 +818,7 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
   Serial.println("lua chack finish");
 
   for(int i = 0; i < CTRLBTNNUM; i ++){//初期化
-
-      buttonState[i] = false;
+      buttonState[i] = 0;
   }
 
 fr = SPIFFS.open("/init/param/modeset.txt", "r");// ⑩ファイルを読み込みモードで開く
@@ -862,15 +877,6 @@ int RunLuaGame::run(int _remainTime){
     return 1; // exit(1をリターンすることで、main.cppの変数modeを１にする)
   }
 
-  //ボタンを押してからの経過フレームを返すための処理
-  // for(int i = 0; i < CTRLBTNNUM; i ++){
-  //   if(ui.getEvent()==NO_EVENT){
-  //     buttonState[i] = 0;
-  //   }else{
-  //     buttonState[i] ++;
-  //   }
-  // }
-
   //ボタンを押してからの経過時間を返すための処理
   for(int i = 0; i < CTRLBTNNUM; i ++){
     if(ui.getEvent()==NO_EVENT){
@@ -891,13 +897,15 @@ int RunLuaGame::run(int _remainTime){
       tft.print(errorString);
       tft.setTextWrap(false);
 
-      // if(buttonState[2]){ // reload
+
+      // if(buttonState[5]==10){ // reload
       //   return 1;
       // }
-      // if(buttonState[1]){ // reload
+      // if(buttonState[6]==10){ // reload
       //   setFileName("/init/main.lua");
       //   return 1;
       // }
+
       // if(buttonState[0]){ // reload
       //   wifiMode = SELECT;
       // }
@@ -938,8 +946,6 @@ int RunLuaGame::run(int _remainTime){
     //   modeSelect += 1;
     //   modeSelect = modeSelect%3;
     // }
-
-
     
   }else if(wifiMode == SHOW){
     // if(buttonState[9]){ // reload//ブルーメニューをとじてwifionのまま戻る
@@ -947,9 +953,6 @@ int RunLuaGame::run(int _remainTime){
 
     // }
   }
-
-
-  
 
   // if(buttonState[9]){//ブルーメニュー決定
   //     switch(modeSelect){
@@ -967,7 +970,6 @@ int RunLuaGame::run(int _remainTime){
   //         setFileName("/init/main.lua");
   //         return 1;
   //     }
-      
   //   }
 
   // show FPS

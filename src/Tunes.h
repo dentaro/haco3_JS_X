@@ -1,8 +1,12 @@
 #include <Arduino.h>
+#include <FS.h>
+#include "SPIFFS.h"
+#include "string.h"
 
 #ifndef TUNES_H
 #define TUNES_H
 #define SPEAKER_PIN 25
+#define BUZZER_CHANEL 0 
 
 class Tunes
 {
@@ -20,12 +24,14 @@ class Tunes
     static int SineValues[256];
     static int SquareValues[256];
     static hw_timer_t* timer;
+    
 
     void init();
     void static IRAM_ATTR onTimer();
     void run();
     void pause();
     void resume();
+    // void static task1(void *pvParameters);
 
 };
 #endif

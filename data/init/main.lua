@@ -1,6 +1,7 @@
 --  launcher
 
 function setup()
+
 end
 
 count = 0
@@ -163,9 +164,9 @@ function drawUtil()
      elseif cursor == 3 then
        reboot()
      elseif cursor == 4 then
-       tone(0, 523, 0)
-       tone(1, 659, 0)
-       tone(2, 784, 0)
+      --  tone(0, 523)
+      --  tone(1, 659)
+       tone(2, 784)
      elseif cursor == 5 then
        tone(0, 0)
        tone(1, 0)

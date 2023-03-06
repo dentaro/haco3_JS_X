@@ -10,7 +10,7 @@ extern void reboot();
 extern void tone(int _toneNo , int _tonelength);
 extern void wCalData(String _wrfile);
 extern String rCalData(String _wrfile);
-// extern Tunes tunes;
+extern Tunes tunes;
 extern int pressedBtnID;
 extern uint8_t charSpritex;
 extern uint8_t charSpritey;
@@ -53,8 +53,6 @@ duk_ret_t RunJsGame::l_tone(duk_context* ctx){
 
   int n = duk_get_int(ctx, 0);
   int f = duk_get_int(ctx, 1);
-
-  // tone(n,f);
 
   portENTER_CRITICAL(&Tunes::timerMux);
   Tunes::d[n] = (uint16_t)(3.2768*f);
@@ -585,6 +583,7 @@ int RunJsGame::run(int _remainTime){
     if(buttonState[5] == 10){ // reload
       return 1;
     }
+    
     if(buttonState[6] == 10){ // reload
       setFileName("/init/main.js"); // TODO: lua?
       return 1;

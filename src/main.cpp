@@ -14,7 +14,7 @@
 #include <WiFiType.h>
 #include <WiFiUdp.h>
 
-#include <JPEGDecoder.h>
+// #include <JPEGDecoder.h>
 
 #include <Arduino.h>
 #include <FS.h>
@@ -35,7 +35,7 @@ using namespace std;
 int outputMode = WIDE_MODE;//20FPS程度240*240 遅いけれどタッチしやすい画面　パズルなど
 
 WifiGame* wifiGame = NULL;
-Tunes tunes;
+
 
 uint8_t xpos, ypos = 0;
 uint8_t colValR = 0;
@@ -76,6 +76,7 @@ static LGFX_Sprite sideSprite( &screen );//背景スプライトはディスプ�
 static LGFX_Sprite logoSprite( &screen );//背景スプライトはディスプレイに出力
 LGFX_Sprite sprite88_0 = LGFX_Sprite(&tft);
 BaseGame* game;
+Tunes tunes;
 String appfileName = "";//最初に実行されるアプリ名
 String txtName = "/init/txt/sample.txt";//実行されるファイル名
 
@@ -94,35 +95,15 @@ bool mapready = false;
 
 int8_t sprbits[128];//fgetでアクセスするスプライト属性を格納するための配列
 
-// Tunes tunes;
-// bool constantGetF = false;
-
 char buf[MAX_CHAR];
 char str[100];//情報表示用
-
-// #define BUZZER_PIN 25
-//音階名と周波数の対応
-
-float TONES[14] = 
-{ 261.6//C4
-, 277.18//C_4
-, 293.665//D4
-, 311.127//D_4
-, 329.63//E4
-, 349.228//F4
-, 369.994//F_4
-, 391.995//G4
-, 415.305//G_4
-, 440//A4
-, 466.164//A_4
-, 493.883//B4
-, 523.251//C5
-, 0//NOTONE
-};
-
 int mode = 0;//記号モード //0はrun 1はexit
 int gameState = 0;
 String appNameStr = "init";
+int soundNo = -1;
+int musicNo = -1;
+bool musicflag = false;
+bool sfxflag = false;
 
 enum struct FileType {
   LUA,
@@ -197,7 +178,8 @@ void showRam(){
   Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID)   : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID) );
 }
 
-void drawLogo(){
+void drawLogo()
+{
   logoSprite.setPsram(false);
   logoSprite.setColorDepth(16);                // 子スプライトの色深度
   logoSprite.createSprite(30, 10); // ゲーム画面用スプライトメモリ確保
@@ -210,6 +192,7 @@ void drawLogo(){
   // for(int i=0;i<CTRLBTNNUM-1;i++){
   //   screen.fillRoundRect(258,55*i+20,60,53,2,TFT_DARKGRAY);
   // }
+
   for(int j=0;j<2;j++){
     for(int i=0;i<2;i++){
     screen.fillRoundRect(30*i+258,52*j+20,28,50,2,TFT_DARKGRAY);
@@ -222,20 +205,20 @@ void drawLogo(){
   screen.fillRoundRect(258+30,164,28,38,2,TFT_LIGHTGRAY);
 
   screen.fillRoundRect(258,   204,58,38,2,TFT_LIGHTGRAY);
-
-
-
 }
 
 bool isWifiDebug(){
   return wifiGame != NULL;
 }
-void reboot(){
+
+void reboot()
+{
   wifiGame->pause();
   ESP.restart();
 }
 
-FileType detectFileType(String *appfileName){
+FileType detectFileType(String *appfileName)
+{
   if(appfileName->endsWith(".js")){
     return FileType::JS;
   }else if(appfileName->endsWith(".lua")){
@@ -251,11 +234,9 @@ FileType detectFileType(String *appfileName){
 }
 
 String *targetfileName;
-
-BaseGame* nextGameObject(String* _appfileName, int _gameState, String _mn){
+BaseGame* nextGameObject(String* _appfileName, int _gameState, String _mn)
+{
   // gameState = _gameState;
-  
-
   switch(detectFileType(_appfileName)){
     case FileType::JS:  
       game = new RunJsGame(); 
@@ -294,18 +275,18 @@ void startWifiDebug(bool isSelf){
   tunes.resume();
 }
 
-void tone(int _toneNo, int _tonelength){
-  ledcWriteTone(1,TONES[_toneNo]);
-  delay(_tonelength);
-  ledcWriteTone(1, 0);    // ならしたら最後に消音
-}
+// void tone(int _toneNo, int _tonelength){
+//   ledcWriteTone(1,TONES[_toneNo]);
+//   delay(_tonelength);
+//   ledcWriteTone(1, 0);    // ならしたら最後に消音
+// }
 
-hw_timer_t * timerA = NULL;//スピーカー用
-volatile static boolean timer_flag = false;
+// hw_timer_t * timerA = NULL;//スピーカー用
+// volatile static boolean timer_flag = false;
 //高速
-void IRAM_ATTR onTimerA() {
-  timer_flag != timer_flag;
-}
+// void IRAM_ATTR onTimerA() {
+//   timer_flag != timer_flag;
+// }
 
 char *A;
 bool flip = true;
@@ -328,12 +309,12 @@ void runFileName(String s){
 hw_timer_t * timer = NULL;
 
 // 画面描画タスクハンドル
-TaskHandle_t taskHandle;
+// TaskHandle_t taskHandle;
 
 // タイマー割り込み
-void IRAM_ATTR onTimer() {
-  xTaskNotifyFromISR(taskHandle, 0, eIncrement, NULL);
-}
+// void IRAM_ATTR onTimer() {
+//   xTaskNotifyFromISR(taskHandle, 0, eIncrement, NULL);
+// }
 
 //ファイル書き込み
 void writeFile(fs::FS &fs, const char * path, const char * message){
@@ -495,16 +476,16 @@ void setup()
   Serial.begin(115200);
   delay(50);
   // タイマー作成(33.333ms)
-  timer = timerBegin(0, 80, true);
-  timerAttachInterrupt(timer, &onTimer, true);
-  timerAlarmWrite(timer, 1000000, true);
-  timerAlarmEnable(timer);
+  // timer = timerBegin(0, 80, true);
+  // timerAttachInterrupt(timer, &onTimer, true);
+  // timerAlarmWrite(timer, 1000000, true);
+  // timerAlarmEnable(timer);
 
-  timerA = timerBegin(0, 80, true);//カウント時間は1マイクロ秒//hw_timer_t*オブジェクト(タイマーハンドラ）がかえってくる
-  timerAttachInterrupt(timerA, &onTimerA, true);//タイマー割り込みが発生したときに実行する関数を登録する。timerA =フレームタイマー
-  timerAlarmWrite(timerA, 1000000, true);//タイマーの設定値(割り込みのタイミング)を設定する。1ui.be/30秒　＝ 33333uSec　1/15秒　＝ 66666uSec
-  timerAlarmEnable(timerA);
-  delay(10);
+  // timerA = timerBegin(0, 80, true);//カウント時間は1マイクロ秒//hw_timer_t*オブジェクト(タイマーハンドラ）がかえってくる
+  // timerAttachInterrupt(timerA, &onTimerA, true);//タイマー割り込みが発生したときに実行する関数を登録する。timerA =フレームタイマー
+  // timerAlarmWrite(timerA, 1000000, true);//タイマーの設定値(割り込みのタイミング)を設定する。1ui.be/30秒　＝ 33333uSec　1/15秒　＝ 66666uSec
+  // timerAlarmEnable(timerA);
+  // delay(10);
 
   if (!SPIFFS.begin(true))
   {
@@ -726,7 +707,7 @@ void loop()
         }
         
         // delay(4);//120FPS スプライトが少ない、速度の速いモード描画ぶん待つ
-        delay(10);//30FPS メニュー、パズルなど
+        // delay(10);//30FPS メニュー、パズルなど
 
   // int wait = 1000/60 - remainTime;//フレームレートを60FPS合わせる
   // if(wait > 0){

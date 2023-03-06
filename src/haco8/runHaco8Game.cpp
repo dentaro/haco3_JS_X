@@ -15,7 +15,12 @@ extern int outputMode;
 extern int mode;
 extern int gameState;
 extern String mapFileName;
+extern int soundNo;
+extern int musicNo;
+extern bool musicflag;
+extern bool sfxflag;
 extern void readMap();
+
 
 extern uint8_t mapArray[MAPWH][MAPWH];
 
@@ -59,6 +64,14 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_fset, 1);
   lua_setglobal(L, "fset");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_sfx, 1);
+  lua_setglobal(L, "sfx");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_music, 1);
+  lua_setglobal(L, "music");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_map, 1);
@@ -208,6 +221,22 @@ int RunHaco8Game::l_fset(lua_State* L){
   int8_t bitfilter = 0b00000001<<fbitno;
        if(val == 0)sprbits[sprno] &= ~bitfilter;//スプライト番号sprnoのfbitno番目を0に
   else if(val == 1)sprbits[sprno] |=  bitfilter;//スプライト番号sprnoのfbitno番目を1に
+  return 0;
+}
+
+int RunHaco8Game::l_sfx(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  sfxflag = true;
+  int8_t sn = lua_tointeger(L, 1);
+  soundNo = sn;
+  return 0;
+}
+
+int RunHaco8Game::l_music(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  musicflag = true;
+  int8_t mn = lua_tointeger(L, 1);
+  musicNo = mn;
   return 0;
 }
 

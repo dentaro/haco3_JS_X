@@ -1,7 +1,7 @@
 #ifndef BASE_GAME_H
 #define BASE_GAME_H
 
-#define CTRLBTNNUM 5//ゲームに使える再度ボタン数を決めます
+#define CTRLBTNNUM 9//ゲームに使えるサイドボタン数を決めます
 #define CALIBRATION_FILE "/init/param/caldata.txt"
 #define MAPSPRNOS_FILE "/init/param/mapsprnos.txt"//色番号に対応するスプライトを登録するファイル
 #define WIFIPASS_FILE "/init/param/wifipass.txt"
@@ -17,7 +17,6 @@ class BaseGame
   public:
     bool wifiDebugRequest = false;//外部ファイルから書き換えてWifiモードにできる
     bool wifiDebugSelf = false;
-    // int gameState = 0;
 
     void setWifiDebugRequest(bool _b){wifiDebugRequest = _b;};//外部ファイルから書き換えてWifiモードにできる
     void setWifiDebugSelf(bool _b){wifiDebugSelf = _b;};

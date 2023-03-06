@@ -76,6 +76,8 @@ class RunHaco8Game: public RunLuaGame
   static int l_ceil(lua_State* L);
   static int l_fget(lua_State* L);
   static int l_fset(lua_State* L);
+  static int l_sfx(lua_State* L);
+  static int l_music(lua_State* L);
   static int l_circfill(lua_State* L);
   static int l_circ(lua_State* L);
   static int l_rectfill(lua_State* L);

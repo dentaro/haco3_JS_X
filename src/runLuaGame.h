@@ -96,6 +96,7 @@ class RunLuaGame: public BaseGame
     static int l_fillrect(lua_State* L);
     static int l_fillcircle(lua_State* L);
     static int l_btn(lua_State* L);
+    static int l_btnp(lua_State* L);
     static int l_getip(lua_State* L);
     static int l_iswifidebug(lua_State* L);
     static int l_wifiserve(lua_State* L);

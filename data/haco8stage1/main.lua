@@ -1,4 +1,5 @@
 cl = 4
+sound=-1
 function get_map_sprn(sprx,spry)
   local celx=flr(sprx/8)
   local cely=flr(spry/8)
@@ -15,7 +16,6 @@ function get_map_flag(sprx,spry)
 end
 
 function collition(x,y)
-  
   return get_map_flag(x-cl,y+2-cl) or get_map_flag(x+6-cl,y+2-cl) or get_map_flag(x-cl,y+7-cl) or get_map_flag(x+6-cl,y+7-cl)
 end
 
@@ -32,33 +32,39 @@ ipf=8 -- アニメーション1フレームについての時間(1ipf = 1/30秒)
 nf=2 -- アニメーションするフレーム数(足踏みは2フレーム)
 t=0
 
+last_sound=-1
+
 function _init()
   -- ここに書いてもグローバル変数になるようにしたい
-  -- x=8
-  -- y=8
+  
+  music(0);--引数変えてもまだ音楽は変わりません（コメントアウトすると音楽なしに）
 end
 
-
 function input()
+  
   local prex = x
   local prey = y
   local pressed=false
   if (btn(1)>=1) then
+  -- sound=0
    x = x-1
    d=1
    pressed=true
   end
   if (btn(2)>=1) then
+  -- sound=1
     x = x+1
    d=2
    pressed=true
   end
   if (btn(3)>=1) then
+  -- sound=2
    y = y-1
    d=3
    pressed=true
   end
   if (btn(4)>=1) then
+  -- sound=3
    y = y+1
    d=4
    pressed=true
@@ -70,13 +76,15 @@ function input()
   end
 
   if collition(x,y) == true then
+    sound=0
     x=prex
     y=prey
   end
-
  end
 
 function _update()
+
+  sound=-1
   -- fset(45,0,0)--水スプライト45を通れなく（0ビットを1に）する
   -- fset(45,1,1)--水スプライト45を通れなく（0ビットを1に）する
   -- fset(45,2,1)--水スプライト45を通れなく（0ビットを1に）する
@@ -87,7 +95,33 @@ function _update()
   -- fset(52,0,0)--スプライトを通れるように（0ビットを0に）する
   t = t+1
   input()
+  
+  if (btnp(5) == true) then
+    sound=1
+  end
+  if (btnp(6) == true) then
+    sound=2
+  end
+  if (btnp(7) == true) then
+    sound=3
+  end
+  if (btnp(8) == true) then
+    sound=4
+  end
 
+
+  -- if sound>-1 then
+    sfx(sound)
+    last_sound=sound
+  -- end
+
+  -- tone(0, 523, 0)
+  -- tone(1, 659, 0)
+  -- tone(2, 784, 0)
+
+  -- tone(0, 0)
+  -- tone(1, 0)
+  -- tone(2, 0)
 
   -- lefttop=get_map_flag(x+1-cl,y+2-cl)
   -- righttop=get_map_flag(x+5-cl,y+2-cl)
@@ -113,13 +147,24 @@ function _draw()
   -- pset(x+5-cl,y+7-cl, 8)
   -- print(lefttop.."/"..righttop,68,2,7)
   -- print(leftbottom.."/"..rightbottom,68,8,7)
+
+  -- rectfill(0,0,127,127,0)
+ -- 前回再生されたSFX番号を画面に表示する
+--  if last_sound>-1 then
+  print(last_sound, 68,14,7)
+--  end
   
 end
 -------------------------------------------------------
-function setup()--init
-  _init()
+firstF = true
+function setup()--使えず、、、、
 end
+
 function loop()--update --draw
+if firstF == true then
+  _init()
+  firstF = false
+end
 _update()
 _draw()
 end

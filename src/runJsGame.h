@@ -64,7 +64,6 @@ class RunJsGame: public BaseGame
   { 255,202,165}//15: 桃色
   };
     
-
     int loadSurface(File* fp, uint8_t* buf);
     static int l_tone(duk_context* ctx);
     static int l_spr(duk_context* ctx);
