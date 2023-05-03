@@ -183,6 +183,10 @@ int RunHaco8Game::l_map(lua_State* L){
   int roiW = lua_tointeger(L, 5);
   int roiH = lua_tointeger(L, 6);
 
+  String fn = lua_tostring(L, 7);
+  if(fn != NULL){
+    mapFileName = fn;
+  }
 
   sprite88_roi.clear();//指定の大きさにスプライトを作り直す
   sprite88_roi.createSprite(8,8);
@@ -234,8 +238,13 @@ int RunHaco8Game::l_sfx(lua_State* L){
 
 int RunHaco8Game::l_music(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
-  musicflag = true;
+  
   int8_t mn = lua_tointeger(L, 1);
+  if(mn == -1){
+    musicflag = false;
+  }else{
+    musicflag = true;
+  }
   musicNo = mn;
   return 0;
 }

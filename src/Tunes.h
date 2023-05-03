@@ -5,7 +5,7 @@
 
 #ifndef TUNES_H
 #define TUNES_H
-#define SPEAKER_PIN 25
+#define SPEAKER_PIN 26
 #define BUZZER_CHANEL 0 
 
 class Tunes

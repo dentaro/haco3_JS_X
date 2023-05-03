@@ -17,6 +17,8 @@ extern int8_t sprbits[128];//8*16
 extern vector<string> split(string& input, char delimiter);
 extern String appNameStr;
 extern String mapFileName;
+extern float sliderval[2];
+extern bool optionuiflag;
 
 int cursor = 0;
 
@@ -315,6 +317,18 @@ int RunLuaGame::l_btnp(lua_State* L)
   return 1;
 }
 
+int RunLuaGame::l_sldr(lua_State* L)
+{
+  RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+  int xy = lua_tointeger(L, 1);
+  
+  // if(xy==0||xy==1){
+    optionuiflag = true;
+    lua_pushnumber(L, sliderval[xy]);
+  // }
+  return 1;
+}
+
 int RunLuaGame::l_iswifidebug(lua_State* L){
   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
 
@@ -363,17 +377,27 @@ int RunLuaGame::l_list(lua_State* L){//
 
   lua_newtable(L);
 
+  //ファイル数をあらかじめカウント
   File root = SPIFFS.open("/");
   f = root.openNextFile();
-  int i = 0;
-  while(f){
-    Serial.println(f.path());
-    lua_pushstring(L, f.path());//パスを文字列にしてリターン
-    lua_rawseti(L, -2, i);
-    f = root.openNextFile();
-    i ++;
+  int firstCountNo = 0;
+  int fileCount = firstCountNo; // ファイル数をカウントするための変数を初期化
+
+  while (f) {
+  String filePath = f.path(); // ファイルパスを取得
+
+  if (filePath.endsWith(".lua")||filePath.endsWith(".js")||filePath.endsWith("caldata.txt")) { // 拡張子が ".lua"".lua" の場合のみ処理
+    Serial.println(filePath);
+    lua_pushstring(L, filePath.c_str()); // パスを文字列にしてリターン
+    lua_rawseti(L, -2, fileCount);
+    fileCount++; // ファイル数をインクリメント
   }
+  f = root.openNextFile();
+}
+  f.close();
+  root.close();
   return 1;
+  
 }
 int RunLuaGame::l_require(lua_State* L){
   bool loadError = false;
@@ -666,6 +690,10 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
   lua_setglobal(L, "btnp");
 
   lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_sldr, 1);
+  lua_setglobal(L, "sldr");
+
+  lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_getip, 1);
   lua_setglobal(L, "getip");
 
@@ -879,11 +907,21 @@ int RunLuaGame::run(int _remainTime){
 
   //ボタンを押してからの経過時間を返すための処理
   for(int i = 0; i < CTRLBTNNUM; i ++){
-    if(ui.getEvent()==NO_EVENT){
+    if(ui.getEvent() == NO_EVENT)
+    {
       buttonState[i] = 0;
-    }else{
-      if(pressedBtnID ==  i){//押されたものだけの値をあげる
-      buttonState[i] ++;
+    }
+    // else if(ui.getEvent() == UNTOUCH || ui.getEvent() == WAIT || ui.getEvent() == RELEASE || ui.getEvent() == TAPPED)
+    // {
+    //   buttonState[i] = 0;
+    //   // if(pressedBtnID == i){//押されたものだけの値をあげる
+    //   //   buttonState[i] ++;
+    //   // }
+    // }
+    else if(ui.getEvent() == MOVE)
+    {
+      if(pressedBtnID == i){//押されたものだけの値をあげる
+        buttonState[i] ++;
       }
     }
   }
@@ -986,10 +1024,11 @@ int RunLuaGame::run(int _remainTime){
 
   
 
-  int wait = 1000/30 - _remainTime;
-  if(wait > 0){
-    delay(wait);
-  }
+  // int wait = 1000/30 - _remainTime;
+  // if(wait > 0){
+  //   delay(wait);
+  // }
+
   return 0;
 }
 

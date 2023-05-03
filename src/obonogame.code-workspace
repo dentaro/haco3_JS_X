@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "../../obonogame"
+		},
+		{
+			"name": "abagame",
+			"path": "../../abagame"
+		},
+		{
+			"name": "daisotouch",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"cglab.h": "c"
+		}
+	}
+}

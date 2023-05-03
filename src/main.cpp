@@ -36,7 +36,6 @@ int outputMode = WIDE_MODE;//20FPS程度240*240 遅いけれどタッチしや�
 
 WifiGame* wifiGame = NULL;
 
-
 uint8_t xpos, ypos = 0;
 uint8_t colValR = 0;
 uint8_t colValG = 0;
@@ -75,6 +74,8 @@ LGFX_Sprite sprite64 = LGFX_Sprite();
 static LGFX_Sprite sideSprite( &screen );//背景スプライトはディスプレイに出力
 static LGFX_Sprite logoSprite( &screen );//背景スプライトはディスプレイに出力
 LGFX_Sprite sprite88_0 = LGFX_Sprite(&tft);
+// static LGFX_Sprite sliderSprite( &tft );//スライダ用
+
 BaseGame* game;
 Tunes tunes;
 String appfileName = "";//最初に実行されるアプリ名
@@ -104,6 +105,8 @@ int soundNo = -1;
 int musicNo = -1;
 bool musicflag = false;
 bool sfxflag = false;
+float sliderval[2] = {0,0};
+bool optionuiflag = false;
 
 enum struct FileType {
   LUA,
@@ -289,7 +292,7 @@ void startWifiDebug(bool isSelf){
 // }
 
 char *A;
-bool flip = true;
+// bool flip = true;
 
 uint32_t preTime;
 void setFileName(String s){
@@ -550,6 +553,12 @@ void setup()
   ui.createBtns( 130,  101, 30, 20,  1, 1, TOUCH, 2);//コントローラー4ボタン
   ui.createBtns( 130,  9,   30, 52,  2, 2, TOUCH, 2);//コントローラー4ボタン
 
+    // if(optionuiflag == true){
+    // ui.createSliders( 0, 100, 128, 20, 1, 1, sliderSprite, XY_VAL, MULTI_EVENT, 2);
+    // sliderSprite.fillScreen(TFT_RED);
+    // ui.setBtnName( ui.getUiID("SLIDER_5"), "2DSlider0" );
+  // }
+
   delay(100);
 
   tft.setPsram( false );//DMA利用のためPSRAMは切る
@@ -596,6 +605,17 @@ void loop()
       pressedBtnID = -1;//リセット
     }
   }
+
+      if(optionuiflag == true){
+
+      if( ui.getTouchBtnID() == ui.getUiFirstNo( ui.getUiID("SLIDER_5") )  )
+      {
+        // sliderval[0] = int( ui.getSliderVal( ui.getUiID("SLIDER_5"), 0, X_VAL)*128 ); 
+        sliderval[0] = ui.getSliderVal( ui.getUiID("SLIDER_5"), 0, X_VAL ); 
+        sliderval[1] = ui.getSliderVal( ui.getUiID("SLIDER_5"), 0, Y_VAL ); 
+        // Serial.println(ui.getSliderVal( ui.getUiID("SLIDER_5"), 0, X_VAL));
+      }
+    }
 
     // if(ui.getTouchBtnID() == RELEASE){//リリースされたら
     //   pressedBtnID = -1;
@@ -656,6 +676,11 @@ void loop()
     game = nextGameObject(&appfileName, gameState, mapFileName);//ファイルの種類を判別して適したゲームオブジェクトを生成
     game->init();//resume()（再開処理）を呼び出し、ゲームで利用する関数などを準備
     tunes.resume();
+  }
+
+  if(optionuiflag == true){
+  // tft.fillRect(int(sliderval[0]*128), 90, 10,10,TFT_RED); 
+  // ui.drawSliders( ui.getUiID("SLIDER_5"), tft, sliderSprite, 0, 100);
   }
 
   // == display update ==

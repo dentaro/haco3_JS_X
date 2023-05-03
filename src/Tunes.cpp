@@ -20,7 +20,6 @@ extern int musicNo;
 extern bool musicflag;
 extern bool sfxflag;
 
-
 // SQURE_WAVE ---------------------------
 #define  V1  0xffff
 #define V2  0x7fff
@@ -62,7 +61,6 @@ uint16_t pW1,pW2,pW3, sw1,sw2,sw3;    // 波形ポインタとサンプリング
 uint16_t v,v1,v2,v3,Va,Vb, u,u1,u2;          // 振幅とその合算値
 uint8_t x,y;
 uint8_t wcnt = 0;
-
 
 void IRAM_ATTR Tunes::onTimer(){
   //mymelo----------------------------------------------------------------------------
