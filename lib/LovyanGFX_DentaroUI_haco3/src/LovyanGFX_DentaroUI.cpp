@@ -1,10 +1,15 @@
 #include "LovyanGFX_DentaroUI.hpp"
+#include <iostream>
+#include <string>
+#include <vector>
 using namespace std;
 
 #define FLICK_DIST 3
 
 #define CALIBRATION_FILE "/init/caldata.txt"
 #define REPEAT_CAL false
+
+
 
 LovyanGFX_DentaroUI::LovyanGFX_DentaroUI(LGFX* _lcd)
 {
@@ -110,14 +115,12 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _c
   begin(_lcd);
   _lcd.setRotation( _rotateNo );
   showSavedCalData(_lcd);//タッチキャリブレーションの値を表示
-    for(int i = 0; i < BUF_PNG_NUM; i++)
+
+  
+  for(int i = 0; i < BUF_PNG_NUM; i++)
   {
-    createLayout( 0, 0, 256, 256, layoutSprite_list[i], MULTI_EVENT );//レイアウト用のスプライトを作る
+    createLayout( 0, 0, 8, 8, layoutSprite_list[i], MULTI_EVENT );//レイアウト用のスプライトを作る
   }
-  // for(int objId = 0; objId < BUF_PNG_NUM; objId++){
-  //   preReadXtileNo[objId] = -1;
-  //   preReadYtileNo[objId] = -1;
-  // }
 }
 
 String LovyanGFX_DentaroUI::rCalData(String _wrfile){
@@ -126,10 +129,6 @@ String LovyanGFX_DentaroUI::rCalData(String _wrfile){
   fr.close();	// ⑫	ファイルを閉じる
   return _readStr;
 }
-
-#include <iostream>
-#include <string>
-#include <vector>
  
 std::vector<std::string> split(std::string str, char del) {
     int first = 0;
@@ -252,9 +251,6 @@ void LovyanGFX_DentaroUI::calibrationRun( LGFX& _lcd){
   // //Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_IRAM_8BIT) : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_IRAM_8BIT) );
   // Serial.printf("heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID)   : %6d\n", heap_caps_get_minimum_free_size(MALLOC_CAP_INVALID) );
     }
-
-    
-  
   }
 
 void LovyanGFX_DentaroUI::begin( LGFX& _lcd)
@@ -423,12 +419,6 @@ void LovyanGFX_DentaroUI::update( LGFX& _lcd )
   }else if (touchState == B_UNTOUCH) {
     clist[0] = TFT_DARKGREEN;
   }
-
-  // if(eventState == RELEASE){//リリース時に、btnidを-1に
-  // //   obj_ret.reset();
-  //   obj_ret.setBtnID_ret(-1);
-  // }
-  
   
   for(int i = 0; i < uiBoxes_num; i++){
     for(int j = 0; j<uiBoxes[i].b_num; j++){
@@ -499,8 +489,8 @@ void LovyanGFX_DentaroUI::createBtns(
   {//縦方向に並ぶ
   touchZoom = _touchZoom;
 
-uiBoxes[uiID] = *new UiContainer;
-// uiBoxes.push_back(*new UiContainer);
+// uiBoxes[uiID] = *new UiContainer;
+uiBoxes.push_back(*new UiContainer);
 
 //   // if(uiID<128){
     uiBoxes[uiID].label = "BTN_" + String(uiID);
@@ -529,7 +519,7 @@ for(int j= 0; j < uiBoxes[uiID].col; j++)
       {
         int p_btnID =  _startId + j * uiBoxes[uiID].row + i;
 
-        touch_btn_list.push_back(new TouchBtn( lcd ));//ボタン数分増やしていく
+        touch_btn_list.push_back(new TouchBtn());//ボタン数分増やしていく
 
           touch_btn_list[p_btnID]->initBtn(p_btnID, String(p_btnID),
           i*b_w,
@@ -552,7 +542,7 @@ for(int j= 0; j < uiBoxes[uiID].col; j++)
   }
 
   uiBoxes[uiID].b_num =  btnID - uiBoxes[uiID].b_sNo;//UIのボタン数をセット
-  // Serial.println("e");
+  Serial.println("e");
 
   uiBoxes_num++;
   uiID++;
@@ -604,7 +594,7 @@ void LovyanGFX_DentaroUI::setLayoutPos( int _x, int _y )
 void LovyanGFX_DentaroUI::createLayout( int _x, int _y, int _w, int _h, LGFX_Sprite& _layoutSprite, int _eventNo = MULTI_EVENT){
     uiBoxes_num++;
     uiID++;
-    uiBoxes[uiID] = *new UiContainer;
+    uiBoxes.push_back(*new UiContainer);
 
     Serial.println("LAYOUT_" + String(uiID)  + "=[" + String(uiID) + "]" + String(btnID)+"~");
     uiBoxes[uiID].label = "LAYOUT_" + String(uiID);
@@ -622,65 +612,86 @@ void LovyanGFX_DentaroUI::createLayout( int _x, int _y, int _w, int _h, LGFX_Spr
     layoutSprite_w = _w;
     layoutSprite_h = _h;
 
-    _layoutSprite.setPsram( false );
-    _layoutSprite.setColorDepth(16);//親スプライトの色深度１６
-    _layoutSprite.createSprite(layoutSprite_w, layoutSprite_h);
-    _layoutSprite.setPaletteGrayscale();
+    // _layoutSprite.setPsram( false );
+    // _layoutSprite.setColorDepth(16);//親スプライトの色深度１６
+    // _layoutSprite.createSprite(layoutSprite_w, layoutSprite_h);
+    // _layoutSprite.setPaletteGrayscale();
 }
 
 void LovyanGFX_DentaroUI::createSliders(int _x, int _y, int _w, int _h,  int _row, int _col,
 LGFX_Sprite& _uiSprite,
 int _xy_mode,
-int _eventNo)
+int _eventNo, int _touchZoom)
 {
-  uiBoxes[uiID] = *new UiContainer;
-  uiBoxes_num++;
-  uiID++;
+  touchZoom = _touchZoom;
+
+  uiBoxes.push_back(*new UiContainer);
   uiBoxes[uiID].label = "SLIDER_" + String(uiID);
-  Serial.println("SLIDER_" + String(uiID) + "=[" + String(uiID) + "]");
+  Serial.println("SLIDER_" + String(uiID) + "=[" + String(uiID) + "]" + String(btnID)+"~");
+
   int _startId = btnID;
   uiBoxes[uiID].b_sNo = btnID;
   uiBoxes[uiID].id  = uiID;
-  uiBoxes[uiID].x   = _x;
-  uiBoxes[uiID].y   = _y;
-  uiBoxes[uiID].w   = _w;
-  uiBoxes[uiID].h   = _h;
+
+  // uiBoxes[uiID].x   = _x;
+  // uiBoxes[uiID].y   = _y;
+  // uiBoxes[uiID].w   = _w;
+  // uiBoxes[uiID].h   = _h;
+  uiBoxes[uiID].x   = _x*touchZoom;
+  uiBoxes[uiID].y   = _y*touchZoom;
+  uiBoxes[uiID].w   = _w*touchZoom;
+  uiBoxes[uiID].h   = _h*touchZoom;
   uiBoxes[uiID].row = _row;
   uiBoxes[uiID].col = _col;
   uiBoxes[uiID].eventNo = _eventNo;
-
-  _uiSprite.setPsram( false );
+  
+  _uiSprite.setPsram(false);//UNUSE_PSRAM
   _uiSprite.setColorDepth( COL_DEPTH );
-  _uiSprite.createSprite( _w, _h );
+  _uiSprite.createSprite( uiBoxes[uiID].w, uiBoxes[uiID].h );
+  
+    int s_w = int(uiBoxes[uiID].w/_row);
+    int s_h = int(uiBoxes[uiID].h/_col);
+    // int s_w = int(_w/_row);
+    // int s_h = int(_h/_col);
 
-  int s_w = int( _w/_row );
-  int s_h = int( _h/_col );
+  for(int j= 0; j < uiBoxes[uiID].col; j++)
+{
+    for(int i= 0; i < uiBoxes[uiID].row; i++)
+      {
+        int p_btnID =  _startId + j * uiBoxes[uiID].row + i;
 
-  for( int i= 0; i < _row; i++ )
-    {
-    for( int j= 0; j < _col; j++ )
-    {
-    btnID = _startId + j*_row + i;
-    touch_btn_list[_startId + j*_row + i] = NULL;
-    touch_btn_list[_startId + j*_row + i] = new TouchBtn( lcd );
-    touch_btn_list[_startId + j*_row + i]->initSlider( _startId + j*_row + i,
-    i*s_w,
-    j*s_h,
-    s_w,
-    s_h,
-    String( _startId + j*_row + i ),
-    layoutSpritePos,
-    getTouchPoint(_x, _y),
-    _uiSprite,
-    _xy_mode);
+        touch_btn_list.push_back(new TouchBtn());//ボタン数分増やしていく
 
-    btnID++;
-    }
+        touch_btn_list[_startId + j*_row + i]->initSlider( _startId + j*_row + i,
+        i*s_w,
+        j*s_h,
+        s_w,
+        s_h, 
+        String( _startId + j*_row + i ), 
+        layoutSpritePos, 
+        getTouchPoint(_x*touchZoom, _y*touchZoom), 
+        // getTouchPoint(uiBoxes[uiID].x*touchZoom, uiBoxes[uiID].y*touchZoom), 
+        _uiSprite,
+        _xy_mode);
+
+        touch_btn_list[ p_btnID ]->setVisibleF( true );
+        touch_btn_list[ p_btnID ]->setAvailableF( true );
+
+        Serial.print("[");
+        Serial.print(p_btnID);
+        Serial.print("]");
+        btnID++;//ボタンを更新
+      }
   }
-  uiBoxes[uiID].b_num =  btnID - uiBoxes[uiID].b_sNo;
+  
+  uiBoxes[uiID].b_num =  btnID - uiBoxes[uiID].b_sNo;//UIのボタン数をセット
+  Serial.println("e");
+
+  uiBoxes_num++;
+  uiID++;
+  
+  
 }
-
-
 
 void LovyanGFX_DentaroUI::setQWERTY(int uiID, String _btnsString, LGFX_Sprite& _sprite)
 {
@@ -708,9 +719,9 @@ void LovyanGFX_DentaroUI::setBtnName( int _btnNo, String _btnName)
   touch_btn_list[_btnId]->setBtnName(_btnName);
 }
 
-void LovyanGFX_DentaroUI::drawBtns( int uiID, LovyanGFX* _lgfx, LGFX_Sprite& _uiSprite, int _x, int _y)
+void LovyanGFX_DentaroUI::drawBtns( int uiID, LovyanGFX& _lgfx, LGFX_Sprite& _uiSprite, int _x, int _y)
 {
-  lgfx = _lgfx;
+  // lgfx = _lgfx;
   if( getEvent() != NO_EVENT ){
   if(getEvent() == uiBoxes[uiID].eventNo || uiBoxes[uiID].eventNo == MULTI_EVENT)
   {
@@ -726,18 +737,18 @@ void LovyanGFX_DentaroUI::drawBtns( int uiID, LovyanGFX* _lgfx, LGFX_Sprite& _ui
       else touch_btn_list[i]->setSelectBtnF(false);
       touch_btn_list[i]->btnDraw(_uiSprite);
     }
-    _uiSprite.pushSprite(_lgfx, uiBoxes[uiID].x, uiBoxes[uiID].y);
+    _uiSprite.pushSprite(&_lgfx, uiBoxes[uiID].x, uiBoxes[uiID].y);
 
     }
   }
 }
 
-void LovyanGFX_DentaroUI::drawSliders(int _uiID, LovyanGFX* _lgfx, LGFX_Sprite& _uiSprite)
+void LovyanGFX_DentaroUI::drawSliders(int _uiID, LovyanGFX& _lgfx, LGFX_Sprite& _uiSprite)
 {
   drawSliders( _uiID, _lgfx, _uiSprite, uiBoxes[_uiID].x, uiBoxes[_uiID].y);
 }
 
-void LovyanGFX_DentaroUI::drawSliders(int uiID, LovyanGFX* _lgfx, LGFX_Sprite& _uiSprite, int _x, int _y)
+void LovyanGFX_DentaroUI::drawSliders(int uiID, LovyanGFX& _lgfx, LGFX_Sprite& _uiSprite, int _x, int _y)
 {
   if( getEvent() != NO_EVENT ){
     if( getEvent() == uiBoxes[uiID].eventNo || uiBoxes[uiID].eventNo == MULTI_EVENT)
@@ -748,23 +759,23 @@ void LovyanGFX_DentaroUI::drawSliders(int uiID, LovyanGFX* _lgfx, LGFX_Sprite& _
 
     for(int i = _id; i < _id + _btnNum; i++)
     {
-      touch_btn_list[i]->sliderDraw(_uiSprite, tp);
+      touch_btn_list[i]->sliderDraw(_uiSprite, tp, touchZoom);
     }
-    _uiSprite.pushSprite(_lgfx, _x, _y);
+    _uiSprite.pushSprite(&_lgfx, _x, _y);
     }
   }
 }
 
-void LovyanGFX_DentaroUI::drawBtns(int _uiID, LovyanGFX* _lgfx, LGFX_Sprite& _uiSprite){
+void LovyanGFX_DentaroUI::drawBtns(int _uiID, LovyanGFX& _lgfx, LGFX_Sprite& _uiSprite){
   toggle_mode = false;
   drawBtns( _uiID, _lgfx, _uiSprite, uiBoxes[_uiID].x, uiBoxes[_uiID].y);
 }
 
-void LovyanGFX_DentaroUI::drawToggles(int _uiID, LovyanGFX* _lgfx, LGFX_Sprite& _uiSprite){
+void LovyanGFX_DentaroUI::drawToggles(int _uiID, LovyanGFX& _lgfx, LGFX_Sprite& _uiSprite){
   drawToggles(_uiID, _lgfx, _uiSprite, uiBoxes[_uiID].x, uiBoxes[_uiID].y);
 }
 
-void LovyanGFX_DentaroUI::drawToggles(int _uiID, LovyanGFX* _lgfx, LGFX_Sprite& _uiSprite, int _x, int _y){
+void LovyanGFX_DentaroUI::drawToggles(int _uiID, LovyanGFX& _lgfx, LGFX_Sprite& _uiSprite, int _x, int _y){
   toggle_mode = true;
   drawBtns(_uiID, _lgfx, _uiSprite, _x, _y);
   toggle_mode = false;
@@ -962,7 +973,9 @@ int LovyanGFX_DentaroUI::getParentID(){
 
 int LovyanGFX_DentaroUI::getUiID( const char* _uiLabel){
   int i = 0;
+  
   while(uiBoxes[i].label != String(_uiLabel)){
+    // Serial.println(uiBoxes[i].label);
     i++;
   }
   return i;
