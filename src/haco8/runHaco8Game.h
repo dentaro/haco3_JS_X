@@ -71,6 +71,8 @@ class RunHaco8Game: public RunLuaGame
   static int l_cls(lua_State* L);
   static int l_rnd(lua_State* L);
   static int l_flr(lua_State* L);
+  static int l_max(lua_State* L);
+  static int l_min(lua_State* L);
   static int l_go2(lua_State* L);
   static int l_gstat(lua_State* L);
   static int l_ceil(lua_State* L);
@@ -88,6 +90,8 @@ class RunHaco8Game: public RunLuaGame
   static int l_map(lua_State* L);
   static int l_mget(lua_State* L);
   static int l_spr8(lua_State* L);
+  // static int l_add(lua_State* L);
+  // static int l_del(lua_State* L);
   
   uint16_t getColor(int _cn, int _rgb);
   void haco8resume();//この関数で基底クラスのダミー関数を置き換えることで、派生クラスの処理を挿入する

@@ -46,6 +46,14 @@ void RunHaco8Game::haco8resume()
   lua_setglobal(L, "flr");
 
   lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_min, 1);
+  lua_setglobal(L, "min");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_max, 1);
+  lua_setglobal(L, "max");
+
+  lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_go2, 1);
   lua_setglobal(L, "go2");
 
@@ -84,6 +92,14 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_spr8, 1);
   lua_setglobal(L, "spr8");
+
+  // lua_pushlightuserdata(L, this);
+  // lua_pushcclosure(L, l_add, 1);
+  // lua_setglobal(L, "add");
+
+  // lua_pushlightuserdata(L, this);
+  // lua_pushcclosure(L, l_del, 1);
+  // lua_setglobal(L, "del");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_circfill, 1);
@@ -173,6 +189,61 @@ int RunHaco8Game::l_spr8(lua_State* L){
   }
   return 0;
 }
+
+//luaテーブル操作
+// int RunHaco8Game::l_add(lua_State* L){
+//   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+//   // int t = lua_tointeger(L, 1);
+//   int v = lua_tointeger(L, 2);
+//   int n = lua_rawlen(L, -1); // テーブルの要素数を取得
+//   lua_pushinteger(L, v); // 値をスタックにプッシュ
+//   lua_rawseti(L, -2, n + 1); // 値をテーブルに追加
+//   lua_pop(L, 1); // テーブルをポップ
+    
+//   return 1;
+// }
+
+
+
+// int RunHaco8Game::l_del(lua_State* L, int index, lua_Integer v){
+
+//   return 1;
+// }
+
+// int RunHaco8Game::l_add(lua_State* L) {
+  // int num_tables = 2;//2つのテーブルの結合
+  // RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  //   int total_len = 0;
+  //   for (int i = 1; i <= num_tables; i++) {
+  //       if (!lua_istable(L, i)) {
+  //           luaL_error(L, "Argument #%d is not a table", i);
+  //       }
+  //       total_len += lua_rawlen(L, i);
+  //   }
+
+  //   lua_createtable(L, total_len, 0);
+  //   int table_index = 1;
+
+  //   for (int i = 1; i <= num_tables; i++) {
+  //       lua_pushvalue(L, i);
+  //       lua_pushstring(L, "");
+  //       int sep_index = lua_gettop(L);
+  //       int table_len = lua_rawlen(L, i);
+
+  //       for (int j = 1; j <= table_len; j++) {
+  //           lua_rawgeti(L, i, j);
+  //           lua_pushvalue(L, sep_index);
+  //           lua_call(L, 2, 1);
+  //           const char* str = lua_tostring(L, -1);
+  //           lua_pop(L, 1);
+  //           lua_pushstring(L, str);
+  //           lua_rawseti(L, -2, table_index++);
+  //       }
+  //   }
+
+  //   return 1;
+// }
+
 
 int RunHaco8Game::l_map(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
@@ -264,6 +335,31 @@ int RunHaco8Game::l_flr(lua_State* L){
   lua_pushinteger(L, n);
   return 1;
 }
+
+int RunHaco8Game::l_max(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double a = lua_tonumber(L, 1);//intに入れた時点でfloorされてる
+  double b = lua_tonumber(L, 2);//intに入れた時点でfloorされてる
+  if (a > b){
+    lua_pushnumber(L, a);
+  }else{
+    lua_pushnumber(L, b);
+  }
+  return 1;
+}
+
+int RunHaco8Game::l_min(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double a = lua_tonumber(L, 1);//intに入れた時点でfloorされてる
+  double b = lua_tonumber(L, 2);//intに入れた時点でfloorされてる
+  if (a < b){
+    lua_pushnumber(L, a);
+  }else{
+    lua_pushnumber(L, b);
+  }
+  return 1;
+}
+
 
 int RunHaco8Game::l_go2(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));

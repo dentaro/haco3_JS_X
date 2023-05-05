@@ -496,9 +496,6 @@ void setup()
     return;
   }
 
-
-  
-
   if(rCalData(CALIBRATION_FILE) == NULL){//タッチキャリブレーションデータがなければ
     ui.begin( screen, 16, 1, true);//立ち上げ時にキャリブレーションする
   }else{
