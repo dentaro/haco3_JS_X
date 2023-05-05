@@ -50,8 +50,37 @@ void RunHaco8Game::haco8resume()
   lua_setglobal(L, "min");
 
   lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_mid, 1);
+  lua_setglobal(L, "mid");
+
+
+  lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_max, 1);
   lua_setglobal(L, "max");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_min, 1);
+  lua_setglobal(L, "min");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_abs, 1);
+  lua_setglobal(L, "abs");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_sqrt, 1);
+  lua_setglobal(L, "sqrt");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_sin, 1);
+  lua_setglobal(L, "sin");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_cos, 1);
+  lua_setglobal(L, "cos");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_atan2, 1);
+  lua_setglobal(L, "atan2");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_go2, 1);
@@ -338,8 +367,8 @@ int RunHaco8Game::l_flr(lua_State* L){
 
 int RunHaco8Game::l_max(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
-  double a = lua_tonumber(L, 1);//intに入れた時点でfloorされてる
-  double b = lua_tonumber(L, 2);//intに入れた時点でfloorされてる
+  double a = lua_tonumber(L, 1);
+  double b = lua_tonumber(L, 2);
   if (a > b){
     lua_pushnumber(L, a);
   }else{
@@ -348,10 +377,29 @@ int RunHaco8Game::l_max(lua_State* L){
   return 1;
 }
 
+int RunHaco8Game::l_mid(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double x = lua_tonumber(L, 1);
+  double y = lua_tonumber(L, 2);
+  double z = lua_tonumber(L, 3);
+
+      if ((x <= y && y <= z) || (z <= y && y <= x)) {
+          lua_pushnumber(L, y);
+      }
+      else if ((y <= x && x <= z) || (z <= x && x <= y)) {
+          lua_pushnumber(L, x);
+      }
+      else {
+          lua_pushnumber(L, z);
+      }
+  return 1;
+}
+
+
 int RunHaco8Game::l_min(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
-  double a = lua_tonumber(L, 1);//intに入れた時点でfloorされてる
-  double b = lua_tonumber(L, 2);//intに入れた時点でfloorされてる
+  double a = lua_tonumber(L, 1);
+  double b = lua_tonumber(L, 2);
   if (a < b){
     lua_pushnumber(L, a);
   }else{
@@ -360,6 +408,46 @@ int RunHaco8Game::l_min(lua_State* L){
   return 1;
 }
 
+
+int RunHaco8Game::l_abs(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double x = lua_tonumber(L, 1);
+  if (x < 0) {
+        lua_pushnumber(L, -x);
+    } else {
+        lua_pushnumber(L, x);
+    }
+  return 1;
+}
+
+int RunHaco8Game::l_sqrt(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double x = lua_tonumber(L, 1);
+  lua_pushnumber(L, sqrt(x));
+  return 1;
+}
+
+int RunHaco8Game::l_sin(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double x = lua_tonumber(L, 1);
+  lua_pushnumber(L, sin(x));
+  return 1;
+}
+
+int RunHaco8Game::l_cos(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double x = lua_tonumber(L, 1);
+  lua_pushnumber(L, cos(x));
+  return 1;
+}
+
+int RunHaco8Game::l_atan2(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double y = lua_tonumber(L, 1);//intに入れた時点でfloorされてる
+  double x = lua_tonumber(L, 2);//intに入れた時点でfloorされてる
+  lua_pushnumber(L, atan2(y, x));
+  return 1;
+}
 
 int RunHaco8Game::l_go2(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
@@ -478,11 +566,18 @@ int RunHaco8Game::l_print(lua_State* L){
 
 int RunHaco8Game::l_line(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
-  int xa = lua_tointeger(L, 1);
-  int ya = lua_tointeger(L, 2);
-  int xb = lua_tointeger(L, 3);
-  int yb = lua_tointeger(L, 4);
-  int cn = lua_tointeger(L, 5);
+
+  double xa = lua_tonumber(L, 1);
+  double ya = lua_tonumber(L, 2);
+  double xb = lua_tonumber(L, 3);
+  double yb = lua_tonumber(L, 4);
+  int    cn = lua_tointeger(L, 5);
+  
+  // int xa = lua_tointeger(L, 1);
+  // int ya = lua_tointeger(L, 2);
+  // int xb = lua_tointeger(L, 3);
+  // int yb = lua_tointeger(L, 4);
+  // int cn = lua_tointeger(L, 5);
 
   if(cn != NULL)
   {

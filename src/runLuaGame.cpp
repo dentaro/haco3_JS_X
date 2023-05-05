@@ -140,6 +140,14 @@ int RunLuaGame::l_tp(lua_State* L)
   return 1;
 }
 
+int RunLuaGame::l_tstat(lua_State* L)
+{
+  RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+  int en = ui.getEvent();
+  lua_pushinteger(L, en);
+  return 1;
+}
+
 // int RunLuaGame::l_tp(lua_State* L){
 //   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
 //   int n = lua_tointeger(L, 1);
@@ -632,6 +640,10 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_tp, 1);
   lua_setglobal(L, "tp");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_tstat, 1);
+  lua_setglobal(L, "tstat");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_tone, 1);
