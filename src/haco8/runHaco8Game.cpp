@@ -42,6 +42,10 @@ void RunHaco8Game::haco8resume()
   lua_setglobal(L, "rnd");
 
   lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_srnd, 1);
+  lua_setglobal(L, "srnd");
+
+  lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_flr, 1);
   lua_setglobal(L, "flr");
 
@@ -69,6 +73,10 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_sqrt, 1);
   lua_setglobal(L, "sqrt");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_distance, 1);
+  lua_setglobal(L, "distance");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_sin, 1);
@@ -121,6 +129,18 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_spr8, 1);
   lua_setglobal(L, "spr8");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_sgn, 1);
+  lua_setglobal(L, "sgn");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_shl, 1);
+  lua_setglobal(L, "shl");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_shr, 1);
+  lua_setglobal(L, "shr");
 
   // lua_pushlightuserdata(L, this);
   // lua_pushcclosure(L, l_add, 1);
@@ -427,6 +447,19 @@ int RunHaco8Game::l_sqrt(lua_State* L){
   return 1;
 }
 
+int RunHaco8Game::l_distance(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double x1 = lua_tonumber(L, 1);
+  double y1 = lua_tonumber(L, 2);
+  double x2 = lua_tonumber(L, 3);
+  double y2 = lua_tonumber(L, 4);
+
+  double dx = x2 - x1;
+  double dy = y2 - y1;
+  lua_pushnumber(L, sqrt(dx*dx + dy*dy));
+  return 1;
+} 
+
 int RunHaco8Game::l_sin(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
   double x = lua_tonumber(L, 1);
@@ -478,6 +511,43 @@ int RunHaco8Game::l_rnd(lua_State* L){
   int n = lua_tointeger(L, 1);
   n =  rand() % n;
   lua_pushinteger(L, n);
+  return 1;
+}
+
+int RunHaco8Game::l_srnd(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int s = lua_tointeger(L, 1);
+  srand(s);
+  // lua_pushinteger(L, 0);
+  return 0;
+}
+
+int RunHaco8Game::l_sgn(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double x = lua_tonumber(L, 1);
+  if (x > 0) {
+    lua_pushinteger(L, 1);
+  } else if (x < 0) {
+    lua_pushinteger(L, -1);
+  } else {
+    lua_pushinteger(L, 0);
+  }
+  return 1;
+}
+
+int RunHaco8Game::l_shl(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  int y = lua_tointeger(L, 2);
+  lua_pushinteger(L, x << y);
+  return 1;
+}
+
+int RunHaco8Game::l_shr(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  int y = lua_tointeger(L, 2);
+  lua_pushinteger(L, x >> y);
   return 1;
 }
 
