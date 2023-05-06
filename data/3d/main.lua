@@ -38,9 +38,15 @@ angle = 0
     index = index + 1
   end
     -- 3Dポリゴンを描画する
-    line(flr(points[1].x), flr(points[1].y), flr(points[2].x), flr(points[2].y), 7)
-    line(flr(points[2].x), flr(points[2].y), flr(points[3].x), flr(points[3].y), 7)
-    line(flr(points[3].x), flr(points[3].y), flr(points[1].x), flr(points[1].y), 7)
+    line(points[1].x, points[1].y, points[2].x, points[2].y, 7)
+    line(points[2].x, points[2].y, points[3].x, points[3].y, 7)
+    line(points[3].x, points[3].y, points[1].x, points[1].y, 7)
+    
+    mv = mid(22,5,33)
+    print(mv,0,0)
+    rv = atan2(3,4)
+    print(rv,0,0)
+
   end  
 
 -------------------------------------------------------
