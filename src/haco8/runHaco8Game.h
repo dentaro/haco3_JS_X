@@ -81,6 +81,12 @@ class RunHaco8Game: public RunLuaGame
   static int l_sin(lua_State* L);
   static int l_cos(lua_State* L);
   static int l_atan2(lua_State* L);
+
+  static int l_band(lua_State* L);
+  static int l_bnot(lua_State* L);
+  static int l_bor(lua_State* L);
+  static int l_bxor(lua_State* L);
+
   static int l_go2(lua_State* L);
   static int l_gstat(lua_State* L);
   static int l_ceil(lua_State* L);
@@ -94,6 +100,7 @@ class RunHaco8Game: public RunLuaGame
   static int l_rect(lua_State* L);
   static int l_line(lua_State* L);
   static int l_print(lua_State* L);
+  static int l_t(lua_State* L);
   static int l_fillcircle2(lua_State* L);
   static int l_map(lua_State* L);
   static int l_mget(lua_State* L);

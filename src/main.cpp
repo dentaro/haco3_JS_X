@@ -107,6 +107,7 @@ bool musicflag = false;
 bool sfxflag = false;
 float sliderval[2] = {0,0};
 bool optionuiflag = false;
+int frame = 0;
 
 enum struct FileType {
   LUA,
@@ -385,11 +386,11 @@ int readMap()
         colValG = spriteMap.readPixelRGB(i,j).G8();
         colValB = spriteMap.readPixelRGB(i,j).B8();
 
-        Serial.print(colValR);
-        Serial.print(":");
-        Serial.print(colValG);
-        Serial.print(":");
-        Serial.println(colValB);
+        // Serial.print(colValR);
+        // Serial.print(":");
+        // Serial.print(colValG);
+        // Serial.print(":");
+        // Serial.println(colValB);
 //24ビットRGB
 // { 0,0,0},//0: 黒色
 // { 27,42,86 },//1: 暗い青色
@@ -580,10 +581,14 @@ void setup()
   game = nextGameObject(&appfileName, gameState, mapFileName);//ホームゲームを立ち上げる
   game->init();
   tunes.init();
+
+  showRam();
+  frame=0;
 }
 
 void loop()
 {
+  
 
   // ui.setConstantGetF(true);//trueだとタッチポイントのボタンIDを連続取得するモード
   ui.update(screen);//タッチイベントを取るので、LGFXが基底クラスでないといけない
@@ -736,5 +741,7 @@ void loop()
   //   delay(wait);
   // }
   // xSemaphoreGiveFromISR(semaphore, NULL);
+
+  frame++;
 
 }

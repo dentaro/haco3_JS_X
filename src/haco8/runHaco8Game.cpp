@@ -20,6 +20,7 @@ extern int musicNo;
 extern bool musicflag;
 extern bool sfxflag;
 extern void readMap();
+extern int frame;
 
 
 extern uint8_t mapArray[MAPWH][MAPWH];
@@ -89,6 +90,22 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_atan2, 1);
   lua_setglobal(L, "atan2");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_band, 1);
+  lua_setglobal(L, "band");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_bnot, 1);
+  lua_setglobal(L, "bnot");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_bor, 1);
+  lua_setglobal(L, "bor");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_bxor, 1);
+  lua_setglobal(L, "bxor");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_go2, 1);
@@ -178,6 +195,10 @@ void RunHaco8Game::haco8resume()
   lua_pushcclosure(L, l_print, 1);
   lua_setglobal(L, "print");
 
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_t, 1);
+  lua_setglobal(L, "t");
+
   // gameState = _gameState;
 
   //スプライト属性を設定する
@@ -238,60 +259,6 @@ int RunHaco8Game::l_spr8(lua_State* L){
   }
   return 0;
 }
-
-//luaテーブル操作
-// int RunHaco8Game::l_add(lua_State* L){
-//   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
-//   // int t = lua_tointeger(L, 1);
-//   int v = lua_tointeger(L, 2);
-//   int n = lua_rawlen(L, -1); // テーブルの要素数を取得
-//   lua_pushinteger(L, v); // 値をスタックにプッシュ
-//   lua_rawseti(L, -2, n + 1); // 値をテーブルに追加
-//   lua_pop(L, 1); // テーブルをポップ
-    
-//   return 1;
-// }
-
-
-
-// int RunHaco8Game::l_del(lua_State* L, int index, lua_Integer v){
-
-//   return 1;
-// }
-
-// int RunHaco8Game::l_add(lua_State* L) {
-  // int num_tables = 2;//2つのテーブルの結合
-  // RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
-  //   int total_len = 0;
-  //   for (int i = 1; i <= num_tables; i++) {
-  //       if (!lua_istable(L, i)) {
-  //           luaL_error(L, "Argument #%d is not a table", i);
-  //       }
-  //       total_len += lua_rawlen(L, i);
-  //   }
-
-  //   lua_createtable(L, total_len, 0);
-  //   int table_index = 1;
-
-  //   for (int i = 1; i <= num_tables; i++) {
-  //       lua_pushvalue(L, i);
-  //       lua_pushstring(L, "");
-  //       int sep_index = lua_gettop(L);
-  //       int table_len = lua_rawlen(L, i);
-
-  //       for (int j = 1; j <= table_len; j++) {
-  //           lua_rawgeti(L, i, j);
-  //           lua_pushvalue(L, sep_index);
-  //           lua_call(L, 2, 1);
-  //           const char* str = lua_tostring(L, -1);
-  //           lua_pop(L, 1);
-  //           lua_pushstring(L, str);
-  //           lua_rawseti(L, -2, table_index++);
-  //       }
-  //   }
-
-  //   return 1;
-// }
 
 
 int RunHaco8Game::l_map(lua_State* L){
@@ -551,6 +518,37 @@ int RunHaco8Game::l_shr(lua_State* L){
   return 1;
 }
 
+int RunHaco8Game::l_band(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  int y = lua_tointeger(L, 2);
+  lua_pushinteger(L, x & y);
+  return 1;
+}
+
+int RunHaco8Game::l_bnot(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  lua_pushinteger(L, ~x);
+  return 1;
+}
+
+int RunHaco8Game::l_bor(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  int y = lua_tointeger(L, 2);
+  lua_pushinteger(L, x | y);
+  return 1;
+}
+
+int RunHaco8Game::l_bxor(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  int y = lua_tointeger(L, 2);
+  lua_pushinteger(L, x ^ y);
+  return 1;
+}
+
 // uint8_t clist[16][3] =
 //   {
 //   { 0,0,0},//0: 黒色
@@ -768,4 +766,10 @@ int RunHaco8Game::l_cls(lua_State* L){
   tft.fillRect(0,0,128,128,lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
 
   return 0;
+}
+
+int RunHaco8Game::l_t(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  lua_pushinteger(L, frame);
+  return 1;
 }

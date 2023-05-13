@@ -22,7 +22,12 @@ extern "C"{
 #ifndef RUN_LUA_GAME_H
 #define RUN_LUA_GAME_H
 
-#define MAX_CHAR 256
+#define MAX_CHAR 1024
+
+// #define LUA_BUFFERSIZE 1024
+// #define LUA_BUFFERSIZE_PS (LUA_BUFFERSIZE * 2)
+
+// #define LUA_BUFSIZE 2048
 
 struct LoadF{
   File f;
@@ -46,7 +51,9 @@ class RunLuaGame: public BaseGame
     };
 
     lua_State* L;
+    luaL_Buffer b;
     byte col[3] = {0,0,0};
+    // int frame = 0;
     int buttonState[CTRLBTNNUM];//ボタンの個数未定
     int tp[2] ={0,0};
     uint16_t palette[256];

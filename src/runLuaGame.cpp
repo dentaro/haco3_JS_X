@@ -19,6 +19,7 @@ extern String appNameStr;
 extern String mapFileName;
 extern float sliderval[2];
 extern bool optionuiflag;
+extern int frame;
 
 int cursor = 0;
 
@@ -50,8 +51,8 @@ extern "C" {
     ret[len + 1] = 0;
 
     *size = len + 1;
-    Serial.print("");
-    Serial.println(ret);
+    // Serial.print("");
+    Serial.print(ret);
     Serial.println(*size);
     return ret;
   }
@@ -205,7 +206,13 @@ int RunLuaGame::l_pset(lua_State* L){
     self->col[1] = self->clist[cn][1]; // 6bit
     self->col[2] = self->clist[cn][2]; // 5bit
   }
-    tft.drawPixel(x, y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  tft.drawPixel(x, y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+
+  // if(cn2 == NULL && cn2 == NULL){
+  //   tft.drawPixel(x, y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  // }else if(cn2 != NULL && cn2 != NULL){
+  //   tft.drawPixel(x, y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  // }
   return 0;
 }
 
@@ -631,10 +638,17 @@ void RunLuaGame::pause(){
 
 void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（setupのようなもの)
 
-  char buf[MAX_CHAR];
-  char str[100];
+L = luaL_newstate();
+lua_setglobal(L, "PSRAM");
 
-  L = luaL_newstate();
+char *luaBuffer = (char *)malloc(MAX_CHAR); // メモリ割り当てを行う
+luaL_Buffer buff;
+luaL_buffinit(L, &buff);
+luaL_buffinitsize(L, &buff, MAX_CHAR);
+luaL_addlstring(&buff, luaBuffer, MAX_CHAR);
+
+// free(luaBuffer); // メモリ解放を行う
+
   luaL_openlibs(L);
 
   lua_pushlightuserdata(L, this);
@@ -823,6 +837,8 @@ void RunLuaGame::resume(){//ゲーム起動時のみ一回だけ走る処理（s
 
   SPIFFS.begin(true);//SPIFFSを利用可能にする
 
+
+
   if(SPIFFS.exists(getPngName(appfileName))){
     sprite64.drawPngFile(SPIFFS, appfileName, 0, 0);
   }
@@ -895,6 +911,8 @@ fr = SPIFFS.open("/init/param/modeset.txt", "r");// ⑩ファイルを読み込�
 
 
   tft.pushSprite(0, 0);
+  //初期化
+  frame=0;
 }
 
 int RunLuaGame::run(int _remainTime){
@@ -1040,6 +1058,7 @@ int RunLuaGame::run(int _remainTime){
   // if(wait > 0){
   //   delay(wait);
   // }
+  // frame++;
 
   return 0;
 }

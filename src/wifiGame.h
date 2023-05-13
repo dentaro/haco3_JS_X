@@ -1,14 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <FS.h>
-
-#ifdef M5STACK
-#include "M5Stack.h"
-#else
-// #include <TFT_eSPI.h>
 #include <LovyanGFX_DentaroUI.hpp>
-#endif
-
 #include "SPIFFS.h"
 #include "baseGame.h"
 #include "Tunes.h"
@@ -17,7 +10,7 @@
 #ifndef WIFI_GAME_H
 #define WIFI_GAME_H
 
-#define MAX_CHAR 256
+#define MAX_CHAR 4096//256
 
 class WifiGame
 {

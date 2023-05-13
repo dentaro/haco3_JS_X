@@ -35,6 +35,7 @@ class RunJsGame: public BaseGame
   public:
     duk_context* ctx;
     byte col[3] = {0,0,0};
+    // int frame = 0;
     int buttonState[CTRLBTNNUM];
     int tp[2] ={0,0};
     // bool wifiDebugRequest = false;
