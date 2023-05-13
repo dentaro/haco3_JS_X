@@ -9,8 +9,6 @@ using namespace std;
 #define CALIBRATION_FILE "/init/caldata.txt"
 #define REPEAT_CAL false
 
-
-
 LovyanGFX_DentaroUI::LovyanGFX_DentaroUI(LGFX* _lcd)
 {
   lcd = _lcd;
@@ -46,65 +44,6 @@ const bits_btn_t*  LovyanGFX_DentaroUI::getStack()
   return phbs.getStack();
 }
 
-//上のupdateを視覚化しただけの処理（やってることは同じ）
-void LovyanGFX_DentaroUI::drawPhBtns(LovyanGFX& _lcd, int _x, int _y)
-{
-
-  // ボタン入力履歴を画面に描画
-        // auto stack = ui.getStack();
-        // for (std::size_t idx = 0; idx < BTN_STACK_MAX; ++idx)
-        // {
-        //   layoutSprite.fillRect(idx * 10, 30, 9, 9, (stack[idx] & bit_btn_a) ? TFT_RED   : TFT_DARKGREY);
-        //   layoutSprite.fillRect(idx * 10, 40, 9, 9, (stack[idx] & bit_btn_b) ? TFT_GREEN : TFT_DARKGREY);
-        //   layoutSprite.fillRect(idx * 10, 50, 9, 9, (stack[idx] & bit_btn_c) ? TFT_BLUE  : TFT_DARKGREY);
-        // }
-        
-  // phbs.loop();
-
-  // delay(1);
-  // 入力状態の更新（変化がなければ終了）
-  // if (!phbs.loop()) return;
-
-  // ボタン入力履歴を画面に描画
-  // auto stack = phbs.getStack();
-  // for (std::size_t idx = 0; idx < BTN_STACK_MAX; ++idx)
-  // {
-  //   int offx = _x;
-  //   _lcd.fillRect(offx + idx * 5, _y + 0, 4, 4, (stack[idx] & bit_btn_a) ? TFT_RED   : TFT_DARKGREY);
-  //   _lcd.fillRect(offx + idx * 5, _y + 5, 4, 4, (stack[idx] & bit_btn_b) ? TFT_GREEN : TFT_DARKGREY);
-  //   _lcd.fillRect(offx + idx * 5, _y +10, 4, 4, (stack[idx] & bit_btn_c) ? TFT_BLUE  : TFT_DARKGREY);
-  // }
-
-  // // コマンド判定結果を取得
-  // static std::uint32_t hitvalue = ~0U;
-  // std::uint32_t prev = hitvalue;
-  // hitvalue = phbs.getValue();
-
-  // // 以前の値と同じ場合は除外
-  // if (prev == hitvalue) return;
-
-  // // 入力内容を画面とシリアルに出力
-  // switch (hitvalue)
-  // {
-  // default:  _lcd.println("--"); break;
-  // case 101: _lcd.println("A click"); break;
-  // case 102: _lcd.println("B click"); break;
-  // case 103: _lcd.println("C click"); break;
-  // case 111: _lcd.println("A hold"); break;
-  // case 112: _lcd.println("B hold"); break;
-  // case 113: _lcd.println("C hold"); break;
-  // case 121: _lcd.println("A double click"); break;
-  // case 122: _lcd.println("B double click"); break;
-  // case 123: _lcd.println("C double click"); break;
-  // case 201: _lcd.println("AB hold"); break;
-  // case 202: _lcd.println("AC hold"); break;
-  // case 203: _lcd.println("BC hold"); break;
-  // case 204: _lcd.println("ABC hold"); break;
-  // case 301: _lcd.println("A->B->C"); break;
-  // }
-}
-
-
 void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _calibF )
 {
   _lcd.init();
@@ -116,7 +55,6 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _c
   _lcd.setRotation( _rotateNo );
   showSavedCalData(_lcd);//タッチキャリブレーションの値を表示
 
-  
   for(int i = 0; i < BUF_PNG_NUM; i++)
   {
     createLayout( 0, 0, 8, 8, layoutSprite_list[i], MULTI_EVENT );//レイアウト用のスプライトを作る
@@ -185,8 +123,6 @@ void LovyanGFX_DentaroUI::calibrationRun( LGFX& _lcd){
         int calval = atoi(subStr.c_str());//c_strでconst char*に変換してからatoiで整数値に
         calData[calval];
       }
-
-
       _lcd.calibrateTouch(calData, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
       _lcd.setTouchCalibrate(calData);
 

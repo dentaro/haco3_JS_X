@@ -187,26 +187,7 @@ void TouchBtn::btnDraw(LovyanGFX&  _uiSprite, int _x, int _y )
 
         _uiSprite.setColor(TFT_BLACK);
         _uiSprite.drawCircle(_x, _y,  this->b_r0);
-
-        // _uiSprite.setColor(TFT_WHITE);//強制的に白にする
-        // _uiSprite.fillArc(_x, _y, this->b_r0, this->b_r1, this->b_a0, this->b_a1);
-
-        // b_str_hw = _uiSprite.textWidth(btn_name)/2;
-        // float middle_angle = (this->b_a0 + this->b_a1 + 0.1) /2;//角度が0にならないように0.1度を加えている//this->b_a * this->btnNo + this->b_a/2 - this->btns_starAngle;
-        // float middle_radius = (this->b_r0 + this->b_r1)/2;
-        // float str_x = cos(middle_angle/ 180.0 * M_PI) * middle_radius;
-        // float str_y = sin(middle_angle/ 180.0 * M_PI) * middle_radius;
-
-        // _uiSprite.drawString(btn_name, 
-        //                     _x + str_x + b_hw - b_str_hw-1, 
-        //                     _y + str_y + b_hh - 11 );
-        // _uiSprite.setColor(TFT_BLACK);
-        // _uiSprite.drawArc(_x, _y, this->b_r0, this->b_r1, this->b_a0, this->b_a1);
-
       }
-
-      
-
     }
   }
   else if( this->btn_mode == TOUCH_FLICK_MODE )//フリックボタンの時
@@ -215,8 +196,6 @@ void TouchBtn::btnDraw(LovyanGFX&  _uiSprite, int _x, int _y )
     {
       _uiSprite.fillRoundRect( this->b_x, this->b_y, this->b_w, this->b_h, 10, TFT_WHITE );
       _uiSprite.setTextColor( TFT_BLACK );
-      //_uiSprite.setFont(&lgfxJapanGothicP_20);
-      // drawName = btnIDlabel;//btn_name;
       b_str_hw = _uiSprite.textWidth( btn_name ) / 2;
       _uiSprite.drawString( btn_name, b_x + b_hw - b_str_hw , b_y + b_hh - 8 );
     }
@@ -292,34 +271,16 @@ void TouchBtn::tileDraw(LovyanGFX& _lgfx, LGFX_Sprite& _layoutSprite,
 lgfx::v1::touch_point_t _layoutSpritePos, lgfx::v1::touch_point_t _sp, 
 uint8_t _bgColIndex, LGFX_Sprite& _g_basic_sprite)
 {
-
-  // Serial.println("aliveccc");
-
-  // _layoutSprite.setColorDepth(TILE_COL_DEPTH);//親スプライト16
-  //_layoutSprite.fillScreen(_bgColIndex);
-  // divSprite0.setColorDepth(TILE_COL_DEPTH);//親スプライト16
-
-  // _layoutSprite.setColorDepth(TILE_COL_DEPTH);//親スプライト16
-  // divSprite0.setColorDepth(TILE_COL_DEPTH);//親スプライト16
-  
   _g_basic_sprite.setPivot(_g_basic_sprite.width()/2.0, _g_basic_sprite.height()/2.0);//setPivot()で回転する場合の原点を指定します。初期値は左上の(0, 0)だと思います
 
-//  divSprite0.fillScreen(_bgColIndex);
-  
   _g_basic_sprite.pushSprite(&divSprite0, tilePos.x, tilePos.y);
   divSprite0.pushSprite(&_layoutSprite, 0, 0);//親を指定して出力
-  
-//  divSprite0.fillScreen(_bgColIndex);
-  
+
   _g_basic_sprite.pushSprite(&divSprite0, tilePos.x-b_qw, tilePos.y);
   divSprite0.pushSprite(&_layoutSprite, b_qw, 0);//親を指定して出力
   
-//  divSprite0.fillScreen(_bgColIndex);
-  
   _g_basic_sprite.pushSprite(&divSprite0, tilePos.x-b_qw*2, tilePos.y);
   divSprite0.pushSprite(&_layoutSprite, b_qw*2, 0);//親を指定して出力
-  
-  //divSprite0.fillScreen(_bgColIndex);
 
   _g_basic_sprite.pushSprite(&divSprite0, tilePos.x-b_qw*3, tilePos.y);
   divSprite0.pushSprite(&_layoutSprite, b_qw*3, 0);//親を指定して出力

@@ -490,10 +490,9 @@ class LovyanGFX_DentaroUI {
 
         // PhysicBtn phbs;
 
-    // uint16_t calData[8] = {422,3624,358,251,3749,3637,3716,220};//y
-    // uint16_t calData[8] = {3811,3853,345,3789,3711,403,1086,430};//daiso
+    // uint16_t calData[8] = {326,3722,259,185,3776,3655,3776,243};//y
+    uint16_t calData[8] = {3811,3853,345,3789,3711,403,1086,430};//daiso
     //uint16_t calData[8] = {558,3648,447,396,3599,3622,3625,324};
-    uint16_t calData[8] = {326,3722,259,185,3776,3655,3776,243};//y
     uint16_t calDataOK = 0;
 
     int TopBtnUiID = 0;
@@ -845,5 +844,4 @@ public:
     void updatePhBtns();
     const bits_btn_t*  getStack();
     std::uint32_t getHitValue();
-    void drawPhBtns(LovyanGFX& _lcd, int _x, int _y);
 };
