@@ -506,7 +506,7 @@ void RunJsGame::resume(){
 
   while(fp.available()){
     fp.readStringUntil('\n').toCharArray(buf, MAX_CHAR);
-    Serial.println(buf);
+    // Serial.println(buf);
     duk_push_string(ctx, buf);
   }
   duk_push_string(ctx, "\n");

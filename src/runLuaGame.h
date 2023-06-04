@@ -103,6 +103,9 @@ class RunLuaGame: public BaseGame
     static int l_drawrect(lua_State* L);
     static int l_fillrect(lua_State* L);
     static int l_fillcircle(lua_State* L);
+    static int l_drawcircle(lua_State* L);
+    static int l_drawtri(lua_State* L);
+    static int l_filltri(lua_State* L);
     static int l_btn(lua_State* L);
     static int l_btnp(lua_State* L);
     static int l_sldr(lua_State* L);
@@ -120,6 +123,8 @@ class RunLuaGame: public BaseGame
 
     String getBitmapName(String s);
     String getPngName(String s);
+    void hsbToRgb(float angle, float si, float br, int& r, int& g, int& b);
+    void fillFastTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t c1);
 
     //継承先の関数を優先するものにはvirtual
     virtual void haco8resume(){};//派生クラスに書き換えられるダミー関数

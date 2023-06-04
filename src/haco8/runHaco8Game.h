@@ -32,10 +32,71 @@ extern "C"{
 //   uint16_t tmp = ((r>>3) << 11) | ((g>>2) << 5) | (b>>3);
 //   return tmp; //(tmp >> 8) | (tmp << 8);
 // }
+struct Vector3 {
+  double x;
+  double y;
+  double z;
+  
+  Vector3(double x, double y, double z)
+    : x(x), y(y), z(z)
+  {}
+};
+
+struct Intersection {
+    double x;
+    double y;
+    double distance;
+    double mapheight;
+    int colangle;
+};
 
 class RunHaco8Game: public RunLuaGame
 {
   public:
+
+  // static int rayangle;
+
+  struct CameraObj {
+    int x;
+    int y;
+    int z;
+    int angle;
+    double zoom;
+
+    // コンストラクタで初期値を設定
+    CameraObj()
+        : x(0), y(0), z(0), angle(0), zoom(1.0)
+    {
+    }
+  };
+
+  struct LightObj {
+    int x;
+    int y;
+    int z;
+
+    // コンストラクタで初期値を設定
+    LightObj()
+        : x(0), y(0), z(0)
+    {
+    }
+  };
+
+  struct CubeObj {
+    int x;
+    int y;
+    int z;
+    int angle;
+    double size;
+    int colangle;
+    int width;
+    int height;
+    // コンストラクタで初期値を設定
+    CubeObj()
+        : x(0), y(0), z(0), angle(0), size(1.0),colangle(0), width(10), height(10)
+    {
+    }
+};
 
 //24bitRGB
   uint8_t clist[16][3] =
@@ -81,6 +142,9 @@ class RunHaco8Game: public RunLuaGame
   static int l_sin(lua_State* L);
   static int l_cos(lua_State* L);
   static int l_atan2(lua_State* L);
+  
+  static int l_gsin(lua_State* L);
+  static int l_gcos(lua_State* L);
 
   static int l_band(lua_State* L);
   static int l_bnot(lua_State* L);
@@ -105,13 +169,46 @@ class RunHaco8Game: public RunLuaGame
   static int l_map(lua_State* L);
   static int l_mget(lua_State* L);
   static int l_spr8(lua_State* L);
-  // static int l_add(lua_State* L);
+
   // static int l_del(lua_State* L);
   static int l_sgn(lua_State* L);
   static int l_shl(lua_State* L);
   static int l_shr(lua_State* L);
-  
+
+  //3D関連
+  static int l_getstl(lua_State* L);
+  static int l_rendr(lua_State* L);
+  static int l_creobj(lua_State* L);
+  static int l_cam(lua_State* L);
+  static int l_trans(lua_State* L);
+  //fps関連
+  static int l_wini(lua_State* L);
+  static int l_wset(lua_State* L);
+  static int l_wdraw(lua_State* L);
+
+  // ベクトルの長さを計算する関数
+  double calculateLength(double x, double y, double z);
+
+  // ベクトルの正規化を行う関数
+  Vector3 normalize(double x, double y, double z);
+
+  // 2つのベクトルの内積を計算する関数
+  double calculateDotProduct(const Vector3& v1, const Vector3& v2);
+
+  // 3つの頂点から法線ベクトルを計算する関数
+  Vector3 calculateNormal(const Vector3& v1, const Vector3& v2, const Vector3& v3);
+
+  // ポリゴンの明るさを計算する関数
+  double calculateBrightness(const Vector3& v1, const Vector3& v2, const Vector3& v3, const LightObj& light);
+
+  // void renderPolygon(lua_State* L, const std::vector<std::vector<float>>& polygonData);
+  void renderPolygon(const std::vector<std::vector<float>>& polygonData, int colangle);
+  // void renderPolygon(lua_State* L, const std::vector<std::vector<float>>& polygonData);
+
+  // void getVertices(lua_State* L, int tableIndex, Vertex& v1, Vertex& v2, Vertex& v3);
+
   uint16_t getColor(int _cn, int _rgb);
+
   void haco8resume();//この関数で基底クラスのダミー関数を置き換えることで、派生クラスの処理を挿入する
   
 };

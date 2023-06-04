@@ -262,8 +262,8 @@ void Tunes::init(){
     String _readStr = fr.readStringUntil(',');// カンマまで１行読み出し
     std::string _readstr = _readStr.c_str();
     Ws[i] = atoi(_readstr.c_str());
-    Serial.print(i);
-    Serial.print(",");
+    // Serial.print(i);
+    // Serial.print(",");
     
   }
   fr.close();	// ⑫	ファイルを閉じる

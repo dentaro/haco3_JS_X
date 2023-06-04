@@ -21,11 +21,14 @@ extern bool musicflag;
 extern bool sfxflag;
 extern void readMap();
 extern int frame;
+extern double sinValues[90];// 0から89度までの91個の要素
 
 
 extern uint8_t mapArray[MAPWH][MAPWH];
 
 extern int8_t sprbits[128];//fgetでアクセスするスプライト属性を格納するための配列
+
+Intersection intersections[32];
 
 RunHaco8Game::RunHaco8Game(int _gameState, String _mn){
   gameState = _gameState;
@@ -82,6 +85,14 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_sin, 1);
   lua_setglobal(L, "sin");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_gsin, 1);
+  lua_setglobal(L, "gsin");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_gcos, 1);
+  lua_setglobal(L, "gcos");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_cos, 1);
@@ -198,6 +209,40 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_t, 1);
   lua_setglobal(L, "t");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_getstl, 1);
+  lua_setglobal(L, "getstl");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_rendr, 1);
+  lua_setglobal(L, "rendr");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_creobj, 1);
+  lua_setglobal(L, "creobj");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_cam, 1);
+  lua_setglobal(L, "cam");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_trans, 1);
+  lua_setglobal(L, "trans");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_wini, 1);
+  lua_setglobal(L, "wini");
+
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_wset, 1);
+  lua_setglobal(L, "wset");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_wdraw, 1);
+  lua_setglobal(L, "wdraw");
+  
 
   // gameState = _gameState;
 
@@ -427,19 +472,118 @@ int RunHaco8Game::l_distance(lua_State* L){
   return 1;
 } 
 
-int RunHaco8Game::l_sin(lua_State* L){
+int normalizeAngle(int angle) {
+    angle = angle % 360; // 360で割った余りを求める
+    if (angle < 0) {
+        angle += 360; // 負の角度を正の範囲に変換する
+    }
+    return angle;
+}
+
+int RunHaco8Game::l_gsin(lua_State* L) {
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+
+  // x を 0 から 359 の範囲に収める
+  x = (x % 360 + 360) % 360;
+
+  if (x >= 0 && x <= 89) {
+    lua_pushnumber(L, sinValues[x]);
+  } 
+  else if (x >= 90 && x <= 179) {
+    lua_pushnumber(L, sinValues[180 - x]);
+  } 
+  else if (x >= 180 && x <= 269) {
+    lua_pushnumber(L, -sinValues[x - 180]);
+  } 
+  else {
+    lua_pushnumber(L, -sinValues[360 - x]);
+  }
+  
+  return 1;
+}
+
+int RunHaco8Game::l_gcos(lua_State* L) {
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  
+  // x を 0 から 359 の範囲に収める
+  x = (x % 360 + 360 - 90) % 360;
+
+  if (x >= 0 && x <= 89) {
+    lua_pushnumber(L, sinValues[x]);
+  } 
+  else if (x >= 90 && x <= 179) {
+    lua_pushnumber(L, sinValues[180 - x]);
+  } 
+  else if (x >= 180 && x <= 269) {
+    lua_pushnumber(L, -sinValues[x - 180]);
+  } 
+  else {
+    lua_pushnumber(L, -sinValues[360 - x]);
+  }
+  
+  return 1;
+}
+
+
+// double normalizeAngle(int angle) {
+//     angle = (angle % 360 + 360) % 360;
+//     return static_cast<double>(angle);
+// }
+
+double gsin(int angle) {
+    angle = static_cast<int>(normalizeAngle(angle));
+
+    if (angle >= 0 && angle <= 89) {
+        return sinValues[angle];
+    } 
+    else if (angle >= 90 && angle <= 179) {
+        return sinValues[180 - angle];
+    } 
+    else if (angle >= 180 && angle <= 269) {
+        return -sinValues[angle - 180];
+    } 
+    else {
+        return -sinValues[360 - angle];
+    }
+}
+
+double gcos(int angle) {
+    angle = static_cast<int>(normalizeAngle(angle));
+    // angle = -(angle + 90+360) % 360;
+
+    angle = (angle % 360 + 360 - 90) % 360;
+
+    if (angle >= 0 && angle <= 89) {
+        return sinValues[angle];
+    } 
+    else if (angle >= 90 && angle <= 179) {
+        return sinValues[180 - angle];
+    } 
+    else if (angle >= 180 && angle <= 269) {
+        return -sinValues[angle - 180];
+    } 
+    else {
+        return -sinValues[360 - angle];
+    }
+}
+
+
+int RunHaco8Game::l_sin(lua_State* L) {
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
   double x = lua_tonumber(L, 1);
   lua_pushnumber(L, sin(x));
   return 1;
 }
 
-int RunHaco8Game::l_cos(lua_State* L){
+int RunHaco8Game::l_cos(lua_State* L) {
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
   double x = lua_tonumber(L, 1);
   lua_pushnumber(L, cos(x));
   return 1;
 }
+
 
 int RunHaco8Game::l_atan2(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
@@ -639,19 +783,20 @@ int RunHaco8Game::l_line(lua_State* L){
   double ya = lua_tonumber(L, 2);
   double xb = lua_tonumber(L, 3);
   double yb = lua_tonumber(L, 4);
-  int    cn = lua_tointeger(L, 5);
-  
-  // int xa = lua_tointeger(L, 1);
-  // int ya = lua_tointeger(L, 2);
-  // int xb = lua_tointeger(L, 3);
-  // int yb = lua_tointeger(L, 4);
-  // int cn = lua_tointeger(L, 5);
-
+  int   cn = lua_tointeger(L, 5);
+  int   cn2 = lua_tointeger(L, 6);
+  int   cn3 = lua_tointeger(L, 7);
   if(cn != NULL)
   {
     self->col[0] = self->clist[cn][0]; // 5bit
     self->col[1] = self->clist[cn][1]; // 6bit
     self->col[2] = self->clist[cn][2]; // 5bit
+  }
+  if(cn3 != NULL)
+  {
+    self->col[0] = cn; // 5bit
+    self->col[1] = cn2; // 6bit
+    self->col[2] = cn3; // 5bit
   }
   tft.drawLine(xa,ya,xb,yb, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
   return 0;
@@ -772,4 +917,636 @@ int RunHaco8Game::l_t(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
   lua_pushinteger(L, frame);
   return 1;
+}
+
+//ここから3D関連
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <iomanip>
+// #include <lua.hpp>
+//3d関連
+struct Vertex {
+    double x;
+    double y;
+    double z;
+};
+struct Point2D {
+    int x;
+    int y;
+
+    Point2D(int _x, int _y) : x(_x), y(_y) {}
+};
+
+static RunHaco8Game::CameraObj camera;
+static RunHaco8Game::LightObj light;
+static RunHaco8Game::CubeObj cube;
+
+ 
+std::string convertToDecimalNotation(double value) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2) << value;
+    return oss.str();
+}
+
+std::vector<Vertex> parseSTLFile(const std::string& filename) {
+    std::vector<Vertex> vertices;
+
+    std::ifstream file(filename);
+    if (!file) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return vertices;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+
+        std::string keyword;
+        iss >> keyword;
+
+        if (keyword == "vertex") {
+            Vertex vertex;
+            iss >> vertex.x >> vertex.y >> vertex.z;
+            vertices.push_back(vertex);
+        }
+    }
+
+    return vertices;
+}
+
+
+// ベクトルの長さを計算する関数
+double RunHaco8Game::calculateLength(double x, double y, double z) {
+  return std::sqrt(x * x + y * y + z * z);
+}
+
+// ベクトルの正規化を行う関数
+Vector3 RunHaco8Game::normalize(double x, double y, double z) {
+  double length = calculateLength(x, y, z);
+  return {x / length, y / length, z / length};
+}
+
+// 2つのベクトルの内積を計算する関数
+double RunHaco8Game::calculateDotProduct(const Vector3& v1, const Vector3& v2) {
+  return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+// 3つの頂点から法線ベクトルを計算する関数
+Vector3 RunHaco8Game::calculateNormal(const Vector3& v1, const Vector3& v2, const Vector3& v3) {
+  double ux = v2.x - v1.x;
+  double uy = v2.y - v1.y;
+  double uz = v2.z - v1.z;
+  double vx = v3.x - v1.x;
+  double vy = v3.y - v1.y;
+  double vz = v3.z - v1.z;
+
+  double nx = uy * vz - uz * vy;
+  double ny = uz * vx - ux * vz;
+  double nz = ux * vy - uy * vx;
+
+  return normalize(nx, ny, nz);
+}
+
+// ポリゴンの明るさを計算する関数
+double RunHaco8Game::calculateBrightness(const Vector3& v1, const Vector3& v2, const Vector3& v3, const LightObj& light) {
+  // ポリゴンの法線ベクトルを計算
+  Vector3 normal = calculateNormal(v1, v2, v3);
+  // 光源ベクトルを計算
+  Vector3 lightVector = normalize(light.x, light.y, light.z);
+  // ポリゴンの法線ベクトルと光源ベクトルの角度を計算
+  double dotProduct = calculateDotProduct(normal, lightVector);
+  // 明るさを0~1の範囲に正規化
+  double brightness = (dotProduct + 1) / 2;
+  return brightness;
+}
+
+// テーブル内の要素のインデックス
+const int VRTCS_TABLE_INDEX = 1;
+
+// テーブル内の要素のキー
+const char* V1_KEY = "v1";
+const char* V2_KEY = "v2";
+const char* V3_KEY = "v3";
+
+// テーブルから頂点情報を取得する関数
+// void RunHaco8Game::getVertices(lua_State* L, int tableIndex, Vertex& v1, Vertex& v2, Vertex& v3) {
+//     lua_getfield(L, tableIndex, V1_KEY);  // v1 テーブルをスタックにプッシュ
+//     v1.x = lua_tonumber(L, -1);  // v1.x の値を取得
+//     lua_pop(L, 1);  // v1 テーブルをスタックから削除
+
+//     lua_getfield(L, tableIndex, V2_KEY);  // v2 テーブルをスタックにプッシュ
+//     v2.x = lua_tonumber(L, -1);  // v2.x の値を取得
+//     lua_pop(L, 1);  // v2 テーブルをスタックから削除
+
+//     lua_getfield(L, tableIndex, V3_KEY);  // v3 テーブルをスタックにプッシュ
+//     v3.x = lua_tonumber(L, -1);  // v3.x の値を取得
+//     lua_pop(L, 1);  // v3 テーブルをスタックから削除
+// }
+
+// C++側の関数
+
+inline float clamp(float value, float min, float max) {
+    if (value < min) {
+        return min;
+    } else if (value > max) {
+        return max;
+    } else {
+        return value;
+    }
+}
+
+void RunHaco8Game::renderPolygon(const std::vector<std::vector<float>>& polygonData, int colangle) {
+
+  // オブジェクトの回転行列を計算
+    // float rotationAngle = static_cast<float>(cube.angle) * M_PI / 180.0f;
+    float cosAngle = -gsin((cube.angle + 90) % 360);
+    float sinAngle =  gsin(cube.angle % 360);
+
+    // ポリゴンの描画処理
+    for (size_t i = 0; i < polygonData.size(); i += 3) {
+            // 頂点座標を取得
+    Vector3 v1(static_cast<double>(polygonData[i][0]), static_cast<double>(polygonData[i][1]), static_cast<double>(polygonData[i][2]));
+    Vector3 v2(static_cast<double>(polygonData[i + 1][0]), static_cast<double>(polygonData[i + 1][1]), static_cast<double>(polygonData[i + 1][2]));
+    Vector3 v3(static_cast<double>(polygonData[i + 2][0]), static_cast<double>(polygonData[i + 2][1]), static_cast<double>(polygonData[i + 2][2]));
+
+    // オブジェクト座標系での座標変換
+    float x1 = v1.x - cube.x;
+    float y1 = v1.y - cube.y;
+    float z1 = v1.z - cube.z;
+
+    float x2 = v2.x - cube.x;
+    float y2 = v2.y - cube.y;
+    float z2 = v2.z - cube.z;
+
+    float x3 = v3.x - cube.x;
+    float y3 = v3.y - cube.y;
+    float z3 = v3.z - cube.z;
+
+    // オブジェクトの回転行列を適用
+    float transformedX1 = x1 * cosAngle - z1 * sinAngle;
+    float transformedZ1 = z1 * cosAngle + x1 * sinAngle;
+    float transformedY1 = y1;
+
+    float transformedX2 = x2 * cosAngle - z2 * sinAngle;
+    float transformedZ2 = z2 * cosAngle + x2 * sinAngle;
+    float transformedY2 = y2;
+
+    float transformedX3 = x3 * cosAngle - z3 * sinAngle;
+    float transformedZ3 = z3 * cosAngle + x3 * sinAngle;
+    float transformedY3 = y3;
+
+    // カメラ座標系での座標変換
+    float sinCamera = gsin(camera.angle % 360);
+    float cosCamera = -gsin((camera.angle + 90) % 360);
+
+    float transformedX1Camera = transformedX1 * cosCamera - transformedZ1 * sinCamera;
+    float transformedZ1Camera = transformedZ1 * cosCamera + transformedX1 * sinCamera;
+    float transformedY1Camera = transformedY1;
+
+    float transformedX2Camera = transformedX2 * cosCamera - transformedZ2 * sinCamera;
+    float transformedZ2Camera = transformedZ2 * cosCamera + transformedX2 * sinCamera;
+    float transformedY2Camera = transformedY2;
+
+    float transformedX3Camera = transformedX3 * cosCamera - transformedZ3 * sinCamera;
+    float transformedZ3Camera = transformedZ3 * cosCamera + transformedX3 * sinCamera;
+    float transformedY3Camera = transformedY3;
+
+    // パースペクティブ補正とズーム適用
+    float scale1 = 640.0f / (64.0f - transformedZ1Camera) * camera.zoom;
+    float scale2 = 640.0f / (64.0f - transformedZ2Camera) * camera.zoom;
+    float scale3 = 640.0f / (64.0f - transformedZ3Camera) * camera.zoom;
+
+    float sx1 = transformedX1Camera * scale1 + 64.0f;
+    float sy1 = transformedY1Camera * scale1 + 64.0f;
+
+    float sx2 = transformedX2Camera * scale2 + 64.0f;
+    float sy2 = transformedY2Camera * scale2 + 64.0f;
+
+    float sx3 = transformedX3Camera * scale3 + 64.0f;
+    float sy3 = transformedY3Camera * scale3 + 64.0f;
+
+        // ポリゴンの法線ベクトルを計算
+        Vector3 normal = calculateNormal(v1, v2, v3);
+
+        // カメラの視線ベクトル
+        Vector3 viewVector = normalize(camera.x, camera.y, camera.z);
+
+        // ポリゴンの法線ベクトルと視線ベクトルの角度を計算
+        float dotProduct = calculateDotProduct(normal, viewVector);
+        float angle = degrees(std::acos(dotProduct));
+
+        // ポリゴンの明るさを計算
+        float brightness = static_cast<float>(calculateBrightness(v1, v2, v3, light));
+
+        // 明るさに基づいてポリゴンの色を設定（0~255の範囲に収める）
+        int color = static_cast<int>(brightness * 255.0f);
+        color = clamp(color, 0, 255);
+
+        // 角度が180度未満のポリゴンのみ描画
+        if (angle < 180.0f) {
+            // 陰面消去を実施
+            Point2D p1(static_cast<int>(floor(sx1)), static_cast<int>(floor(sy1)));
+            Point2D p2(static_cast<int>(floor(sx2)), static_cast<int>(floor(sy2)));
+            Point2D p3(static_cast<int>(floor(sx3)), static_cast<int>(floor(sy3)));
+
+            // ポリゴンの面積を計算
+            float area = (p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y);
+
+            // 面積が正の場合はポリゴンを描画
+            if (area > 0.0f) {
+                  // HSBからRGBに変換
+              int r, g, b;
+              hsbToRgb(cube.colangle, 127, color, r, g, b);
+
+              // RGB値を設定
+              col[0] = r; // Red
+              col[1] = g; // Green
+              col[2] = b; // Blue
+
+              fillFastTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, lua_rgb24to16(col[0], col[1], col[2]));
+              // fillFastTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color); // 0xFFFFは描画色（白）を表します
+            }
+        }
+    }
+}
+
+// LuaのテーブルからC++のstd::vector<std::vector<float>>にデータを格納する関数
+void getPolygonData(lua_State* L, std::vector<std::vector<float>>& polygonData) {
+    luaL_checktype(L, -1, LUA_TTABLE); // 引数のテーブルをチェック
+
+    lua_pushnil(L);  // テーブルの最初のキーを取得するためにnilをプッシュ
+    while (lua_next(L, -2) != 0) {
+        luaL_checktype(L, -1, LUA_TTABLE); // テーブル内の要素がテーブルであることをチェック
+
+        std::vector<float> vertex;
+        lua_pushnil(L); // サブテーブルの最初のキーを取得するためにnilをプッシュ
+        while (lua_next(L, -2) != 0) {
+            luaL_checktype(L, -1, LUA_TNUMBER); // サブテーブル内の要素が数値であることをチェック
+
+            float value = static_cast<float>(lua_tonumber(L, -1));
+            vertex.push_back(value);
+
+            lua_pop(L, 1); // サブテーブル内の値をポップ
+        }
+        polygonData.push_back(vertex);
+
+        lua_pop(L, 1); // テーブル内の値をポップ
+    }
+}
+
+
+
+int RunHaco8Game::l_rendr(lua_State* L) {
+    RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+
+    // ポリゴンデータを取得
+    std::vector<std::vector<float>> polygonData;
+    getPolygonData(L, polygonData);
+
+    // ポリゴンを描画
+    self->renderPolygon(polygonData,120);
+
+    return 0;
+}
+
+int RunHaco8Game::l_creobj(lua_State* L) {
+
+    RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+    int objectType = lua_tointeger(L, 1);
+
+    switch (objectType) {
+        case 0: // カメラ
+            camera = CameraObj(); // デフォルトの初期値を使用
+            camera.x = 0;
+            camera.y = 0;
+            camera.z = 0;
+            camera.angle = 0;
+            camera.zoom = 1.0;
+            break;
+
+        case 1: // 光源
+            light = LightObj(); // デフォルトの初期値を使用
+            light.x = 1;
+            light.y = 3;
+            light.z = 10;
+            break;
+
+        case 2: // cube1
+            cube = CubeObj(); // デフォルトの初期値を使用
+            cube.x = 0;
+            cube.y = 0;
+            cube.z = 0;
+            cube.angle = 0;
+            cube.size = 1.0;
+            cube.width = 128;
+            cube.height = 120;
+            break;
+    }
+    
+    lua_newtable(L); // テーブルを作成
+
+    switch (objectType) {
+        case 0: // カメラ
+            lua_pushstring(L, "x");
+            lua_pushinteger(L, camera.x);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "y");
+            lua_pushinteger(L, camera.y);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "z");
+            lua_pushinteger(L, camera.z);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "angle");
+            lua_pushinteger(L, camera.angle);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "zoom");
+            lua_pushnumber(L, camera.zoom);
+            lua_settable(L, -3);
+            break;
+
+        case 1: // 光源
+            lua_pushstring(L, "x");
+            lua_pushinteger(L, light.x);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "y");
+            lua_pushinteger(L, light.y);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "z");
+            lua_pushinteger(L, light.z);
+            lua_settable(L, -3);
+            break;
+
+        case 2: // cube1
+            lua_pushstring(L, "x");
+            lua_pushinteger(L, cube.x);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "y");
+            lua_pushinteger(L, cube.y);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "z");
+            lua_pushinteger(L, cube.z);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "angle");
+            lua_pushinteger(L, cube.angle);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "size");
+            lua_pushnumber(L, cube.size);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "width");
+            lua_pushinteger(L, cube.width);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "height");
+            lua_pushinteger(L, cube.height);
+            lua_settable(L, -3);
+            break;
+    }
+
+    return 1; // テーブルをスタックに返す
+}
+
+int RunHaco8Game::l_trans(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  int y = lua_tointeger(L, 2);
+  int z = lua_tointeger(L, 3);
+  int angle = lua_tointeger(L, 4);
+  double size = lua_tonumber(L, 5);
+  int objid = lua_tointeger(L, 6);//あとでオブジェクトを配列にするときに使うcube[2]のように
+  int colangle = lua_tointeger(L, 7);
+  cube.x = x;
+  cube.y = y;
+  cube.z = z;
+  cube.angle = angle;
+  cube.size = size;
+  cube.colangle = colangle;
+  cube.width = 128;
+  cube.height = 120;
+  return 0;
+}
+
+int RunHaco8Game::l_cam(lua_State* L){
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  int y = lua_tointeger(L, 2);
+  int z = lua_tointeger(L, 3);
+  int angle = lua_tointeger(L, 4);
+  double zoom = lua_tonumber(L, 5);
+  camera.x = x;
+  camera.y = y;
+  camera.z = z;
+  camera.angle = angle;
+  camera.zoom = zoom;
+  return 0;
+}
+
+// struct Intersection {
+//     double x;
+//     double y;
+//     double distance;
+// };
+
+
+int RunHaco8Game::l_wini(lua_State* L) {
+  // const int ARRAY_SIZE = 32;  // 配列の要素数
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+
+  int divnum = lua_tointeger(L, 1);
+
+  //Intersection構造体の配列を作成
+  std::array<Intersection, 32> intersections;
+  // std::vector<Intersection> intersections(divnum);
+
+    //配列の各要素を初期化
+  for (int rayno = 0; rayno < divnum; ++rayno) {
+      intersections[rayno].x = 999.0;
+      intersections[rayno].y = 999.0;
+      intersections[rayno].distance = 999.0;
+      intersections[rayno].mapheight = 0.0;
+  }
+
+  return 0;
+}
+
+int RunHaco8Game::l_wset(lua_State* L) {
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+
+  // Get the coordinates of the first line segment
+  int pangle = lua_tointeger(L, 1);
+  
+  double x1 = lua_tonumber(L, 2);
+  double y1 = lua_tonumber(L, 3);
+
+  // wall line points
+  double x3 = lua_tonumber(L, 4);
+  double y3 = lua_tonumber(L, 5);
+  double x4 = lua_tonumber(L, 6);
+  double y4 = lua_tonumber(L, 7);
+  int colangle = lua_tointeger(L, 8);
+  
+  int raylength = 64;
+  int angleStep = 2;
+  int centerno = 16;
+
+  // int closestDistance=999;
+
+  for(int rayno = 0;rayno<32; rayno++){
+
+    double distance  = 999;
+    
+    int rayangle = (pangle + angleStep*(rayno-centerno) + 360) % 360;
+    double sin = gsin(rayangle);
+    double cos = -gsin((rayangle + 90+360) % 360);
+    double x2 = x1 + raylength * cos; // レイの終点のx座標
+    double y2 = y1 + raylength * sin; // レイの終点のy座標
+
+    tft.drawLine(x1, y1, x2, y2, lua_rgb24to16(127, 127, 0));//光線を描画
+    double denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    
+
+    if (denominator == 0) {
+      // 線分は平行なので、nilを返す
+      
+      // lua_pushnil(L);
+      // return 1;
+    } else {
+      
+      double t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
+      double u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator;
+
+      if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+        // 線分は交差しているので、交点座標を計算する
+        double intersectionX = x1 + t * (x2 - x1);
+        double intersectionY = y1 + t * (y2 - y1);
+        distance = sqrt(pow((intersectionX - x1), 2) + pow((intersectionY - y1), 2));
+
+        if(intersections[rayno].distance>distance){
+          intersections[rayno].distance = distance;
+          intersections[rayno].x = intersectionX;
+          intersections[rayno].y = intersectionY;
+          intersections[rayno].colangle = colangle;
+        }
+
+        tft.fillCircle(intersections[rayno].x, intersections[rayno].y, 3, lua_rgb24to16(255, 0, 0));
+
+      } else {
+        // 線分は交差していないので、nilを返す
+        // lua_pushnil(L);
+
+      }
+      
+    }
+
+  }
+  return 1;
+}
+
+int RunHaco8Game::l_wdraw(lua_State* L)
+{
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int pangle = lua_tointeger(L, 1);
+
+  int raylength = 64;
+  int angleStep = 2;
+  int centerno = 16;
+  int centerangle = 32;
+
+  for(int rayno = 0; rayno < 32; rayno++)
+  {
+    if(intersections[rayno].distance != 999)
+    {
+      int brightness = 255 - (intersections[rayno].distance / raylength) * 255;
+
+      // HSBからRGBに変換
+      int r, g, b;
+      self->hsbToRgb(intersections[rayno].colangle, 127, brightness, r, g, b); //彩度は自動で決まるのでダミー
+
+      // RGB値を設定
+      self->col[0] = r; // Red
+      self->col[1] = g; // Green
+      self->col[2] = b; //
+
+      int angleDiff = (2 * (rayno - centerno) + 360) % 360;
+      int perpdist = intersections[rayno].distance * gcos(angleDiff);
+      int mapheight = ( 600.0 / perpdist );
+
+      if(mapheight > 64.0){
+        mapheight = 64.0;
+      }
+
+      int cing = 32 - mapheight / 2;
+
+      tft.fillRect(128 - rayno * 2, cing, 2, mapheight, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+      tft.fillCircle(intersections[rayno].x, intersections[rayno].y, 3, lua_rgb24to16(0, 255, 0));
+    }
+
+    // Reset intersection values
+    intersections[rayno].x = 999;
+    intersections[rayno].y = 999;
+    intersections[rayno].distance = 999;
+    intersections[rayno].mapheight = 0;
+    intersections[rayno].colangle = 0;
+  }
+
+  return 0;
+}
+
+
+int RunHaco8Game::l_getstl(lua_State* L)
+{
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  const char* filename = lua_tostring(L, 1);
+
+  // SPIFFSからファイルを開く
+  File file = SPIFFS.open(filename, "r");
+  if (!file) {
+    return luaL_error(L, "failed to open file: %s", filename);
+  }
+
+  // 読み込み位置をファイルの先頭に設定
+  file.seek(0);
+
+  // ファイルからSTLヘッダーを読み込む
+  char header[80];
+  file.read((uint8_t*)header, 80);
+
+  // ファイルから三角形の数を読み込む
+  char poly_count_buf[4];
+  file.read((uint8_t*)poly_count_buf, 4);
+  unsigned int poly_count = *reinterpret_cast<unsigned int*>(poly_count_buf);
+  const unsigned int vertices_count = poly_count * 3;//ポリゴンの頂点数
+
+lua_newtable(L);  // テーブルを新しく作成
+
+for (unsigned int i = 0; i < vertices_count; i += 3) {
+  // ダミーデータを設定する
+  float dummyData[3] = {1.0f+i, 2.0f+i, 3.0f+i};
+
+  lua_newtable(L);  // テーブルを新しく作成
+
+  for (int j = 0; j < 3; ++j) {
+    lua_pushnumber(L, static_cast<lua_Number>(dummyData[j]));
+    lua_rawseti(L, -2, j + 1);
+  }
+
+  lua_rawseti(L, -2, i / 3 + 1);  // テーブルへの追加位置を修正
+}
+
+// テーブルのサイズをスタックに積む
+lua_pushinteger(L, static_cast<lua_Integer>(poly_count));
+
+  return 2;
 }
