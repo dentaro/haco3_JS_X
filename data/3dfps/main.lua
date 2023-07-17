@@ -75,8 +75,9 @@ function _init()
 end
 
 function input()
-  -- x = tp(0)
-  -- y = tp(1)
+  --wifiserve("ap")
+  x = tp(0)
+  y = tp(1)
 
   -- カメラの移動と回転
   if btn(1) >= 2 then
