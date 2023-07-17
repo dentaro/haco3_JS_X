@@ -1,1 +1,1 @@
-/haco8stage1/main.lua
+/calc/main.lua
