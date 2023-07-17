@@ -44,6 +44,7 @@ class RunJsGame: public BaseGame
     bool exitRequest = false;
     bool runError = false;
     String errorString;
+    
 
     uint8_t clist[16][3] =
   {

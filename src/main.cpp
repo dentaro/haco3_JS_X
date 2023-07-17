@@ -70,6 +70,7 @@ LGFX screen;//LGFXを継承
 LovyanGFX_DentaroUI ui(&screen);
 LGFX_Sprite tft(&screen);
 LGFX_Sprite sprite88_roi = LGFX_Sprite(&tft);
+LGFX_Sprite sprite11_roi = LGFX_Sprite(&tft);
 LGFX_Sprite sprite64 = LGFX_Sprite();
 static LGFX_Sprite sideSprite( &screen );//背景スプライトはディスプレイに出力
 static LGFX_Sprite logoSprite( &screen );//背景スプライトはディスプレイに出力
@@ -110,6 +111,9 @@ bool optionuiflag = false;
 int frame = 0;
 
 double sinValues[90];// 0から89度までの91個の要素
+
+int addUiNum[4];
+int allAddUiNum = 0;
 
 enum struct FileType {
   LUA,
@@ -220,6 +224,7 @@ bool isWifiDebug(){
 void reboot()
 {
   wifiGame->pause();
+  //ui.clearAddBtns(9);//個別のゲーム内で追加したボタンを消去してスタメン９個に初期化する
   ESP.restart();
 }
 
@@ -524,6 +529,8 @@ void setup()
 
   // writeFile(SPIFFS, "/init/caldata.txt",text);
 
+  ui.setTouchZoom(2);//2倍表示
+
   drawLogo();//ロゴを表示
   // ui.begin( screen, 16, 1, true);
 
@@ -541,17 +548,61 @@ void setup()
   sprite88_roi.setColorDepth(16);//子スプライトの色深度
   sprite88_roi.createSprite(8, 8);//ゲーム画面用スプライトメモリ確保
 
+  sprite11_roi.setPsram(false );
+  sprite11_roi.setColorDepth(16);//子スプライトの色深度
+  sprite11_roi.createSprite(1, 1);//ゲーム画面用スプライトメモリ確保
+
   spriteMap.setPsram(false );
   spriteMap.setColorDepth(16);//子スプライトの色深度
   spriteMap.createSprite(MAPWH, MAPWH/divnum);//マップ展開用スプライトメモリ確保
 
+  
+
   //sprite（bg1)のボタン配置の時
-  ui.createBtns( 130,  0,  30,   8,  1, 1, TOUCH, 2);//ホームボタン
+  ui.createBtns( 130,  0,  30,   8,  1, 1, TOUCH, ui.getTouchZoom());//ホームボタン
   // ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
-  ui.createBtns( 130,  81,  30, 20,  2, 1, TOUCH, 2);//コントローラー4ボタン
-  ui.createBtns( 130,  61,  30, 20,  1, 1, TOUCH, 2);//コントローラー4ボタン
-  ui.createBtns( 130,  101, 30, 20,  1, 1, TOUCH, 2);//コントローラー4ボタン
-  ui.createBtns( 130,  9,   30, 52,  2, 2, TOUCH, 2);//コントローラー4ボタン
+  ui.createBtns( 130,  81,  30, 20,  2, 1, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
+  ui.createBtns( 130,  61,  30, 20,  1, 1, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
+  ui.createBtns( 130,  101, 30, 20,  1, 1, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
+  ui.createBtns( 130,  9,   30, 52,  2, 2, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
+
+//additional btn
+//ボタンを動かす場合は、位置を0,0で定義して、あとで動かす
+File fr = SPIFFS.open("/init/param/addBtmNum.txt", "r");
+String line;
+
+while (fr.available()) {
+  line = fr.readStringUntil('\n');
+  if (!line.isEmpty()) {
+    int commaIndex = line.indexOf(',');
+    if (commaIndex != -1) {
+      String val = line.substring(0, commaIndex);
+      addUiNum[0] = val.toInt();
+
+      for (int i = 1; i < 4; i++) {
+        int nextCommaIndex = line.indexOf(',', commaIndex + 1);
+        if (nextCommaIndex != -1) {
+          val = line.substring(commaIndex + 1, nextCommaIndex);
+          addUiNum[i] = val.toInt();
+          commaIndex = nextCommaIndex;
+        }
+      }
+      ui.createBtns(0, 0, addUiNum[0], addUiNum[1], addUiNum[2], addUiNum[3], TOUCH, ui.getTouchZoom());//w20,h20,1,1,2
+      allAddUiNum++;
+    }
+  }
+}
+
+fr.close();
+
+
+// for(int i=0;i<addUiNum[0];i++){
+//   // ui.createBtns( 0,  0,  20, 20,  1, 1, TOUCH, 2 );
+//   ui.createBtns( 0,  0,  addUiNum[1], addUiNum[2],  addUiNum[3], addUiNum[4], TOUCH, 2 );
+// }
+  // ui.createBtns( 0,  0,  20, 20,  1, 1, TOUCH, 2 );
+  // ui.createBtns( 0,  0,  20, 20,  1, 1, TOUCH, 2 );
+
 
     // if(optionuiflag == true){
     // ui.createSliders( 0, 100, 128, 20, 1, 1, sliderSprite, XY_VAL, MULTI_EVENT, 2);
@@ -564,6 +615,10 @@ void setup()
   tft.setPsram( false );//DMA利用のためPSRAMは切る
   tft.createSprite( 128, 128 );
   tft.startWrite();//CSアサート開始
+
+  // tft.setPsram( true );
+  // tft.createSprite( 128, 128+64 );
+  // tft.startWrite();//CSアサート開始
   
   tft.setTextSize(1);
   tft.setFont(&lgfxJapanGothicP_8);
@@ -590,8 +645,6 @@ void setup()
 
 void loop()
 {
-  
-
   // ui.setConstantGetF(true);//trueだとタッチポイントのボタンIDを連続取得するモード
   ui.update(screen);//タッチイベントを取るので、LGFXが基底クラスでないといけない
 
@@ -642,6 +695,7 @@ void loop()
 
       tunes.pause();
       game->pause();
+      // ui.clearAddBtns();//個別のゲーム内で追加したボタンを消去する
       free(game);
       txtName = appfileName;
       game = nextGameObject(&appfileName, gameState, mapFileName);
@@ -675,11 +729,17 @@ void loop()
   if(mode != 0){ // exit request//次のゲームを立ち上げるフラグがた値、modeが１次のゲームを起動であれば
     tunes.pause();
     game->pause();
+    // ui.clearAddBtns();//個別のゲーム内で追加したタッチボタンを消去する
     free(game);
     txtName = appfileName;
     game = nextGameObject(&appfileName, gameState, mapFileName);//ファイルの種類を判別して適したゲームオブジェクトを生成
     game->init();//resume()（再開処理）を呼び出し、ゲームで利用する関数などを準備
     tunes.resume();
+
+    // for(int i=0;i<allAddUiNum;i++){
+    //   ui.setBtnPos(9+i, 128, 128);
+    // }//使わないときは、アドボタンは画面外128,128に飛ばす
+    
   }
 
   if(optionuiflag == true){

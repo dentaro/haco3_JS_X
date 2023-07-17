@@ -20,6 +20,10 @@ extern String mapFileName;
 extern float sliderval[2];
 extern bool optionuiflag;
 extern int frame;
+extern int boxzerox;
+extern int boxzeroy;
+
+// extern Vector3 boxzero;
 // extern double sinValues[90];// 0から89度までの91個の要素
 
 int cursor = 0;
@@ -136,9 +140,14 @@ int RunLuaGame::l_tp(lua_State* L)
 {
   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
   int n = lua_tointeger(L, 1);
-  self->tp[0] = ui.getPos().x/2;
-  self->tp[1] = ui.getPos().y/2;
-  lua_pushinteger(L, (lua_Integer)self->tp[n]);
+  if(ui.getPos().x<256){//UIエリアに入っていなければ
+    self->tp[0] = ui.getPos().x/2;
+    self->tp[1] = ui.getPos().y/2;
+    lua_pushinteger(L, (lua_Integer)self->tp[n]);
+  }else{//UIエリアに入ったら
+    // タッチされても過去の値をそのまま返す
+    lua_pushinteger(L, (lua_Integer)self->tp[n]);
+  }
   return 1;
 }
 
@@ -201,15 +210,30 @@ int RunLuaGame::l_pset(lua_State* L){
   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
   double x = lua_tonumber(L, 1);
   double y = lua_tonumber(L, 2);
-  // int x = lua_tointeger(L, 1);
-  // int y = lua_tointeger(L, 2);
   int cn = lua_tointeger(L, 3);
-  if(cn != NULL){
-    self->col[0] = self->clist[cn][0]; // 5bit
-    self->col[1] = self->clist[cn][1]; // 6bit
-    self->col[2] = self->clist[cn][2]; // 5bit
+  int cn2 = lua_tointeger(L, 4);
+  int cn3 = lua_tointeger(L, 5);
+  
+  // if(cn != NULL){
+  //   self->col[0] = self->clist[cn][0]; // 5bit
+  //   self->col[1] = self->clist[cn][1]; // 6bit
+  //   self->col[2] = self->clist[cn][2]; // 5bit
+  // }
+  // tft.drawPixel(x, y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+
+
+  if(cn2 == NULL){
+    tft.writePixel(x, y, cn);
   }
-  tft.drawPixel(x, y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+
+  if(cn3 != NULL)
+  {
+    self->col[0] = cn; // 5bit
+    self->col[1] = cn2; // 6bit
+    self->col[2] = cn3; // 5bit
+    tft.drawPixel(x, y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  }
+  
 
   // if(cn2 == NULL && cn2 == NULL){
   //   tft.drawPixel(x, y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
@@ -290,6 +314,7 @@ int RunLuaGame::l_drawrect(lua_State* L){
   double w = lua_tonumber(L, 3);
   double h = lua_tonumber(L, 4);
   int cn = lua_tointeger(L, 5);
+  
   if(cn != NULL)
   {
     self->col[0] = self->clist[cn][0]; // 5bit
@@ -299,6 +324,114 @@ int RunLuaGame::l_drawrect(lua_State* L){
 
   tft.drawRect(x, y, w, h, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
   return 0;
+}
+
+int RunLuaGame::l_drawbox(lua_State* L) {
+  RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+  
+  double px = lua_tonumber(L, 1);
+  double py = lua_tonumber(L, 2);
+  double x = lua_tonumber(L, 3);
+  double y = lua_tonumber(L, 4);
+  double z = lua_tonumber(L, 5);
+  int cn = lua_tointeger(L, 6);
+  
+  if (cn != 0) { // NULL ではなく 0 と比較することを推奨します
+    self->col[0] = self->clist[cn][0]; // 5bit
+    self->col[1] = self->clist[cn][1]; // 6bit
+    self->col[2] = self->clist[cn][2]; // 5bit
+  }
+
+  self->boxzerox = px;
+  self->boxzeroy = py;
+
+  // double unit = 10;
+  double rad = atan(0.5);
+  const Vector3 a(9, 4.5, z);
+  const Vector3 b(-9, 4.5, z);
+  const Vector3 c(a.x + b.x, a.y + b.y, a.z + b.z); // ベクトル合成
+  const Vector3 o(x * cos(rad) - y * cos(rad) + self->boxzerox, x * sin(rad) + y * sin(rad) + self->boxzeroy, z); // クオータービュー（x座標・y座標反転）
+
+  // self->fillFastTriangle(o.x, o.y, o.x - a.x, o.y + a.y, o.x - c.x, o.y + c.y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  // self->fillFastTriangle(o.x, o.y, o.x - b.x, o.y + b.y, o.x - c.x, o.y + c.y, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+
+  self->fillFastTriangle(o.x, o.y-z, o.x - a.x, o.y + a.y-z, o.x - c.x, o.y + c.y-z, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  self->fillFastTriangle(o.x, o.y-z, o.x - b.x, o.y + b.y-z, o.x - c.x, o.y + c.y-z, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+
+  self->fillFastTriangle(o.x - c.x, o.y + c.y-z,  o.x - a.x, o.y + a.y-z, o.x - c.x, o.y + c.y, lua_rgb24to16(50, 50, 100));
+  self->fillFastTriangle(o.x - a.x, o.y + a.y-z, o.x - a.x, o.y + a.y   , o.x - c.x, o.y + c.y, lua_rgb24to16(50, 50, 100));
+
+  self->fillFastTriangle(o.x - c.x, o.y + c.y-z, o.x - b.x, o.y + b.y-z, o.x - c.x, o.y + c.y,    lua_rgb24to16(100, 100, 100));
+  self->fillFastTriangle(o.x - b.x, o.y + b.y,    o.x - c.x, o.y + c.y,    o.x - b.x, o.y + b.y-z, lua_rgb24to16(100, 100, 100));
+
+  // tft.drawRect(x+50, y+50, w, h, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+
+  return 0;
+}
+
+int RunLuaGame::l_drawboxp(lua_State* L) {
+  RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+  
+  double x = lua_tonumber(L, 1);
+  double y = lua_tonumber(L, 2);
+  double z = lua_tonumber(L, 3);
+
+  double rad = atan(0.5);
+  const Vector3 a(9, 4.5, z);
+  const Vector3 b(-9, 4.5, z);
+  const Vector3 c(a.x + b.x, a.y + b.y, a.z + b.z); // ベクトル合成
+  const Vector3 o(x * cos(rad) - y * cos(rad) + self->boxzerox, x * sin(rad) + y * sin(rad) + self->boxzeroy, z); // クオータービュー（x座標・y座標反転）
+
+  // self->fillFastTriangle(o.x, o.y-z, o.x - a.x, o.y + a.y-z, o.x - c.x, o.y + c.y-z, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  // self->fillFastTriangle(o.x, o.y-z, o.x - b.x, o.y + b.y-z, o.x - c.x, o.y + c.y-z, lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  self->fillFastTriangle(o.x, o.y-z, o.x - a.x, o.y + a.y-z, o.x - c.x, o.y + c.y-z, lua_rgb24to16(0, 0, 50));
+  self->fillFastTriangle(o.x, o.y-z, o.x - b.x, o.y + b.y-z, o.x - c.x, o.y + c.y-z, lua_rgb24to16(0, 0, 50));
+
+  // Create a Lua table
+lua_newtable(L);
+
+// Set the values of the table
+lua_pushnumber(L, o.x);
+lua_setfield(L, -2, "x");
+
+lua_pushnumber(L, o.y-z);
+lua_setfield(L, -2, "y");
+
+lua_pushnumber(L, o.z);
+lua_setfield(L, -2, "z");
+
+// テーブルのサイズをスタックに積む
+lua_pushinteger(L, 3);
+
+return 2;
+
+}
+
+
+
+int RunLuaGame::l_fillpoly(lua_State* L){
+  RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+  double x0 = lua_tonumber(L, 1);
+  double y0 = lua_tonumber(L, 2);
+  double x1 = lua_tonumber(L, 3);
+  double y1 = lua_tonumber(L, 4);
+  double x2 = lua_tonumber(L, 5);
+  double y2 = lua_tonumber(L, 6);
+  double x3 = lua_tonumber(L, 7);
+  double y3 = lua_tonumber(L, 8);
+  int cn = lua_tointeger(L, 9);
+
+  self->col[0] = self->clist[cn][0]; // 5bit
+  self->col[1] = self->clist[cn][1]; // 6bit
+  self->col[2] = self->clist[cn][2]; // 5bit
+
+  self->fillFastTriangle(x0,y0,x1,y1,x2,y2,lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  self->fillFastTriangle(x2,y2,x3,y3,x0,y0,lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+
+  // tft.fillTriangle( x0,y0,x1,y1,x2,y2);
+  // tft.fillTriangle( x2,y2,x3,y3,x0,y0);
+  return 0;
+
 }
 
 int RunLuaGame::l_fillrect(lua_State* L){
@@ -598,10 +731,71 @@ int RunLuaGame::l_drawcircle(lua_State* L){
 int RunLuaGame::l_btn(lua_State* L){
   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
   int n = lua_tointeger(L, 1);
-  // Serial.println((lua_Integer)self->buttonState[n]);
-  lua_pushinteger(L, (lua_Integer)self->buttonState[n]);
+  int n2 = lua_tointeger(L, 2);
+  double addval = lua_tonumber(L, 3);
+  double val = lua_tonumber(L, 4);
+
+  if(n2 == NULL){
+    lua_pushinteger(L, (lua_Integer)self->buttonState[n]);
+  }else{
+    if (self->buttonState[n] >= 2) {
+      lua_pushnumber(L, val + addval);
+    } 
+    else if (self->buttonState[n2] >= 2) {
+      lua_pushnumber(L, val - addval); 
+    }
+  }
   return 1;
 }
+
+int RunLuaGame::l_addbtn(lua_State* L){
+  RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+  int btnno = lua_tointeger(L, 1);
+  double x = lua_tonumber(L, 2);
+  double y = lua_tonumber(L, 3);
+  int cn = lua_tointeger(L, 4);
+  // int w = lua_tointeger(L, 4);
+  // int h = lua_tointeger(L, 5);
+  // int zoom = lua_tointeger(L, 4);
+  // ui.setBtnPos(btnno, floor(x), floor(y), w, h, zoom);
+
+  ui.setBtnPos(btnno, x, y);//ui.getTochZoom()
+
+  
+  
+  if(cn != NULL)
+  {
+    self->col[0] = self->clist[cn][0]; // 5bit
+    self->col[1] = self->clist[cn][1]; // 6bit
+    self->col[2] = self->clist[cn][2]; // 5bit
+    //イベント処理のためタッチボタンの幅と高さは２倍処理済みの実寸で保持されるので、tftへの描写は1/2にする
+    tft.drawRect(x, y, ui.getBtnW(btnno)/ui.getTouchZoom(), ui.getBtnH(btnno)/ui.getTouchZoom(), lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+    tft.setCursor(x, y);
+    tft.setTextColor(TFT_DARKGRAY);
+    tft.setTextSize(1);
+    // tft.print(ui.getBtnW(btnno));
+    tft.print(btnno);
+  }
+  else{
+    //色指定がなければ何も描画しない(ボタンはある）
+  }
+
+  
+
+  // int uino = lua_tointeger(L, 1);
+  // int btnno = lua_tointeger(L, 2);
+  // double x = lua_tonumber(L, 3);
+  // double y = lua_tonumber(L, 4);
+  // int w = lua_tointeger(L, 5);
+  // int h = lua_tointeger(L, 6);
+  // int zoom = lua_tointeger(L, 7);
+  // ui.setBtnPos(uino, btnno, floor(x), floor(y), w, h, zoom);
+  
+  return 0;
+  // return 1;
+}
+
+// addbtn(9,100,0,20,20)
 
 int RunLuaGame::l_btnp(lua_State* L)
 {
@@ -983,6 +1177,18 @@ luaL_addlstring(&buff, luaBuffer, MAX_CHAR);
   lua_setglobal(L, "fillrect");
 
   lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_fillpoly, 1);
+  lua_setglobal(L, "fillpoly");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_drawbox, 1);
+  lua_setglobal(L, "drawbox");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_drawboxp, 1);
+  lua_setglobal(L, "drawboxp");
+
+  lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_drawtri, 1);
   lua_setglobal(L, "drawtri");
 
@@ -1001,6 +1207,10 @@ luaL_addlstring(&buff, luaBuffer, MAX_CHAR);
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_btn, 1);
   lua_setglobal(L, "btn");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_addbtn, 1);
+  lua_setglobal(L, "addbtn");
 
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_btnp, 1);
@@ -1056,7 +1266,7 @@ luaL_addlstring(&buff, luaBuffer, MAX_CHAR);
 
   haco8resume();//派生クラスでのみこの位置で実行されるダミー関数
 
-   File fr;
+  File fr;
 
   fr = SPIFFS.open(SPRBITS_FILE, "r");// ⑩ファイルを読み込みモードで開く
     for(int i= 0;i<128;i++){//
@@ -1162,9 +1372,11 @@ luaL_addlstring(&buff, luaBuffer, MAX_CHAR);
     }
   }
 
+  ui.clearAddBtns();//個別のゲーム内で追加したタッチボタンを消去する
+
   Serial.println("lua check finish");
 
-  for(int i = 0; i < CTRLBTNNUM; i ++){//初期化
+  for(int i = 0; i < CTRLBTNNUM+ui.getAddBtnNum(); i ++){//初期化
       buttonState[i] = 0;
   }
 
@@ -1192,29 +1404,14 @@ fr = SPIFFS.open("/init/param/modeset.txt", "r");// ⑩ファイルを読み込�
         break;
   }
 
-
-  // // const char* mn = _nm;
-  // // //mapFileName = "/init/map/0.png";//デフォルトは０
-  // // if(mn != NULL){
-  // //   mapFileName = mn;
-  //   readMap();
-  // // }
-
-  // for (int i = 0; i < 90; ++i) {
-  //       double radians = i * M_PI / 180.0;
-  //       sinValues[i] = sin(radians);
-  // }
-
-
   tft.pushSprite(0, 0);
-  //初期化
   frame=0;
 }
 
 int RunLuaGame::run(int _remainTime){
   char str[12];
   // char key;
-  // for(int i = 0; i < CTRLBTNNUM; i ++){//初期化
+  // for(int i = 0; i < CTRLBTNNUM +ui.getAddBtnNum(); i ++){//初期化
   //     buttonState[i] = false;
   //     if(pressedBtnID ==  i){buttonState[i]  = true;}//左
   // }
@@ -1232,7 +1429,7 @@ int RunLuaGame::run(int _remainTime){
   }
 
   //ボタンを押してからの経過時間を返すための処理
-  for(int i = 0; i < CTRLBTNNUM; i ++){
+  for(int i = 0; i < CTRLBTNNUM+ ui.getAddBtnNum(); i ++){
     if(ui.getEvent() == NO_EVENT)
     {
       buttonState[i] = 0;

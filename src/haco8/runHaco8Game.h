@@ -32,15 +32,16 @@ extern "C"{
 //   uint16_t tmp = ((r>>3) << 11) | ((g>>2) << 5) | (b>>3);
 //   return tmp; //(tmp >> 8) | (tmp << 8);
 // }
-struct Vector3 {
-  double x;
-  double y;
-  double z;
+
+// struct Vector3 {
+//   double x;
+//   double y;
+//   double z;
   
-  Vector3(double x, double y, double z)
-    : x(x), y(y), z(z)
-  {}
-};
+//   Vector3(double x, double y, double z)
+//     : x(x), y(y), z(z)
+//   {}
+// };
 
 struct Intersection {
     double x;
@@ -185,6 +186,10 @@ class RunHaco8Game: public RunLuaGame
   static int l_wini(lua_State* L);
   static int l_wset(lua_State* L);
   static int l_wdraw(lua_State* L);
+
+  static int l_gcol(lua_State* L);
+  static int l_sp3d(lua_State* L);
+  static int l_spmap(lua_State* L);
 
   // ベクトルの長さを計算する関数
   double calculateLength(double x, double y, double z);

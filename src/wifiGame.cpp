@@ -23,8 +23,8 @@ void WifiGame::init(bool isSelf){
 }
 
 int WifiGame::initSTA(){
-  String ssid = preferences.getString("WIFI_SSID");
-  String password = preferences.getString("WIFI_PASSWD");
+  String ssid = "";//preferences.getString("WIFI_SSID");
+  String password = "";//preferences.getString("WIFI_PASSWD");
 
   File fr = SPIFFS.open(WIFIPASS_FILE, "r");// ⑩ファイルを読み込みモードで開く
   for(int i= 0;i<2;i++){//
@@ -61,10 +61,22 @@ int WifiGame::initSTA(){
   tft.pushSprite(0, 0);
 #endif
 
-  while(WiFi.status() != WL_CONNECTED){
+  // while(WiFi.status() != WL_CONNECTED){
+  //   delay(500);
+  //   Serial.print(".");
+  // }
+
+  unsigned long startTime = millis();
+  while (WiFi.status() != WL_CONNECTED) {
+    if (millis() - startTime >= 1000) { // 1秒以上経過した場合は再試行
+      Serial.println("");
+      Serial.println("Failed to connect to WiFi.");
+      return -1; // エラーコードを返すなど、エラー処理を追加する
+    }
     delay(500);
     Serial.print(".");
   }
+
   Serial.println("");
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
@@ -128,7 +140,8 @@ void WifiGame::getHandler(WiFiClient *c, String path){
 
   if(path.startsWith("/setting/")){
     c->println("HTTP/1.1 200 OK");
-    c->println("Content-type: text/html");
+    c->println("Content-type: text/html; charset=utf-8"); // UTF-8を指定
+    // c->println("Content-type: text/html");
     c->println();
     c->println("<form method='POST' action='/action/wifiset'>");
     c->println("ssid: <input type='text' name='ssid'>");
@@ -144,7 +157,8 @@ void WifiGame::getHandler(WiFiClient *c, String path){
     File f = root.openNextFile();
 
     c->println("HTTP/1.1 200 OK");
-    c->println("Content-type: text/html");
+    c->println("Content-type: text/html; charset=utf-8"); // UTF-8を指定
+    // c->println("Content-type: text/html");
     c->println();
     c->println("<h1>haco3 file list</h1>");
 
@@ -194,11 +208,13 @@ void WifiGame::getHandler(WiFiClient *c, String path){
 
     if(isHtml || isEdit){
       c->println("HTTP/1.1 200 OK");
-      c->println("Content-type: text/html");
+      c->println("Content-type: text/html; charset=utf-8"); // UTF-8を指定
+      // c->println("Content-type: text/html");
       c->println();
     }else{
       c->println("HTTP/1.1 200 OK");
-      c->println("Content-type: text/text");
+      c->println("Content-type: text/text; charset=utf-8"); // UTF-8を指定
+      // c->println("Content-type: text/text");
       c->println();
     }
 
@@ -266,19 +282,22 @@ void WifiGame::postHandler(WiFiClient *c, String path, String body){
     path = path.substring(8);
     if(SPIFFS.remove(path)){
       c->println("HTTP/1.1 200 OK");
-      c->println("Content-type: text/plain");
+      c->println("Content-type: text/plain; charset=utf-8"); // UTF-8を指定
+      // c->println("Content-type: text/plain");
       c->println();
       c->println("OK");
     }else{
       c->println("HTTP/1.1 200 OK");
-      c->println("Content-type: text/plain");
+      c->println("Content-type: text/plain; charset=utf-8"); // UTF-8を指定
+      // c->println("Content-type: text/plain");
       c->println();
       c->println("remove fail");
     }
   }else if(path.startsWith("/action/reboot")){
     Serial.println("action reboot");
     c->println("HTTP/1.1 200 OK");
-    c->println("Content-type: text/plain");
+    c->println("Content-type: text/plain; charset=utf-8"); // UTF-8を指定
+    // c->println("Content-type: text/plain");
     c->println();
     c->println("OK");
 
@@ -288,7 +307,8 @@ void WifiGame::postHandler(WiFiClient *c, String path, String body){
     ESP.restart();
   }else{
     c->println("HTTP/1.1 400 BadRequest");
-    c->println("Content-type: text/plain");
+    c->println("Content-type: text/plain; charset=utf-8"); // UTF-8を指定
+    // c->println("Content-type: text/plain");
     c->println();
     c->println("400 BadRequest");
   }

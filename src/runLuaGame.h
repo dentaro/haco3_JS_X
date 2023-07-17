@@ -39,6 +39,28 @@ inline uint16_t lua_rgb24to16(uint8_t r, uint8_t g, uint8_t b) {
   return tmp; //(tmp >> 8) | (tmp << 8);
 }
 
+struct Vector3 {
+  double x;
+  double y;
+  double z;
+  
+  Vector3(double x, double y, double z)
+    : x(x), y(y), z(z)
+  {}
+
+  void set(double ax, double ay, double az) {
+    x = ax;
+    y = ay;
+    z = az;
+  }
+  void add(double ax, double ay, double az) {
+    x += ax;
+    y += ay;
+    z += az;
+  }
+};
+
+
 class RunLuaGame: public BaseGame
 {//クラスはデフォルトではprivata
 
@@ -54,7 +76,10 @@ class RunLuaGame: public BaseGame
     luaL_Buffer b;
     byte col[3] = {0,0,0};
     // int frame = 0;
-    int buttonState[CTRLBTNNUM];//ボタンの個数未定
+    
+    // int buttonState[CTRLBTNNUM+20];//ボタンの個数20個まで追加可能
+    // std::deque<int> buttonState(buttonState, buttonState + CTRLBTNNUM);
+    std::deque<int> buttonState;//ボタンの個数未定
     int tp[2] ={0,0};
     uint16_t palette[256];
 
@@ -66,6 +91,9 @@ class RunLuaGame: public BaseGame
     bool exitRequest = false;
     bool runError = false;
     String errorString;
+    // Vector3::Vector3 boxzero;
+    int boxzerox = 60;
+    int boxzeroy = 60;
 
     // int gameState = 0;
 
@@ -102,11 +130,15 @@ class RunLuaGame: public BaseGame
     static int l_opmode(lua_State* L);
     static int l_drawrect(lua_State* L);
     static int l_fillrect(lua_State* L);
+    static int l_fillpoly(lua_State* L);
+    static int l_drawbox(lua_State* L);
+    static int l_drawboxp(lua_State* L);
     static int l_fillcircle(lua_State* L);
     static int l_drawcircle(lua_State* L);
     static int l_drawtri(lua_State* L);
     static int l_filltri(lua_State* L);
     static int l_btn(lua_State* L);
+    static int l_addbtn(lua_State* L);
     static int l_btnp(lua_State* L);
     static int l_sldr(lua_State* L);
     static int l_getip(lua_State* L);

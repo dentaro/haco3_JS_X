@@ -23,7 +23,6 @@ extern void readMap();
 extern int frame;
 extern double sinValues[90];// 0から89度までの91個の要素
 
-
 extern uint8_t mapArray[MAPWH][MAPWH];
 
 extern int8_t sprbits[128];//fgetでアクセスするスプライト属性を格納するための配列
@@ -242,7 +241,18 @@ void RunHaco8Game::haco8resume()
   lua_pushlightuserdata(L, this);
   lua_pushcclosure(L, l_wdraw, 1);
   lua_setglobal(L, "wdraw");
-  
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_gcol, 1);
+  lua_setglobal(L, "gcol");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_sp3d, 1);
+  lua_setglobal(L, "sp3d");
+
+  lua_pushlightuserdata(L, this);
+  lua_pushcclosure(L, l_spmap, 1);
+  lua_setglobal(L, "spmap");
 
   // gameState = _gameState;
 
@@ -325,19 +335,20 @@ int RunHaco8Game::l_map(lua_State* L){
 
   int spr8numX = 8;//スプライトシートに並ぶ８＊８スプライトの個数
   int spr8numY = 8;
-
   for(int m=0;m<roiH;m++){
       for(int n=0;n<roiW;n++){
           int sprno = mapArray[my+n][mx+m];
           
             int sx = ((sprno-1)%spr8numX); //0~7
             int sy = ((sprno-1)/spr8numY); //整数の割り算は自動で切り捨てされる
+            sprite64.pushSprite(&sprite88_roi, -8*(sx), -8*(sy));//128*128のpngデータを指定位置までずらすsprite64のスプライトデータ8*8で切り抜く
+            sprite88_roi.pushSprite(&tft, roix+n*8, roiy+m*8);//4ずれない
             
-            sprite64.pushSprite(&sprite88_roi, -8*(sx), -8*(sy));//128*128のpngデータを指定位置までずらす
-            sprite88_roi.pushRotateZoom(&tft, roix+n*8+4, roiy+m*8+4, 0, 1, 1, TFT_BLACK);//なぜか４を足さないとずれる要修正
+            // sprite88_roi.pushRotateZoom(&tft, roix+n*8+4, roiy+m*8+4, 0, 1, 1, TFT_BLACK);//なぜか４を足さないとずれる要修正
       }
   }
   return 0;
+  
 }
 
 int RunHaco8Game::l_fget(lua_State* L){
@@ -526,13 +537,8 @@ int RunHaco8Game::l_gcos(lua_State* L) {
   return 1;
 }
 
-
-// double normalizeAngle(int angle) {
-//     angle = (angle % 360 + 360) % 360;
-//     return static_cast<double>(angle);
-// }
-
-double gsin(int angle) {
+double gsin(int angle)
+{
     angle = static_cast<int>(normalizeAngle(angle));
 
     if (angle >= 0 && angle <= 89) {
@@ -1030,23 +1036,6 @@ const char* V1_KEY = "v1";
 const char* V2_KEY = "v2";
 const char* V3_KEY = "v3";
 
-// テーブルから頂点情報を取得する関数
-// void RunHaco8Game::getVertices(lua_State* L, int tableIndex, Vertex& v1, Vertex& v2, Vertex& v3) {
-//     lua_getfield(L, tableIndex, V1_KEY);  // v1 テーブルをスタックにプッシュ
-//     v1.x = lua_tonumber(L, -1);  // v1.x の値を取得
-//     lua_pop(L, 1);  // v1 テーブルをスタックから削除
-
-//     lua_getfield(L, tableIndex, V2_KEY);  // v2 テーブルをスタックにプッシュ
-//     v2.x = lua_tonumber(L, -1);  // v2.x の値を取得
-//     lua_pop(L, 1);  // v2 テーブルをスタックから削除
-
-//     lua_getfield(L, tableIndex, V3_KEY);  // v3 テーブルをスタックにプッシュ
-//     v3.x = lua_tonumber(L, -1);  // v3.x の値を取得
-//     lua_pop(L, 1);  // v3 テーブルをスタックから削除
-// }
-
-// C++側の関数
-
 inline float clamp(float value, float min, float max) {
     if (value < min) {
         return min;
@@ -1504,6 +1493,197 @@ int RunHaco8Game::l_wdraw(lua_State* L)
   return 0;
 }
 
+int RunHaco8Game::l_gcol(lua_State* L)
+{
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int x = lua_tointeger(L, 1);
+  int y = lua_tointeger(L, 2);
+  // int rgba = lua_tointeger(L, 3);
+
+  // uint32_t fullcolor = tft.readPixelValue(x, y);
+
+  // 分解してRGBA値を取得
+  uint16_t c = tft.readPixel(x, y);
+  lua_pushinteger(L, c);
+
+  // lua_pushinteger(L, color);
+
+  // uint8_t b = (color >> 24) & 0xFF;
+  // uint8_t a = (color >> 16) & 0xFF;
+  // uint8_t g = (color >> 8) & 0xFF;
+  // uint8_t r = color & 0xFF;
+
+  // // RGB値を格納
+  // self->col[1] = r;
+  // self->col[2] = g;
+  // self->col[0] = b;
+
+  // // 対応するRGB値をLuaスタックにプッシュ
+  // if (rgba == 0) {  // red
+  //   lua_pushinteger(L, self->col[0]);
+  // } else if (rgba == 1) {  // green
+  //   lua_pushinteger(L, self->col[1]);
+  // } else if (rgba == 2) {  // blue
+  //   lua_pushinteger(L, self->col[2]);
+  // } else if (rgba == 3) {  // blue
+  //   lua_pushinteger(L, 255);
+  // }
+
+  return 1;  // スタックにプッシュした値の数を返す
+}
+
+int RunHaco8Game::l_sp3d(lua_State* L)
+{
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  double x = lua_tonumber(L, 1);
+  double y = lua_tonumber(L, 2);
+  double w = lua_tonumber(L, 3);
+  double h = lua_tonumber(L, 4);
+  double x1 = lua_tonumber(L, 5);
+  double y1 = lua_tonumber(L, 6);
+  double angle = lua_tonumber(L, 7);
+  double pheight = lua_tonumber(L, 8);
+  pheight = pheight / 100;
+
+  int bottom = y + h;
+
+  double pcos = gcos(angle);
+  double psin = gsin(angle);
+
+  for (int wx = 0; wx < w; wx++) {
+    for (int wy = 0; wy < h; wy++) {
+        double hRatio = wx / (w - 1);
+        double vRatio = pheight / (1 - (wy / (h - 1)));
+
+        double sX = (1 - hRatio) * vRatio * w;
+        double sY = hRatio * vRatio * h;
+
+        double transformedX = sX * pcos - sY * psin + x1;
+        double transformedY = sX * psin + sY * pcos + y1;
+
+        uint16_t c = tft.readPixel(floor(transformedX), floor(transformedY));
+        tft.drawPixel(x + wx, bottom - wy, c);
+    }
+  }
+  
+  return 0;
+}
+
+
+// 仮の実装として、getmap()関数は単純に指定された座標のカラーを返すようにします
+// getmap関数の実装
+// uint16_t getmapcolor(int x, int y) {
+//   sprite88_roi.clear();//指定の大きさにスプライトを作り直す
+//   sprite88_roi.createSprite(8,8);
+
+//   int spr8numX = 8;//スプライトシートに並ぶ８＊８スプライトの個数
+//   int spr8numY = 8;
+//   // スプライトの位置を計算する
+//     int sprX = x / spr8numX;
+//     int sprY = y / spr8numY;
+
+//     // マップ配列から指定位置のスプライトを抽出する
+//     int sprno = mapArray[sprX][sprY];
+
+//     int sx = ((sprno-1)%spr8numX); //0~7
+//     int sy = ((sprno-1)/spr8numY); //整数の割り算は自動で切り捨てされる
+//     sprite64.pushSprite(&sprite88_roi, -8*(sx), -8*(sy));//128*128のpngデータを指定位置までずらすsprite64のスプライトデータ8*8で切り抜く
+    
+//     // スプライトの座標から色を取得する
+//     uint16_t color = sprite88_roi.readPixel(x%8, y%8);
+//     // uint16_t color  = 0x001F;
+    
+//     return color;
+// }
+
+// uint16_t getmapcolor(int x, int y) {
+//   // int spr8numX = 8; // スプライトシートに並ぶ8x8スプライトの個数
+//   // int spr8numY = 8;
+  
+//   // スプライトの位置を計算する
+//   int sprX = x >> 3;  // x / 8 と同等
+//   int sprY = y >> 3;  // y / 8 と同等
+
+//   // マップ配列から指定位置のスプライトを抽出する
+//   int sprno = mapArray[sprX][sprY];
+
+//   int sx = (sprno - 1) & 7;  // (sprno - 1) % spr8numX と同等
+//   int sy = (sprno - 1) >> 3; // (sprno - 1) / spr8numY と同等
+
+//   // スプライト内の座標から色を取得する
+//   uint16_t color = sprite64.readPixel((sx << 3) + (x & 7), (sy << 3) + (y & 7));
+
+//   return color;
+// }
+
+
+int RunHaco8Game::l_spmap(lua_State* L) {
+  RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
+  int mx = lua_tointeger(L, 1);
+  int my = lua_tointeger(L, 2);
+  double w = lua_tonumber(L, 3);
+  double h = lua_tonumber(L, 4);
+  int roix = lua_tointeger(L, 5);
+  int roiy = lua_tointeger(L, 6);
+  int roiW = lua_tointeger(L, 7);
+  int roiH = lua_tointeger(L, 8);
+
+  double x1 = lua_tonumber(L, 9);
+  double y1 = lua_tonumber(L, 10);
+  double angle = lua_tonumber(L, 11);
+  double pheight = lua_tonumber(L, 12);
+  pheight = pheight / 100;
+
+  String fn = lua_tostring(L, 13);
+  if (fn != NULL) {
+    mapFileName = fn;
+  }
+
+//１ピクセルずつ走査して描画していく
+
+  // int bottom = my + h;
+
+  double pcos = gcos(angle);
+  double psin = gsin(angle);
+
+  double invW = 1.0 / (w - 1);
+  double invH = 1.0 / (h - 1);
+
+  for (int wx = 0; wx < w; wx++) {
+    double hRatio = wx * invW;
+
+    for (int wy = 0; wy < h; wy++) {
+      double vRatio = pheight / (1 - (wy * invH));
+
+      double sX = (1 - hRatio) * vRatio * w;
+      double sY = hRatio * vRatio * h;
+
+      double transformedX = sX * pcos - sY * psin + x1;
+      double transformedY = sX * psin + sY * pcos + y1;
+
+      if (transformedX < ((roix + roiW) << 3) && transformedY < ((roiy + roiH) << 3) && transformedX >= (roix << 3) && transformedY >= (roiy << 3)) {
+        // uint16_t c = getmapcolor(static_cast<int>(transformedX), static_cast<int>(transformedY));
+        int xx = static_cast<int>(transformedX);
+        int yy = static_cast<int>(transformedY);
+
+        int sprX = xx / 8;  // floorしている
+        int sprY = yy / 8;  // floorしている
+
+        // マップ配列から指定位置のスプライトを抽出する
+        int sprno = mapArray[sprX][sprY];
+
+        int sx = (sprno - 1) & 7;  // (sprno - 1) % spr8numX と同等
+        int sy = (sprno - 1) >> 3; // (sprno - 1) / spr8numY と同等
+
+        // スプライト内の座標から色を取得する
+        uint16_t color = sprite64.readPixel((sx << 3) + (xx & 7), (sy << 3) + (yy & 7));
+
+        tft.drawPixel(mx + wx, my + h - wy, color);
+      }
+    }
+  }
+  return 0;
+}
 
 int RunHaco8Game::l_getstl(lua_State* L)
 {

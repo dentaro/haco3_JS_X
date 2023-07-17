@@ -544,11 +544,12 @@ int RunJsGame::run(int _remainTime){
   char str[100];
   char key;
   if(ui.getTouchBtnNum()>CTRLBTNNUM){
-    ui.clearAddBtns(CTRLBTNNUM);//最初に生成する4つのコントロールボタン以外は消して初期化する
+    // ui.clearAddBtns();//最初に生成する4つのコントロールボタン以外は消して初期化する
   }
 
   if(exitRequest){//次のゲームを起動するフラグがたったら
     exitRequest = false;//フラグをリセットして
+    ui.clearAddBtns();
     return 1; // exit(1をリターンすることで、main.cppの変数modeを１にする)
   }
 
