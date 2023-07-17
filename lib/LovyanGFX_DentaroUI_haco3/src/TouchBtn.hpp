@@ -195,6 +195,8 @@ public:
     // TouchBtn(LGFX* _lcd): lcd(_lcd) {}
     // LGFX* lcd;
     TouchBtn();
+   ~TouchBtn();
+    
 
     void initBtn(int _btnId, String _btnIDlabel, int _x, int _y, int _w, int _h, String _name, 
     lgfx::v1::touch_point_t _layoutSpritePos,
@@ -235,6 +237,9 @@ public:
     void setColor(uint16_t _color);
     void setBgColorIndex(uint16_t _bgColorIndex);
     int getBtnID();
+    int getBtnW();
+    int getBtnH();
+    void setBtnID(int id);
     int getBtnMode();
 
     void setBtnName(String _btn_name);
@@ -259,5 +264,7 @@ public:
 
     void setDrawFinishF(bool _drawFinishF);
     bool getDrawFinishF();
+
+    
 
 };

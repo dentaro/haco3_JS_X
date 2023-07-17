@@ -410,11 +410,127 @@ int LovyanGFX_DentaroUI::getTouchBtnNum(){
   return touch_btn_list.size();
 }
 
-void LovyanGFX_DentaroUI::clearAddBtns(int _ctrlBtnNum){
-  for(int i = _ctrlBtnNum; i < touch_btn_list.size(); i++){//ボタンは４つ残す。
-   touch_btn_list.pop_back();
-  }
+// void LovyanGFX_DentaroUI::clearAddBtns(int index) {
+  // // uiBoxes.pop_back();
 
+  // // イテレーターを取得
+  // std::deque<UiContainer>::iterator iterator = uiBoxes.begin();
+
+  // // 9番目の要素を指すためにindex回インクリメント
+  // for (int i = 0; i < index; i++) {
+  //     ++iterator;
+  // }
+
+  // uiBoxes.erase(iterator); // 位置を指定して削除
+
+  // // イテレーターを取得
+  // std::deque<TouchBtn*>::iterator iterator2 = touch_btn_list.begin();
+
+  // // index番目の要素を指すためにindex回インクリメント
+  // for (int i = 0; i < index; i++) {
+  //     ++iterator2;
+  // }
+
+  // // delete *iterator2; // 削除するオブジェクトのメモリを解放
+  // touch_btn_list.erase(iterator2); // 位置を指定して削除
+
+
+  // // int pos = std::distance(uiBoxes.begin(), iterator);
+
+  // // uiBoxes.erase(iterator);//位置を指定して削除
+  
+  // Serial.println(touch_btn_list.size());
+
+  // // touch_btn_list.erase(iterator2);//位置を指定して削除
+  // // delete touch_btn_list[index-1];
+
+  // Serial.println(touch_btn_list.size());
+
+  // uiID--;
+  // uiBoxes_num--;
+
+  
+
+  // uiBoxes.pop_back();
+
+
+  // int endIndex = index; // 9つのオブジェクトを残すための終了インデックス
+
+  // if (endIndex >= 0 && endIndex < touch_btn_list.size()) {
+  //   // 削除するオブジェクトの範囲を指定
+  //   int deleteCount = touch_btn_list.size() - index -1;
+
+  //   // 削除するオブジェクトを削除
+  //   // for (int i = index; i < touch_btn_list.size(); i++) {
+  //   //   delete touch_btn_list[i];
+  //   // }
+
+  //   // touch_btn_listから削除したオブジェクトを削除
+  //   // touch_btn_list.erase(touch_btn_list.begin() + index, touch_btn_list.end());
+
+  //   // ボタンIDの再計算
+  //   for (int i = index; i < touch_btn_list.size(); i++) {
+  //     touch_btn_list[i]->setBtnID(i - index);
+  //   }
+
+  //   // UIボックスの更新
+  //   for (int i = 0; i < uiBoxes.size(); i++) {
+  //     if (uiBoxes[i].b_sNo >= index) {
+  //       uiBoxes[i].b_sNo -= deleteCount;
+  //     }
+  //     uiBoxes[i].b_num -= deleteCount;
+  //   }
+
+  //   // ボタン数の再計算
+  //   uiBoxes_num -= deleteCount;
+  // }
+// }
+
+void LovyanGFX_DentaroUI::clearAddBtns() {
+  int count = uiBoxes.size();
+  int count2 = touch_btn_list.size();
+
+  Serial.print("uiBoxes:");
+  Serial.println(count);
+  Serial.print("touch_btn_list:");
+  Serial.println(count2);
+
+  // if (count >= 7) {
+  //   UiContainer* objToDelete = &uiBoxes[6];  // 削除するオブジェクトへのポインタを取得
+  //   delete objToDelete;  // オブジェクトの解放
+  //   uiBoxes.erase(uiBoxes.begin() + 6);  // std::deque から削除したオブジェクトを削除
+  // }
+
+  // if (count2 >= 10) {
+  //   TouchBtn* objToDelete2 = touch_btn_list[9];  // 削除するオブジェクトへのポインタを取得
+  //   delete objToDelete2;  // オブジェクトの解放
+  //   touch_btn_list.erase(touch_btn_list.begin() + 9);  // std::deque から削除したオブジェクトを削除
+  // }
+  
+  // uiBoxes.resize(6);
+  // touch_btn_list.resize(9);
+
+  uiID = 6;
+  btnID = 9;
+}
+
+
+void LovyanGFX_DentaroUI::createAddBtns(
+  int _x, int _y,
+  int _w,int _h,
+  int _row, int _col,
+  int _eventNo, int _touchZoom)
+  {
+
+
+}
+
+int LovyanGFX_DentaroUI::getAddBtnNum(){
+  return addBtnNum;
+}
+
+void LovyanGFX_DentaroUI::setAddBtnNum(int _num){
+  addBtnNum = _num;
 }
 
 void LovyanGFX_DentaroUI::createBtns(
@@ -425,8 +541,12 @@ void LovyanGFX_DentaroUI::createBtns(
   {//縦方向に並ぶ
   touchZoom = _touchZoom;
 
-// uiBoxes[uiID] = *new UiContainer;
-uiBoxes.push_back(*new UiContainer);
+  addBtnNum += _row *_col;
+
+  // UiContainer object;
+  // uiBoxes.push_back(object); 
+
+  uiBoxes.push_back(*new UiContainer);
 
 //   // if(uiID<128){
     uiBoxes[uiID].label = "BTN_" + String(uiID);
@@ -435,19 +555,23 @@ uiBoxes.push_back(*new UiContainer);
     int _startId = btnID;//スタート時のボタンIDをセット
     uiBoxes[uiID].b_sNo = btnID;
     uiBoxes[uiID].id  = uiID;
-    uiBoxes[uiID].x   = _x*touchZoom;
-    uiBoxes[uiID].y   = _y*touchZoom;
-    uiBoxes[uiID].w   = _w*touchZoom;
-    uiBoxes[uiID].h   = _h*touchZoom;
+    uiBoxes[uiID].x   = _x*_touchZoom;
+    uiBoxes[uiID].y   = _y*_touchZoom;
+    uiBoxes[uiID].w   = _w*_touchZoom;
+    uiBoxes[uiID].h   = _h*_touchZoom;
     uiBoxes[uiID].row = _row;
     uiBoxes[uiID].col = _col;
     uiBoxes[uiID].eventNo = _eventNo;
+    
     int b_w = int(uiBoxes[uiID].w/uiBoxes[uiID].row);
     int b_h = int(uiBoxes[uiID].h/uiBoxes[uiID].col);
 
-    Serial.print(uiBoxes[uiID].row);
-    Serial.print(":");
-    Serial.println(uiBoxes[uiID].col);
+    // int b_w = int(uiBoxes[uiID].w/uiBoxes[uiID].row);
+    // int b_h = int(uiBoxes[uiID].h/uiBoxes[uiID].col);
+
+    // Serial.print(uiBoxes[uiID].row);
+    // Serial.print(":");
+    // Serial.println(uiBoxes[uiID].col);
 
 for(int j= 0; j < uiBoxes[uiID].col; j++)
 {
@@ -873,15 +997,6 @@ void LovyanGFX_DentaroUI::setSliderVal(int uiID, int _btnNo, float _x, float _y)
   touch_btn_list[_btnID]->setSliderVal(_x, _y);
 }
 
-
-// void LovyanGFX_DentaroUI::setCharMode(int _charMode){
-//   charMode = _charMode;
-// }
-
-// int LovyanGFX_DentaroUI::getCharMode(){
-//   return charMode;
-// }
-
 bool LovyanGFX_DentaroUI::getToggleVal(int _uiID, int _btnNo){
   int _btnID = uiBoxes[uiID].b_sNo + _btnNo;
   return touch_btn_list[_btnID]->getToggleVal();
@@ -955,3 +1070,24 @@ void LovyanGFX_DentaroUI::setLayoutPosToAllBtn( lgfx::v1::touch_point_t  _layout
   }
 }
 
+void LovyanGFX_DentaroUI::setBtnPos(int _b_ID, int _x, int _y){
+  // uiBoxes[_uiID].setPos(_x, _y, _w, _h, _touchzoom);
+  touch_btn_list[_b_ID]->setOBtnPos( _x * touchZoom, _y * touchZoom);
+}
+
+
+int LovyanGFX_DentaroUI::getTouchZoom(){
+  return touchZoom;
+}
+
+void LovyanGFX_DentaroUI::setTouchZoom(int _touchzoom){
+  touchZoom = _touchzoom;
+}
+
+int LovyanGFX_DentaroUI::getBtnW(int _b_ID){
+  return touch_btn_list[_b_ID]->getBtnW();
+}
+
+int LovyanGFX_DentaroUI::getBtnH(int _b_ID){
+  return touch_btn_list[_b_ID]->getBtnH();
+}

@@ -10,6 +10,11 @@ TouchBtn::TouchBtn()
 {
 }
 
+TouchBtn::~TouchBtn() {
+      // オブジェクトの解放や後処理を行う処理を記述
+      // 例えば、メモリ解放やリソースの解放など
+}
+
 //TouchBtn::TouchBtn(LGFX& _lcd): lcd(_lcd) {lcd = _lcd;}
 
 void TouchBtn::setlayoutSpritePos(lgfx::v1::touch_point_t _layoutSpritePos)
@@ -434,6 +439,19 @@ int TouchBtn::getBtnID(){
     return btnID;
 }
 
+int TouchBtn::getBtnW(){
+    return this->b_w;
+}
+
+int TouchBtn::getBtnH(){
+    return this->b_h;
+}
+
+
+void TouchBtn::setBtnID(int id) {
+  btnID = id;
+}
+
 void TouchBtn::setColor(uint16_t _color){
   color = _color;
 }
@@ -516,3 +534,5 @@ void TouchBtn::setDrawFinishF(bool _drawFinishF){
 bool TouchBtn::getDrawFinishF(){
   return drawFinishF;
 }
+
+

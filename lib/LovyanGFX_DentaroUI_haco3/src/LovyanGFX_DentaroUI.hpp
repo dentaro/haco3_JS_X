@@ -180,7 +180,18 @@ public:
 class RetClass;
 
 class UiContainer{
+
   public:
+  // int* dynamicData;
+
+  UiContainer() {
+    // dynamicData = new int[10];  // 動的にメモリを確保
+  }
+
+  ~UiContainer() {
+    // delete[] dynamicData;  // メモリの解放
+  }
+
   int id = -1;
   int x = 0;
   int y = 0;
@@ -208,6 +219,13 @@ class UiContainer{
   bool toggle_mode = false;
   //std::vector<int, int> uiPos = {0, 0};
   //std::vector<std::pair<int, int>> uiPos ={ {x, y}, {w, h} };
+
+  void setPos(int _x,int _y,int _w,int _h,int _touchzoom){
+    x = _x * _touchzoom;
+    y = _y * _touchzoom;
+    w = _w * _touchzoom;
+    h = _h * _touchzoom;
+  }
 };
 
 struct Vec2{
@@ -452,8 +470,10 @@ class LovyanGFX_DentaroUI {
     int preEventState = -1;
     int AngleCount = 0;
     int uiBoxes_num = 0;
+    int uiAddBoxes_num = 0;
     // std::deque<UiContainer> uiBoxes;
     std::deque<UiContainer> uiBoxes;
+    std::deque<UiContainer> uiAddBoxes;
     // UiContainer uiBoxes[18];
     UiContainer flickPanel;
     int layoutSprite_w = 0;
@@ -488,8 +508,9 @@ class LovyanGFX_DentaroUI {
     bool touchCalibrationF = false;
     int touchZoom = 1;
 
-        // PhysicBtn phbs;
+    int addBtnNum = 0;
 
+    // PhysicBtn phbs;
     // uint16_t calData[8] = {326,3722,259,185,3776,3655,3776,243};//y
     uint16_t calData[8] = {3811,3853,345,3789,3711,403,1086,430};//daiso
     //uint16_t calData[8] = {558,3648,447,396,3599,3622,3625,324};
@@ -638,10 +659,14 @@ public:
 
     void createOBtns( int _x, int _y, int _r0,int _r1, int _a, int _n, int _eventNo);//円形に並ぶ
     void createOBtns( int _r0,int _r1, int _a, int _n, int _eventNo);//円形に並ぶ
-
+    
+    int getAddBtnNum();
+    void setAddBtnNum(int _num);
     void createBtns( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, int _eventNo);//縦方向に並ぶ
 
     void createBtns( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, int _eventNo, int _touchZoom );//縦方向に並ぶ
+
+    void createAddBtns( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, int _eventNo, int _touchZoom );//縦方向に並ぶ
 
     void createBtns( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, int _eventNo, bool _colF );//横方向に並ぶ
     void createToggles( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, LGFX_Sprite& _uiSprite, int _eventNo);//縦方向に並ぶ
@@ -675,7 +700,7 @@ public:
     // LGFX_Sprite getTileSprite(int _btnID);
     int getTouchBtnNo();//タッチされたボタンオブジェクトの番号を取得
 
-    void clearAddBtns(int _ctrlBtnNum);
+    void clearAddBtns();
     int getTouchBtnNum();//現在のタッチボタンの数を取得
 
     int getTouchBtnID();//タッチされたボタンオブジェクトのIDを取得
@@ -844,4 +869,13 @@ public:
     void updatePhBtns();
     const bits_btn_t*  getStack();
     std::uint32_t getHitValue();
+
+    // void setBtnPos(int _uiID, int _b_ID, int _x, int _y, int _w, int _h, int touchzoom);
+
+    void setBtnPos(int _b_ID, int _x, int _y);
+    int getTouchZoom();
+    void setTouchZoom(int _touchzoom);
+    int getBtnW(int _b_ID);
+    int getBtnH(int _b_ID);
+
 };
