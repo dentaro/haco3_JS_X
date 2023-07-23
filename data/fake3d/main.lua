@@ -28,9 +28,7 @@ end
 
 function _init()
  -- wini(32)
---  setbtn(3)--アディショナルボタンは9から始まる,最後の2は座標を２倍するためのもの
-
---  addbtn(10,80,0,20,20,7)
+  music(0);
 end
 
 function input()
@@ -58,7 +56,7 @@ function input()
     angle = angle + 1    -- 右に回転
   end
 
-  if btn(10) >= 2 then--3
+  if btn(3) >= 2 then--3
     canjump = false
   end
 end
@@ -69,9 +67,7 @@ end
 
 function _draw()
   cls(0)
-  
   unit = 10
-
   -- for ty = 0,3 do
   --   for tx = 0,3 do
   --     -- fillpoly(tx*unit*2, ty*unit, tx*unit*2+10, ty*unit+5, tx*unit*2+10, ty*unit+15, tx*unit*2, ty*unit+10, tx*4+ty)
@@ -86,15 +82,15 @@ function _draw()
 
   ang = ang + 1
 
-  addbtn(9,abs(100*gcos(ang)),0)
-  drawrect(abs(100*gcos(ang)),0,20,20,8)
+  -- addbtn(9,abs(100*gcos(ang)),0)
+  -- drawrect(abs(100*gcos(ang)),0,20,20,8)
 
-  for j = 0,1 do
-    for i = 0,1 do
-      addbtn(10+j*2+i,abs(100*gcos(ang))+20*i,20+20*j)
-      drawrect(abs(100*gcos(ang))+20*i,20+20*j,20,20,3)
-    end
-  end
+  -- for j = 0,1 do
+  --   for i = 0,1 do
+  --     addbtn(10+j*2+i,abs(100*gcos(ang))+20*i,20+20*j)
+  --     drawrect(abs(100*gcos(ang))+20*i,20+20*j,20,20,3)
+  --   end
+  -- end
 
   -- addbtn(11,abs(100*gcos(ang)),40,20,20,2)
   -- drawrect(abs(100*gcos(ang)),40,20,20,10)
@@ -107,7 +103,7 @@ function _draw()
   for ty = 0,3 do
       for tx = 0,3 do
     local h = hmap[ty*4+tx+1]
-    drawbox( 80,75, tx*unit, ty*unit, abs(h*gcos(ang)), ty*4+tx )
+    drawbox( 80, 75, tx*unit, ty*unit, abs(h*gcos(ang)), ty*4+tx )
     drawrect( tx*unit, ty*unit, unit,unit, ty*4+tx )
     end
   end
