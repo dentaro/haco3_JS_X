@@ -36,6 +36,7 @@ function _init()
   -- ここに書いてもグローバル変数になるようにしたい
   -- x=8
   -- y=8
+  music(0);
 end
 
 
@@ -119,10 +120,16 @@ function _draw()
   
 end
 -------------------------------------------------------
-function setup()--init
-  _init()
+
+firstF = true
+function setup()--使えず、、、、
 end
+
 function loop()--update --draw
-_update()
-_draw()
-end
+  if firstF == true then
+    _init()
+    firstF = false
+  end
+  _update()
+  _draw()
+  end

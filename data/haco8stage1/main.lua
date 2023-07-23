@@ -15,7 +15,7 @@ function get_map_flag(sprx,spry)
   return fget(celc,0)
 end
 
-function collition(x,y)
+function collision(x,y)
   return get_map_flag(x-cl,y+2-cl) or get_map_flag(x+6-cl,y+2-cl) or get_map_flag(x-cl,y+7-cl) or get_map_flag(x+6-cl,y+7-cl)
 end
 
@@ -37,7 +37,7 @@ last_sound=-1
 function _init()
   -- ここに書いてもグローバル変数になるようにしたい
   
-  music(0);--引数変えてもまだ音楽は変わりません（コメントアウトすると音楽なしに）
+   music(0);--引数変えてもまだ音楽は変わりません（コメントアウトすると音楽なしに）
 end
 
 function input()
@@ -75,8 +75,8 @@ function input()
    s=d
   end
 
-  if collition(x,y) == true then
-    sound=0
+  if collision(x,y) == true then
+    sound=8
     x=prex
     y=prey
   end
@@ -90,28 +90,42 @@ function _update()
   -- fset(45,2,1)--水スプライト45を通れなく（0ビットを1に）する
   -- fset(45,3,1)--水スプライト45を通れなく（0ビットを1に）する
   -- fset(45,4,1)--水スプライト45を通れなく（0ビットを1に）する
+     fset(11,0,0)--岩スプライト11を通れるように（0ビットを0に）する
   -- fset(11,0,0)--岩スプライト11を通れなく（0ビットを1に）する
   -- fset(42,0,0)--緑スプライト11を通れるように（0ビットを0に）する
   -- fset(52,0,0)--スプライトを通れるように（0ビットを0に）する
   t = t+1
   input()
   
+  -- if (btnp(5) == true) then
+  --   sound=1
+  -- end
+  -- if (btnp(6) == true) then
+  --   sound=2
+  -- end
+  -- if (btnp(7) == true) then
+  --   sound=3
+  -- end
+  -- if (btnp(8) == true) then
+  --   sound=4
+  -- end
+
   if (btnp(5) == true) then
-    sound=1
+    sound=5
   end
   if (btnp(6) == true) then
-    sound=2
+    sound=6
   end
   if (btnp(7) == true) then
-    sound=3
+    sound=7
   end
   if (btnp(8) == true) then
-    sound=4
+    sound=8
   end
 
 
   -- if sound>-1 then
-    sfx(sound)
+    sfx(sound, 32)
     last_sound=sound
   -- end
 
