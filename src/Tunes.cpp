@@ -16,9 +16,11 @@ int Tunes::SquareValues[256];
 hw_timer_t* Tunes::timer;
 
 extern int soundNo;
+extern double soundSpeed;
 extern int musicNo;
 extern bool musicflag;
 extern bool sfxflag;
+extern bool toneflag;
 
 // SQURE_WAVE ---------------------------
 #define  V1  0xffff
@@ -27,7 +29,7 @@ extern bool sfxflag;
 // uint16_t v1,v2,v3, Va,Vb;             // 振幅とその合算値
 uint16_t c1,c2,c3, C1,C2,C3;
 uint8_t note1,note2,note3;            // 楽譜データDO|L4
-#define SFXNUM  8
+#define SFXNUM 8 //8個の効果音波形
 
 char Wx[SFXNUM][256];
 // boolean timer_flag = false;
@@ -60,7 +62,7 @@ uint16_t E,E1,E2;                     // 包絡
 uint16_t pW1,pW2,pW3, sw1,sw2,sw3;    // 波形ポインタとサンプリングステップ幅
 uint16_t v,v1,v2,v3,Va,Vb, u,u1,u2;          // 振幅とその合算値
 uint8_t x,y;
-uint8_t wcnt = 0;
+double wcnt = 0;
 
 void IRAM_ATTR Tunes::onTimer(){
   //mymelo----------------------------------------------------------------------------
@@ -188,44 +190,47 @@ if(musicflag){
 
 }
 
-    if(sfxflag){
-  // Increment the counter and set the time of ISR--------------------------------------------
-  // portENTER_CRITICAL_ISR(&Tunes::timerMux);
-  // Tunes::isrCounter++;
-  // Tunes::lastIsrAt = millis();
-  // Tunes::osc1 += d[0];
-  // Tunes::osc2 += d[1];
-  // Tunes::osc3 += d[2];
+if(toneflag){
+// Increment the counter and set the time of ISR--------------------------------------------
+  portENTER_CRITICAL_ISR(&Tunes::timerMux);
+  Tunes::isrCounter++;
+  Tunes::lastIsrAt = millis();
+  Tunes::osc1 += d[0];
+  Tunes::osc2 += d[1];
+  Tunes::osc3 += d[2];
   
-  // portEXIT_CRITICAL_ISR(&Tunes::timerMux);
+  portEXIT_CRITICAL_ISR(&Tunes::timerMux);
   // Give a semaphore that we can check in the loop
 
-  // // xSemaphoreGiveFromISR(Tunes::timerSemaphore, NULL);
-  // int out = 0;
-  // //out += (Tunes::osc1 >> 8);//((osc1 >> 15)&1 == 1)?0:200;
-  // //out += (Tunes::osc2 >> 8);//((osc2 >> 15)&1 == 1)?0:200;
-  // //out += (Tunes::osc3 >> 8);//((osc3 >> 15)&1 == 1)?0:200;
-  // out += Tunes::SineValues[(osc1 >> 8)];//((osc1 >> 15)&1 == 1)?0:200;
-  // out += Tunes::SineValues[(osc2 >> 8)];//((osc2 >> 15)&1 == 1)?0:200;
-  // out += Tunes::SineValues[(osc3 >> 8)];//((osc3 >> 15)&1 == 1)?0:200;
-  // //out += ((osc1 >> 15)&1 == 1)?0:200;
-  // //out += ((osc2 >> 15)&1 == 1)?0:200;
-  // //out += ((osc3 >> 15)&1 == 1)?0:200;
+  // xSemaphoreGiveFromISR(Tunes::timerSemaphore, NULL);
+  int out = 0;
+  //out += (Tunes::osc1 >> 8);//((osc1 >> 15)&1 == 1)?0:200;
+  //out += (Tunes::osc2 >> 8);//((osc2 >> 15)&1 == 1)?0:200;
+  //out += (Tunes::osc3 >> 8);//((osc3 >> 15)&1 == 1)?0:200;
+  out += Tunes::SineValues[(osc1 >> 8)];//((osc1 >> 15)&1 == 1)?0:200;
+  out += Tunes::SineValues[(osc2 >> 8)];//((osc2 >> 15)&1 == 1)?0:200;
+  out += Tunes::SineValues[(osc3 >> 8)];//((osc3 >> 15)&1 == 1)?0:200;
+  //out += ((osc1 >> 15)&1 == 1)?0:200;
+  //out += ((osc2 >> 15)&1 == 1)?0:200;
+  //out += ((osc3 >> 15)&1 == 1)?0:200;
 
-  // if(d[0] == 0 && d[1] == 0 && d[2] == 0){
-  //   digitalWrite(SPEAKER_PIN, LOW);
-  // }else{
-  //   dacWrite(SPEAKER_PIN,(out/3+128));
-  // }
+  if(d[0] == 0 && d[1] == 0 && d[2] == 0){
+    digitalWrite(SPEAKER_PIN, LOW);
+  }else{
+    dacWrite(SPEAKER_PIN,(out/3+128));
+  }
+}
 
+    if(sfxflag){
 // -------------------------------------------------------------------------------------------------
     portENTER_CRITICAL_ISR(&Tunes::timerMux);
     if(soundNo > -1)
     {
       // digitalWrite()//外部給電
       // ledcWrite()//パルス幅変調
-      dacWrite(SPEAKER_PIN, (Wx[soundNo][wcnt]));//255が最高値　スピーカー無音が128で、上下に波形が出る、ブザーは0~255
-      wcnt += 1;
+      dacWrite(SPEAKER_PIN, (Wx[soundNo][(int)floor(wcnt)]));//255が最高値　スピーカー無音が128で、上下に波形が出る、ブザーは0~255
+      wcnt += soundSpeed;
+
       if(wcnt>256)wcnt=0;
     }
     portEXIT_CRITICAL_ISR(&Tunes::timerMux);

@@ -22,6 +22,9 @@ extern bool optionuiflag;
 extern int frame;
 extern int boxzerox;
 extern int boxzeroy;
+extern int allAddUiNum;
+
+extern bool toneflag;
 
 // extern Vector3 boxzero;
 // extern double sinValues[90];// 0から89度までの91個の要素
@@ -173,9 +176,23 @@ int RunLuaGame::l_tone(lua_State* L){
   int n = lua_tointeger(L, 1);
   int f = lua_tointeger(L, 2);
 
+  toneflag = true;
+
   portENTER_CRITICAL(&Tunes::timerMux);
   Tunes::d[n] = (uint16_t)(3.2768*f);
   portEXIT_CRITICAL(&Tunes::timerMux);
+
+  // portENTER_CRITICAL_ISR(&Tunes::timerMux);
+  //   if(soundNo > -1)
+  //   {
+  //     // digitalWrite()//外部給電
+  //     // ledcWrite()//パルス幅変調
+  //     dacWrite(SPEAKER_PIN, (Wx[soundNo][floor(wcnt)]));//255が最高値　スピーカー無音が128で、上下に波形が出る、ブザーは0~255
+  //     wcnt += soundSpeed;
+  //     if(wcnt>256)wcnt=0;
+  //   }
+  // portEXIT_CRITICAL_ISR(&Tunes::timerMux);
+
   return 0;
 }
 
@@ -749,50 +766,39 @@ int RunLuaGame::l_btn(lua_State* L){
 }
 
 int RunLuaGame::l_addbtn(lua_State* L){
-  RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
-  int btnno = lua_tointeger(L, 1);
-  double x = lua_tonumber(L, 2);
-  double y = lua_tonumber(L, 3);
-  int cn = lua_tointeger(L, 4);
-  // int w = lua_tointeger(L, 4);
-  // int h = lua_tointeger(L, 5);
-  // int zoom = lua_tointeger(L, 4);
-  // ui.setBtnPos(btnno, floor(x), floor(y), w, h, zoom);
+  // RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
+  // int btnno = lua_tointeger(L, 1);
+  // double x = lua_tonumber(L, 2);
+  // double y = lua_tonumber(L, 3);
+  // int cn = lua_tointeger(L, 4);
+  // // int w = lua_tointeger(L, 4);
+  // // int h = lua_tointeger(L, 5);
+  // // int zoom = lua_tointeger(L, 4);
+  // // ui.setBtnPos(btnno, floor(x), floor(y), w, h, zoom);
 
-  ui.setBtnPos(btnno, x, y);//ui.getTochZoom()
-
-  
-  
-  if(cn != NULL)
-  {
-    self->col[0] = self->clist[cn][0]; // 5bit
-    self->col[1] = self->clist[cn][1]; // 6bit
-    self->col[2] = self->clist[cn][2]; // 5bit
-    //イベント処理のためタッチボタンの幅と高さは２倍処理済みの実寸で保持されるので、tftへの描写は1/2にする
-    tft.drawRect(x, y, ui.getBtnW(btnno)/ui.getTouchZoom(), ui.getBtnH(btnno)/ui.getTouchZoom(), lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
-    tft.setCursor(x, y);
-    tft.setTextColor(TFT_DARKGRAY);
-    tft.setTextSize(1);
-    // tft.print(ui.getBtnW(btnno));
-    tft.print(btnno);
-  }
-  else{
-    //色指定がなければ何も描画しない(ボタンはある）
-  }
+  // ui.setBtnPos(btnno, x, y);//ui.getTochZoom()
 
   
-
-  // int uino = lua_tointeger(L, 1);
-  // int btnno = lua_tointeger(L, 2);
-  // double x = lua_tonumber(L, 3);
-  // double y = lua_tonumber(L, 4);
-  // int w = lua_tointeger(L, 5);
-  // int h = lua_tointeger(L, 6);
-  // int zoom = lua_tointeger(L, 7);
-  // ui.setBtnPos(uino, btnno, floor(x), floor(y), w, h, zoom);
   
+  // if(cn != NULL)
+  // {
+  //   self->col[0] = self->clist[cn][0]; // 5bit
+  //   self->col[1] = self->clist[cn][1]; // 6bit
+  //   self->col[2] = self->clist[cn][2]; // 5bit
+  //   //イベント処理のためタッチボタンの幅と高さは２倍処理済みの実寸で保持されるので、tftへの描写は1/2にする
+  //   tft.drawRect(x, y, ui.getBtnW(btnno)/ui.getTouchZoom(), ui.getBtnH(btnno)/ui.getTouchZoom(), lua_rgb24to16(self->col[0], self->col[1], self->col[2]));
+  //   tft.setCursor(x, y);
+  //   tft.setTextColor(TFT_DARKGRAY);
+  //   tft.setTextSize(1);
+  //   // tft.print(ui.getBtnW(btnno));
+  //   tft.print(btnno);
+  // }
+  // else{
+  //   //色指定がなければ何も描画しない(ボタンはある）
+  // }
+
   return 0;
-  // return 1;
+
 }
 
 // addbtn(9,100,0,20,20)
@@ -1376,7 +1382,7 @@ luaL_addlstring(&buff, luaBuffer, MAX_CHAR);
 
   Serial.println("lua check finish");
 
-  for(int i = 0; i < CTRLBTNNUM+ui.getAddBtnNum(); i ++){//初期化
+  for(int i = 0; i < allAddUiNum; i ++){//初期化
       buttonState[i] = 0;
   }
 
@@ -1411,7 +1417,7 @@ fr = SPIFFS.open("/init/param/modeset.txt", "r");// ⑩ファイルを読み込�
 int RunLuaGame::run(int _remainTime){
   char str[12];
   // char key;
-  // for(int i = 0; i < CTRLBTNNUM +ui.getAddBtnNum(); i ++){//初期化
+  // for(int i = 0; i < allAddUiNum +ui.getAddBtnNum(); i ++){//初期化
   //     buttonState[i] = false;
   //     if(pressedBtnID ==  i){buttonState[i]  = true;}//左
   // }
@@ -1429,7 +1435,9 @@ int RunLuaGame::run(int _remainTime){
   }
 
   //ボタンを押してからの経過時間を返すための処理
-  for(int i = 0; i < CTRLBTNNUM+ ui.getAddBtnNum(); i ++){
+  // Serial.print("AllBtnNum:");
+  // Serial.println(ui.getAllBtnNum());
+  for(int i = 0; i < ui.getAllBtnNum(); i ++){
     if(ui.getEvent() == NO_EVENT)
     {
       buttonState[i] = 0;

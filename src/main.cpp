@@ -103,9 +103,11 @@ int mode = 0;//記号モード //0はrun 1はexit
 int gameState = 0;
 String appNameStr = "init";
 int soundNo = -1;
+double soundSpeed = 1.0;
 int musicNo = -1;
 bool musicflag = false;
 bool sfxflag = false;
+bool toneflag = false;
 float sliderval[2] = {0,0};
 bool optionuiflag = false;
 int frame = 0;
@@ -199,7 +201,7 @@ void drawLogo()
   logoSprite.pushAffine(matrix_side);
   logoSprite.deleteSprite(); // 描画したらメモリを解放する
   
-  // for(int i=0;i<CTRLBTNNUM-1;i++){
+  // for(int i=0;i<allAddUiNum;i++){
   //   screen.fillRoundRect(258,55*i+20,60,53,2,TFT_DARKGRAY);
   // }
 
@@ -224,7 +226,6 @@ bool isWifiDebug(){
 void reboot()
 {
   wifiGame->pause();
-  //ui.clearAddBtns(9);//個別のゲーム内で追加したボタンを消去してスタメン９個に初期化する
   ESP.restart();
 }
 
@@ -557,18 +558,18 @@ void setup()
   spriteMap.createSprite(MAPWH, MAPWH/divnum);//マップ展開用スプライトメモリ確保
 
   
-
   //sprite（bg1)のボタン配置の時
-  ui.createBtns( 130,  0,  30,   8,  1, 1, TOUCH, ui.getTouchZoom());//ホームボタン
-  // ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
-  ui.createBtns( 130,  81,  30, 20,  2, 1, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
-  ui.createBtns( 130,  61,  30, 20,  1, 1, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
-  ui.createBtns( 130,  101, 30, 20,  1, 1, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
-  ui.createBtns( 130,  9,   30, 52,  2, 2, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
+  // ui.createBtns( 130,  0,  30,   8,  1, 1, TOUCH, ui.getTouchZoom());//ホームボタン
+  // // ui.createBtns( 130,  9,  30, 111,  1, 4, TOUCH, 2);//コントローラー4ボタン
+  // ui.createBtns( 130,  81,  30, 20,  2, 1, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
+  // ui.createBtns( 130,  61,  30, 20,  1, 1, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
+  // ui.createBtns( 130,  101, 30, 20,  1, 1, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
+  // ui.createBtns( 130,  9,   30, 52,  2, 2, TOUCH, ui.getTouchZoom());//コントローラー4ボタン
 
-//additional btn
-//ボタンを動かす場合は、位置を0,0で定義して、あとで動かす
-File fr = SPIFFS.open("/init/param/addBtmNum.txt", "r");
+  
+
+
+File fr = SPIFFS.open("/init/param/uiinfo.txt", "r");
 String line;
 
 while (fr.available()) {
@@ -579,21 +580,26 @@ while (fr.available()) {
       String val = line.substring(0, commaIndex);
       addUiNum[0] = val.toInt();
 
-      for (int i = 1; i < 4; i++) {
-        int nextCommaIndex = line.indexOf(',', commaIndex + 1);
-        if (nextCommaIndex != -1) {
-          val = line.substring(commaIndex + 1, nextCommaIndex);
-          addUiNum[i] = val.toInt();
-          commaIndex = nextCommaIndex;
+      if(addUiNum[0]!=-1){//-1の時は生成しない
+
+        for (int i = 1; i < 6; i++) {
+          int nextCommaIndex = line.indexOf(',', commaIndex + 1);
+          if (nextCommaIndex != -1) {
+            val = line.substring(commaIndex + 1, nextCommaIndex);
+            addUiNum[i] = val.toInt();
+            commaIndex = nextCommaIndex;
+          }
         }
+        ui.createPanel( addUiNum[0], addUiNum[1], addUiNum[2], addUiNum[3], addUiNum[4], addUiNum[5], TOUCH, ui.getTouchZoom());//ホームボタン
+        allAddUiNum++;
       }
-      ui.createBtns(0, 0, addUiNum[0], addUiNum[1], addUiNum[2], addUiNum[3], TOUCH, ui.getTouchZoom());//w20,h20,1,1,2
-      allAddUiNum++;
     }
   }
 }
 
 fr.close();
+Serial.print("allAddUiNum:");
+Serial.println(allAddUiNum);
 
 
 // for(int i=0;i<addUiNum[0];i++){
@@ -714,6 +720,7 @@ void loop()
   { // reload
     ui.setConstantGetF(false);//初期化処理 タッチポイントの常時取得を切る
     appfileName = "/init/main.lua";
+    
     // game->setWifiDebugRequest(false);//外部ファイルから書き換えてWifiモードにできる
     // game->setWifiDebugSelf(false);
     mode = 1;//exit
@@ -731,6 +738,9 @@ void loop()
     game->pause();
     // ui.clearAddBtns();//個別のゲーム内で追加したタッチボタンを消去する
     free(game);
+    toneflag = false;
+    sfxflag = false;
+    musicflag = false;
     txtName = appfileName;
     game = nextGameObject(&appfileName, gameState, mapFileName);//ファイルの種類を判別して適したゲームオブジェクトを生成
     game->init();//resume()（再開処理）を呼び出し、ゲームで利用する関数などを準備

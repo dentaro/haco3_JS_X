@@ -19,6 +19,8 @@ extern int soundNo;
 extern int musicNo;
 extern bool musicflag;
 extern bool sfxflag;
+extern float soundSpeed;
+// extern bool toneflag;
 extern void readMap();
 extern int frame;
 extern double sinValues[90];// 0から89度までの91個の要素
@@ -375,7 +377,9 @@ int RunHaco8Game::l_sfx(lua_State* L){
   RunHaco8Game* self = (RunHaco8Game*)lua_touserdata(L, lua_upvalueindex(1));
   sfxflag = true;
   int8_t sn = lua_tointeger(L, 1);
+  float spd = lua_tonumber(L, 2);
   soundNo = sn;
+  soundSpeed = spd;
   return 0;
 }
 
