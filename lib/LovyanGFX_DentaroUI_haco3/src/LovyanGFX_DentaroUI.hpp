@@ -57,8 +57,7 @@ using namespace std;
 #define INVISIBLE false
 
 //--地図用
-#define BUF_PNG_NUM 1
-
+// #define BUF_PNG_NUM 1
 // #define BUF_PNG_NUM 9
 
 class MyTFT_eSPI : public LGFX {
@@ -114,7 +113,7 @@ public:
   lgfx::v1::touch_point_t sp;
   
   void reset(){
-    btnID = -1;
+    btnID = -1;//-1;
     btnNo = -1;
     sp.x = 0;
     sp.y = 0;
@@ -178,6 +177,79 @@ public:
 };
 
 class RetClass;
+
+class Panel {
+public:
+  std::vector<TouchBtn*> touchBtns;
+
+  int id = -1;
+  int x = 0;
+  int y = 0;
+  int w = 0;
+  int h = 0;
+  int row = 0;
+  int col = 0;
+
+  int r0 = 0;
+  int r1 = 0;
+  int a = 0;
+  int n = 0;
+  
+  //円形ボタン
+  int c_d = 0;//中心から現在のタッチポイントまでの距離current_distance
+  int c_a = 0;//中心から現在のタッチポイントがなす角度current_angle
+  int p_a = 0;//前フレームのcurrent_angle= pre_angle
+  int diff_a = 0;//c_a - p_a;
+
+  int b_sNo = 0;
+  int b_num = 0;
+  int eventNo = -1; //MULTI_EVENT=-1
+  int parentID = 0;
+  String label = "";
+  bool toggle_mode = false;
+
+
+  Panel() {
+    // デフォルトコンストラクタ
+  }
+
+  ~Panel() {
+    clearTouchBtns();  // Panel オブジェクトが破棄されるときに TouchBtn オブジェクトも解放
+  }
+
+  lgfx::v1::touch_point_t getTouchPoint(int _x, int _y){
+    lgfx::v1::touch_point_t tp;
+    tp.x = _x;
+    tp.y = _y;
+    return tp;
+  }
+
+void addTouchBtn(int _gBtnID, int b_x, int b_y,int b_w, int b_h) {
+
+  TouchBtn* touchBtn = new TouchBtn();  // 新しい TouchBtn オブジェクトを動的に確保
+  touchBtns.push_back(touchBtn);  // vector に追加
+  // 初期化処理
+  // int p_btnID = touchBtns.size() - 1;  // 追加された TouchBtn のインデックス
+   
+  touchBtn->initBtn(_gBtnID, String(_gBtnID), b_x, b_y, b_w, b_h, String(_gBtnID),getTouchPoint(x, y), TOUCH_BTN_MODE);
+  touchBtn->setVisibleF(true);
+  touchBtn->setAvailableF(true);
+
+  // Serial.println(_gBtnID);
+
+  // TouchBtn* lastTouchBtn = touchBtns.back();
+  // Serial.println(lastTouchBtn->getBtnPos().x);
+
+}
+
+void clearTouchBtns() {
+    for (TouchBtn* touchBtn : touchBtns) {
+      delete touchBtn;  // TouchBtn オブジェクトを解放
+    }
+    touchBtns.clear();  // vector をクリア
+  }
+};
+
 
 class UiContainer{
 
@@ -451,7 +523,8 @@ class LovyanGFX_DentaroUI {
     int tap_flick_thre = 82000;//タップとフリックの閾値
     int dist_thre = 40;
     int uiID = -1;
-    int btnID = 0;
+    int gPanelID = 0;
+    int gBtnID = 0;
     uint constantBtnID = 9999;
     bool constantGetF = false;
     int selectBtnID = -1;
@@ -507,8 +580,9 @@ class LovyanGFX_DentaroUI {
     int curKanaColNo = 0;
     bool touchCalibrationF = false;
     int touchZoom = 1;
-
     int addBtnNum = 0;
+
+    std::vector<Panel*> panels;
 
     // PhysicBtn phbs;
     // uint16_t calData[8] = {326,3722,259,185,3776,3655,3776,243};//y
@@ -602,7 +676,7 @@ class LovyanGFX_DentaroUI {
 public:
     LovyanGFX_DentaroUI( LGFX* _lcd );
     LGFX* lcd;
-    LGFX_Sprite layoutSprite_list[BUF_PNG_NUM];
+    // LGFX_Sprite layoutSprite_list[BUF_PNG_NUM];
     PhysicBtn phbs;
     // LovyanGFX_DentaroUI( LGFX& _lcd ): lcd(_lcd) {};
     // LovyanGFX_DentaroUI( LGFX* _lcd );
@@ -626,7 +700,7 @@ public:
     void touchCalibration (bool _calibUseF);
     void setConstantGetF(bool _constantGetF);
     int getCalData(int _calNo);
-    bool isAvailable(int _btnID);
+    bool isAvailable(int _panelNo, int _btnNo);
     void addHandler(int _btnID, int _btnNo, DelegateBase2* _func, uint16_t _runEventNo, int parentID = 0, bool _constantGetF = false);
     void circle(LovyanGFX* _lgfx, uint16_t c, int fillF);
     void rect(LovyanGFX* _lgfx, uint16_t c, int fillF);
@@ -646,12 +720,12 @@ public:
     
     // DelegateBase2 *ret2_DG = Delegate2<RetClass>::createDelegator2( &obj_ret, &RetClass::ret2_switch_toggle );//型式が違うプロトタイプ関数
 
-    void setLayoutPos( int _x, int _y );
+    // void setLayoutPos( int _x, int _y );
 
     void createLayout( int _layoutSprite_x, int _layoutSprite_y, int _layoutSprite_w, int _layoutSprite_h, LGFX_Sprite& _layoutSprite, int _eventNo);
     void setLayoutSpritePos( int _LayoutSpritePosx, int _LayoutSpritePosy );
     
-    void setLayoutPosToAllBtn( lgfx::v1::touch_point_t  _layoutPos );
+    // void setLayoutPosToAllBtn( lgfx::v1::touch_point_t  _layoutPos );
 
     void setBtnName(int _btnNo, String _btnName);
     void setBtnName(int _btnNo, String _btnName, String _btnNameFalse);//toggle用
@@ -662,6 +736,9 @@ public:
     
     int getAddBtnNum();
     void setAddBtnNum(int _num);
+
+    void createPanel( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, int _eventNo, int _touchZoom );
+
     void createBtns( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, int _eventNo);//縦方向に並ぶ
 
     void createBtns( int _uiSprite_x, int _uiSprite_y, int _w,int _h, int _row, int _col, int _eventNo, int _touchZoom );//縦方向に並ぶ
@@ -719,10 +796,10 @@ public:
     // bool getToggleVal2();
 
     void setAllBtnAvailableF(int uiID, bool _available);
-    void setAvailableF(int uiID, int _btnID, bool _available);
+    void setAvailableF(int _panelNo, int _btnNo, bool _available);
 
     void setAllBtnVisibleF(int uiID, bool _visible);
-    void setVisibleF(int uiID, int _btnID, bool _visible);
+    void setVisibleF(int _panelNo, int _btnNo, bool _visible);
 
     void setCharMode(int _charMode);
     int getCharMode();
@@ -854,9 +931,7 @@ public:
     void getTilePos(double lat, double lon, int zoom_level);
 
     void updateOBtnSlider(int uiID, LGFX_Sprite& _uiSprite, int _x, int _y);
-    
-    // int getOBtnPreAngle(int uiID);
-    // int getOBtnStartAngle(int uiID);
+
     int getCurrentAngle(int uiID);
     int getOBtnDiffAngle(int uiID);
 
@@ -869,8 +944,6 @@ public:
     void updatePhBtns();
     const bits_btn_t*  getStack();
     std::uint32_t getHitValue();
-
-    // void setBtnPos(int _uiID, int _b_ID, int _x, int _y, int _w, int _h, int touchzoom);
 
     void setBtnPos(int _b_ID, int _x, int _y);
     int getTouchZoom();
