@@ -10,6 +10,11 @@
 #include "runLuaGame.h"
 #include "Tunes.h"
 
+#include <string>
+#include <sstream>
+
+#include <map>
+
 extern "C"{
 #include <lua.h>
 #include <lualib.h>
@@ -21,27 +26,16 @@ extern "C"{
 
 #define MAPWH 16//マップのpixelサイズ
 
-// #define MAX_CHAR 256
+#define BUF_PNG_NUM 9
 
-// struct LoadF{
-//   File f;
-//   char buf[MAX_CHAR];
-// };
+#define TFT_WIDTH 128
+#define TFT_HEIGHT 120
+#define TFT_WIDTH_HALF 64
+#define TFT_HEIGHT_HALF 60
+// #define TFT_WIDTH_HALF 0
+// #define TFT_HEIGHT_HALF 0
 
-// inline uint16_t lua_rgb24to16(uint8_t r, uint8_t g, uint8_t b) {
-//   uint16_t tmp = ((r>>3) << 11) | ((g>>2) << 5) | (b>>3);
-//   return tmp; //(tmp >> 8) | (tmp << 8);
-// }
-
-// struct Vector3 {
-//   double x;
-//   double y;
-//   double z;
-  
-//   Vector3(double x, double y, double z)
-//     : x(x), y(y), z(z)
-//   {}
-// };
+#define VEC_FRAME_COUNT 10
 
 struct Intersection {
     double x;
@@ -53,9 +47,20 @@ struct Intersection {
 
 class RunHaco8Game: public RunLuaGame
 {
+
+
   public:
 
+
   // static int rayangle;
+
+  struct Rect2D {
+    int x;
+    int y;
+    int w;
+    int h;
+    Rect2D(int _x, int _y, int _w, int _h) : x(_x), y(_y), w(_w), h(_h) {}
+  };
 
   struct CameraObj {
     int x;
@@ -144,8 +149,8 @@ class RunHaco8Game: public RunLuaGame
   static int l_cos(lua_State* L);
   static int l_atan2(lua_State* L);
   
-  static int l_gsin(lua_State* L);
-  static int l_gcos(lua_State* L);
+  // static int l_gsin(lua_State* L);
+  // static int l_gcos(lua_State* L);
 
   static int l_band(lua_State* L);
   static int l_bnot(lua_State* L);
@@ -190,21 +195,27 @@ class RunHaco8Game: public RunLuaGame
   static int l_gcol(lua_State* L);
   static int l_sp3d(lua_State* L);
   static int l_spmap(lua_State* L);
+  static int l_drawpng(lua_State* L);
+  static int l_drawmaps(lua_State* L);
+  static int l_getmappos(lua_State* L);
+  static int l_getgpos(lua_State* L);
+
+  
 
   // ベクトルの長さを計算する関数
   double calculateLength(double x, double y, double z);
 
   // ベクトルの正規化を行う関数
-  Vector3 normalize(double x, double y, double z);
+  Vector3<double> normalize(double x, double y, double z);
 
   // 2つのベクトルの内積を計算する関数
-  double calculateDotProduct(const Vector3& v1, const Vector3& v2);
+  double calculateDotProduct(const Vector3<double>& v1, const Vector3<double>& v2);
 
   // 3つの頂点から法線ベクトルを計算する関数
-  Vector3 calculateNormal(const Vector3& v1, const Vector3& v2, const Vector3& v3);
+  Vector3<double> calculateNormal(const Vector3<double>& v1, const Vector3<double>& v2, const Vector3<double>& v3);
 
   // ポリゴンの明るさを計算する関数
-  double calculateBrightness(const Vector3& v1, const Vector3& v2, const Vector3& v3, const LightObj& light);
+  double calculateBrightness(const Vector3<double>& v1, const Vector3<double>& v2, const Vector3<double>& v3, const LightObj& light);
 
   // void renderPolygon(lua_State* L, const std::vector<std::vector<float>>& polygonData);
   void renderPolygon(const std::vector<std::vector<float>>& polygonData, int colangle);

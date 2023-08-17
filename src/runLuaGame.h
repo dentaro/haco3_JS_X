@@ -22,12 +22,13 @@ extern "C"{
 #ifndef RUN_LUA_GAME_H
 #define RUN_LUA_GAME_H
 
-#define MAX_CHAR 1024
+#define MAX_CHAR 512//1024
+// #define MAX_CHAR 2048
 
 // #define LUA_BUFFERSIZE 1024
 // #define LUA_BUFFERSIZE_PS (LUA_BUFFERSIZE * 2)
 
-// #define LUA_BUFSIZE 2048
+#define LUA_BUFSIZE 1024
 
 struct LoadF{
   File f;
@@ -39,26 +40,42 @@ inline uint16_t lua_rgb24to16(uint8_t r, uint8_t g, uint8_t b) {
   return tmp; //(tmp >> 8) | (tmp << 8);
 }
 
-struct Vector3 {
-  double x;
-  double y;
-  double z;
+// struct Vector3 {
+//   double x;
+//   double y;
+//   double z;
   
-  Vector3(double x, double y, double z)
-    : x(x), y(y), z(z)
-  {}
+//   Vector3(double x = 0.0, double y = 0.0, double z = 0.0)
+//     : x(x), y(y), z(z)
+//   {}
 
-  void set(double ax, double ay, double az) {
-    x = ax;
-    y = ay;
-    z = az;
-  }
-  void add(double ax, double ay, double az) {
-    x += ax;
-    y += ay;
-    z += az;
-  }
-};
+//   void set(double newX, double newY, double newZ) {
+//     x = newX;
+//     y = newY;
+//     z = newZ;
+//   }
+
+//   void add(const Vector3& vec) {
+//     x += vec.x;
+//     y += vec.y;
+//     z += vec.z;
+//   }
+
+//   Vector3 copy() const {
+//     return Vector3(x, y, z);
+//   }
+
+//   // ベクトルの差を計算する関数
+//   Vector3 diff(const Vector3& other) const {
+//     return Vector3(x - other.x, y - other.y, z - other.z);
+//   }
+
+//   // ベクトルの各要素を指定した倍率でスケーリングするメソッド
+//   Vector3 scale(double scaleFactor) const {
+//     return Vector3(x * scaleFactor, y * scaleFactor, z * scaleFactor);
+//   }
+// };
+
 
 
 class RunLuaGame: public BaseGame
@@ -80,6 +97,11 @@ class RunLuaGame: public BaseGame
     // int buttonState[CTRLBTNNUM+20];//ボタンの個数20個まで追加可能
     // std::deque<int> buttonState(buttonState, buttonState + CTRLBTNNUM);
     std::deque<int> buttonState;//ボタンの個数未定
+
+    // std::vector<int> phbtnState;
+    
+    
+    int touchState;//タッチボタン
     int tp[2] ={0,0};
     uint16_t palette[256];
 
@@ -137,8 +159,9 @@ class RunLuaGame: public BaseGame
     static int l_drawcircle(lua_State* L);
     static int l_drawtri(lua_State* L);
     static int l_filltri(lua_State* L);
+    static int l_phbtn(lua_State* L);
     static int l_btn(lua_State* L);
-    static int l_addbtn(lua_State* L);
+    static int l_touch(lua_State* L);
     static int l_btnp(lua_State* L);
     static int l_sldr(lua_State* L);
     static int l_getip(lua_State* L);

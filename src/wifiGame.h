@@ -10,7 +10,7 @@
 #ifndef WIFI_GAME_H
 #define WIFI_GAME_H
 
-#define MAX_CHAR 4096//256
+// #define MAX_CHAR 256
 
 class WifiGame
 {
