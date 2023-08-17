@@ -26,7 +26,7 @@ public:
 // SPIバスの設定
       cfg.spi_host = HSPI_HOST;     // 使用するSPIを選択  (VSPI_HOST or HSPI_HOST)
       cfg.spi_mode = 0;             // SPI通信モードを設定 (0 ~ 3)
-      cfg.freq_write = 79000000;//40000000;    // 送信時のSPIクロック (最大80MHz, 80MHzを整数で割った値に丸められます)
+      cfg.freq_write = 64000000;//79000000;//40000000;    // 送信時のSPIクロック (最大80MHz, 80MHzを整数で割った値に丸められます)
       cfg.freq_read  = 16000000;    // 受信時のSPIクロック
       cfg.spi_3wire  = true;        // 受信をMOSIピンで行う場合はtrueを設定
       cfg.use_lock   = true;        // トランザクションロックを使用する場合はtrueを設定

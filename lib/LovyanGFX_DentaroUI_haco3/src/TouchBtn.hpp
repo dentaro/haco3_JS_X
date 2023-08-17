@@ -22,7 +22,6 @@ using namespace std;
 
 #include <list>
 
-
 #define USE_PSRAM true
 
 #define COL_DEPTH 16

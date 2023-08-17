@@ -1,9 +1,14 @@
 #pragma once //インクルードガード
 #include <SD.h>
 #include <SPIFFS.h>
+
+
+
 #include "LovyanGFX_DentaroUI.hpp"
 #include "PhysicBtn.hpp"//物理ボタン用
 #include "TouchBtn.hpp"//タッチボタン用
+
+using namespace std;
 
 #include <deque>
 
@@ -16,6 +21,10 @@
 #include <limits.h>
 #include <stddef.h>
 #include <vector>
+
+#include "DentaroVector.hpp"
+#include "DentaroPhisics.hpp"
+
 using namespace std;
 
 //開発者表記
@@ -329,106 +338,6 @@ class FlickPanel
 };
 
 
-class MapTile
-{
-  // private:
-  public:
-  int  posId = -1;
-  int  posNo = -1;
-  bool readF = false;
-  int  mapName = -1;
-  int  mapNo = -1;
-  int  preMapNo = 0;
-  int objNo = -1;
-  int MapNo = 0;
-  int latPos, lonPos = 0;
-  bool existF = false;
-  // int xtile, ytile, ztile = 0;
-  int xtilePos, ytilePos = 0;
-  int xtileNo, ytileNo, ztileNo = 0;//IDで使う
-  int preXtileNo, preYtileNo, preZtileNo = 0;//
-  int addXTileNo, addYTileNo = 0;//中央からの相対的なタイルナンバー -1,1
-  int preAddXTileNo, preAddYTileNo = 0;//中央からの相対的なタイルナンバー -1,1
-  String m_url;
-  LGFX_Sprite buff_sprite;
-  LGFX_Sprite* buff_sprite_p;
-  MapTile(){};
-
-  void begin(int _objNo, int _xtile, int _ytile,int _ztile, String _m_url){
-    // xtile = _xtile;
-    // ytile = _ytile;
-    // ztile = _ztile;
-    objNo = _objNo;
-
-    m_url = _m_url;
-    
-    buff_sprite.setPsram(USE_PSRAM);
-    buff_sprite.setColorDepth(TILE_COL_DEPTH);//子スプライトの色深度
-    buff_sprite.createSprite(256, 256);//子スプライトメモリ確保
-    buff_sprite.setPaletteGrayscale();
-    buff_sprite.drawPngFile(SD, m_url,
-                            0, 0,
-                            256, 256,
-                            0, 0, 1.0, 1.0,
-                            datum_t::top_left);
-    buff_sprite_p = &buff_sprite;//オブジェクトのアドレスをコピーして、ポインタを格納
-
-  }
-
-  LGFX_Sprite* getSpritePtr(){return buff_sprite_p;}
-  int getObjNo(){return objNo;}
-  // void setXtile(int _xtile){xtile = _xtile;}
-  // void setYtile(int _ytile){ytile = _ytile;}
-  // int getXtile(){return xtile;}
-  // int getYtile(){return ytile;}
-  void setPreXtileNo(int _preXtileNo){preXtileNo = _preXtileNo;}
-  void setPreYtileNo(int _preYtileNo){preYtileNo = _preYtileNo;}
-  void setXtileNo(int _xtileNo){xtileNo = _xtileNo;}
-  void setYtileNo(int _ytileNo){ytileNo = _ytileNo;}
-
-  void setXtilePos(int _xtilePos){xtilePos = _xtilePos;}
-  void setYtilePos(int _ytilePos){ytilePos = _ytilePos;}
-
-  int getXtileNo(){return xtileNo;}
-  int getYtileNo(){return ytileNo;}
-  
-  int getPreXtileNo(){return preXtileNo;}
-  int getPreYtileNo(){return preYtileNo;}
-
-  int getXtilePos(){return xtilePos;}
-  int getYtilePos(){return ytilePos;}
-
-  void setAddX( int _addXTileNo){addXTileNo = _addXTileNo;}
-  void setAddY(int _addYTileNo){addYTileNo = _addYTileNo;}
-  int getAddX(){return addXTileNo;}
-  int getAddY(){return addYTileNo;}
-
-  void setPreAddX( int _preAddXTileNo){preAddXTileNo = _preAddXTileNo;}
-  void setPreAddY(int _preAddYTileNo){preAddYTileNo = _preAddYTileNo;}
-  int getPreAddX(){return preAddXTileNo;}
-  int getPreAddY(){return preAddYTileNo;}
-
-  void setMapReadF( bool _readF){readF = _readF;}
-  bool getMapReadF(){return readF;};
-  // void setMapName( int _mapName){mapName = _mapName;}
-  
-  int getMapName(){return mapName;}
-  void setMapNo(int _mapNo){mapNo = _mapNo;}
-  int getMapNo(){return mapNo;}
-
-  void setPreMapNo(int _preMapNo){preMapNo = _preMapNo;}
-  int getPreMapNo(){return preMapNo;}
-
-
-  void setPosNo(int _posNo){posNo = _posNo;}
-  int getPosNo(){return posNo;}
-
-  void setExistF(bool _existF){existF = _existF;}
-  bool getExistF(){return existF;}
-};
-
-
-
 class LovyanGFX_DentaroUI {
   
   private:
@@ -598,7 +507,7 @@ class LovyanGFX_DentaroUI {
     bool uiOpenF = true;
 
     //--Map用
-    MapTile* MapTiles[9];
+    // MapTile* MapTiles[1];
     bool DownloadF = false;
     bool mataidaF =false;
     // double latPos = 35.667995;
@@ -921,7 +830,7 @@ public:
 
     void nowLoc(LovyanGFX& _lgfx);
 
-    void drawMaps(LGFX& _lcd, double _walkLatPos, double _walkLonPos, int _tileZoom);
+    // void drawMaps(LGFX& _lcd, double _walkLatPos, double _walkLonPos, int _tileZoom);
 
     void setPngTile(fs::FS &fs, String _m_url, int _spriteNo);
     void setDownloadF(bool _b);

@@ -2,6 +2,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+// #include <esp_heap_caps.h>
+
+#include <driver/adc.h>//アナログボタンはこのヘッダファイルを忘れないように！！
 using namespace std;
 
 #define FLICK_DIST 3
@@ -46,6 +49,7 @@ const bits_btn_t*  LovyanGFX_DentaroUI::getStack()
 
 void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _calibF )
 {
+
   _lcd.init();
   _lcd.begin();
   _lcd.startWrite();//CSアサート開始
@@ -59,6 +63,8 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _c
   // {
   //   createLayout( 0, 0, 8, 8, layoutSprite_list[i], MULTI_EVENT );//レイアウト用のスプライトを作る
   // }
+
+  
 }
 
 String LovyanGFX_DentaroUI::rCalData(String _wrfile){
@@ -1044,6 +1050,18 @@ void LovyanGFX_DentaroUI::showInfo(LovyanGFX& _lgfx , int _infox, int _infoy){
     frame_count = 0;
     _lgfx.setAddrWindow( 0, 0, _lgfx.width(), _lgfx.height() );
   }
+
+  _lgfx.setCursor( 0,_infoy-20 );
+    // ヒープメモリの全体サイズを取得
+  size_t totalHeap = ESP.getHeapSize();
+  // 現在の空きメモリ量を取得
+  size_t freeHeap = ESP.getFreeHeap();
+  
+  // ヒープメモリの使用率を計算（0～100の値に変換）
+  uint8_t usagePercentage = (100 * (totalHeap - freeHeap)) / totalHeap;
+  _lgfx.printf("%u%%\n", usagePercentage);
+  
+
 }
 
 // void LovyanGFX_DentaroUI::setLayoutPosToAllBtn( lgfx::v1::touch_point_t  _layoutPos ){
