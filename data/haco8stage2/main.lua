@@ -121,15 +121,15 @@ function _draw()
 end
 -------------------------------------------------------
 
-firstF = true
-function setup()--使えず、、、、
-end
+-- firstF = true
+-- function setup()--使えず、、、、
+-- end
 
-function loop()--update --draw
-  if firstF == true then
-    _init()
-    firstF = false
-  end
-  _update()
-  _draw()
-  end
+-- function loop()--update --draw
+--   if firstF == true then
+--     _init()
+--     firstF = false
+--   end
+--   _update()
+--   _draw()
+--   end

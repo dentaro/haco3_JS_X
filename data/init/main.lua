@@ -2,9 +2,6 @@
 -- count = 0
 -- color(12)
 count = 0
-
-fs = list() --落ちる
-
 cursor = 0
 scroll = 0
 tabCursor = 0
@@ -15,9 +12,8 @@ function setup()
 end
 
 function _init()
-  -- fs = list()
+  fs = list() --一回だけ読み込む
 end
-
 
 function drawTab(x, y, w)
   spr(x, y,8,8,32,0,8,8) -- left
@@ -180,27 +176,4 @@ function _update()
     drawUtil()
   end
   count = count + 1
-end
-
--- function _draw()
---   drawTile(0,18,16,12)
---   if tabCursor == 0 then
---     drawFile()
---   else
---     drawUtil()
---   end
--- end
-
--------------------------------------------------------
-firstF = true
-function setup()--使えず、、、、
-end
-
-function loop()--update --draw
-if firstF == true then
-  _init()
-  firstF = false
-end
-_update()
--- _draw()
 end

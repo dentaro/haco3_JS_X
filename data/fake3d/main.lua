@@ -5,7 +5,7 @@ z=12
 prex = 12
 prey = 12
 
-angle = 0
+radle = 0
 s=1 -- スプライト番号
 hmap = {
 70,60,50,40,
@@ -13,7 +13,7 @@ hmap = {
 50,40,30,20,
 40,30,20,10
 }
-ang = 0
+rad = 0
 
 v0 = 9       -- 初速度
 time = 0     -- 時間
@@ -51,9 +51,9 @@ function input()
     --y = y + 1  -- 下に移動
   end
   if btn(2) >= 2 then--8
-    angle = angle - 1  -- 左に回転
+    radle = radle - 1  -- 左に回転
   elseif btn(1) >= 2 then--7
-    angle = angle + 1    -- 右に回転
+    radle = radle + 1    -- 右に回転
   end
 
   if btn(3) >= 2 then--3
@@ -66,7 +66,8 @@ function _update()
 end
 
 function _draw()
-  cls(0)
+  -- cls(0)
+  drawpng("/img.png", 0, 0)
   unit = 10
   -- for ty = 0,3 do
   --   for tx = 0,3 do
@@ -76,24 +77,25 @@ function _draw()
   --     drawbox( 80,75, tx*unit, ty*unit, 65-(ty*4+tx)*4, ty*4+tx )
   --   end
   -- end
-  if ang>360 then
-    ang = 0
+  if rad>6.28 then
+    rad = 0
   end
 
-  ang = ang + 1
+  rad = rad + 3.1415/180
 
-  -- addbtn(9,abs(100*gcos(ang)),0)
-  -- drawrect(abs(100*gcos(ang)),0,20,20,8)
+
+  -- addbtn(9,abs(100*gcos(rad)),0)
+  -- drawrect(abs(100*gcos(rad)),0,20,20,8)
 
   -- for j = 0,1 do
   --   for i = 0,1 do
-  --     addbtn(10+j*2+i,abs(100*gcos(ang))+20*i,20+20*j)
-  --     drawrect(abs(100*gcos(ang))+20*i,20+20*j,20,20,3)
+  --     addbtn(10+j*2+i,abs(100*gcos(rad))+20*i,20+20*j)
+  --     drawrect(abs(100*gcos(rad))+20*i,20+20*j,20,20,3)
   --   end
   -- end
 
-  -- addbtn(11,abs(100*gcos(ang)),40,20,20,2)
-  -- drawrect(abs(100*gcos(ang)),40,20,20,10)
+  -- addbtn(11,abs(100*gcos(rad)),40,20,20,2)
+  -- drawrect(abs(100*gcos(rad)),40,20,20,10)
 
   if prex<=0 then prex = 39 end
   if prex>=40 then prex = 1 end
@@ -103,12 +105,12 @@ function _draw()
   for ty = 0,3 do
       for tx = 0,3 do
     local h = hmap[ty*4+tx+1]
-    drawbox( 80, 75, tx*unit, ty*unit, abs(h*gcos(ang)), ty*4+tx )
+    drawbox( 80, 75, tx*unit, ty*unit, abs(h*cos(rad)), ty*4+tx )
     drawrect( tx*unit, ty*unit, unit,unit, ty*4+tx )
     end
   end
 
-  prepos = drawboxp( x-4, y-4, abs(hmap[flr(prey/unit)*4+flr(prex/unit)+1]*gcos(ang)) )
+  prepos = drawboxp( x-4, y-4, abs(hmap[flr(prey/unit)*4+flr(prex/unit)+1]*cos(rad)) )
 
   if prepos.y > py then
     x = prex
@@ -118,7 +120,7 @@ function _draw()
     prey = y
   end
 
-  pos = drawboxp( x-4, y-4, abs(hmap[flr(y/unit)*4+flr(x/unit)+1]*gcos(ang)) )
+  pos = drawboxp( x-4, y-4, abs(hmap[flr(y/unit)*4+flr(x/unit)+1]*cos(rad)) )
   
   -- spr8(s+64, flr(pos.x), flr(pos.y) )
   --spr8(s+64,x, y, 1)--1はbox座標上にマップ
@@ -139,22 +141,8 @@ function _draw()
     time = time + 1
   end
 
-
   spr8(s+64, flr(pos.x), flr(py) )
   spr8(s+64, x, y)
   
 end
 
--------------------------------------------------------
-firstF = true
-function setup()--使えず、、、、
-end
-
-function loop()--update --draw
-if firstF == true then
-  _init()
-  firstF = false
-end
-_update()
-_draw()
-end

@@ -45,25 +45,25 @@ function input()
   local prex = x
   local prey = y
   local pressed=false
-  if (btn(1)>=1) then
+  if (btn(1)>=2) then
   -- sound=0
    x = x-1
    d=1
    pressed=true
   end
-  if (btn(2)>=1) then
+  if (btn(2)>=2) then
   -- sound=1
     x = x+1
    d=2
    pressed=true
   end
-  if (btn(3)>=1) then
+  if (btn(3)>=2) then
   -- sound=2
    y = y-1
    d=3
    pressed=true
   end
-  if (btn(4)>=1) then
+  if (btn(4)>=2) then
   -- sound=3
    y = y+1
    d=4
@@ -110,18 +110,6 @@ function _update()
   --   sound=4
   -- end
 
-  if (btnp(5) == true) then
-    sound=5
-  end
-  if (btnp(6) == true) then
-    sound=6
-  end
-  if (btnp(7) == true) then
-    sound=7
-  end
-  if (btnp(8) == true) then
-    sound=8
-  end
 
 
   -- if sound>-1 then
@@ -170,15 +158,15 @@ function _draw()
   
 end
 -------------------------------------------------------
-firstF = true
-function setup()--使えず、、、、
-end
+-- firstF = true
+-- function setup()--使えず、、、、
+-- end
 
-function loop()--update --draw
-if firstF == true then
-  _init()
-  firstF = false
-end
-_update()
-_draw()
-end
+-- function loop()--update --draw
+-- if firstF == true then
+--   _init()
+--   firstF = false
+-- end
+-- _update()
+-- _draw()
+-- end
