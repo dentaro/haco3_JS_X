@@ -19,8 +19,11 @@ walkAngle = 0.0
 scale = 1.0
 n = 0
 frame = 0
-tx = 63
-ty = 59
+tx = 64
+ty = 60
+
+cx = 64
+cy = 60
 firstF=true
 function setup()
   fillrect(20,20,80,80,7)
@@ -31,36 +34,92 @@ function _init()--1回だけ
 end
 
 function input()
-  -- if (btn(3)>=2) then
-  --   if(tileZoom<15.9)then
-  --     tileZoom = tileZoom + 0.1;
-  --   end
+  if (btn(6)>=2) then
+    if(tileZoom<15.9)then
+      tileZoom = tileZoom + 0.1;
+    end
 
-  -- end
+  end
 
-  -- if (btn(4)>=2) then
-  --   if(tileZoom>10.1)then
-  --     tileZoom = tileZoom - 0.1;
-  --   end
-  -- end
+  if (btn(8)>=2) then
+    if(tileZoom>10.1)then
+      tileZoom = tileZoom - 0.1;
+    end
+  end
 
   --phbtn(3)は0~4095の値をボリュームから取得
-  tileZoom = 10 + phbtn(3) * 5 / 4095;
+  -- tileZoom = 10 + phbtn(2) * 5 / 4095;
 
+  if phbtn(2) == 1 then 
+    tileZoom = tileZoom + 0.1;
+  end
+  if phbtn(2) == 2 then 
+    tileZoom = tileZoom - 0.1;
+  end
 
-  tx = tp(0)
-  ty = tp(1)
+  -- tx = tp(0)
+  -- ty = tp(1)
 
-  if (touch()==2) then
-    gpos = getgpos(tx, ty, tileZoom );
+  -- if (touch()==2) then --タッチされたら
+  --   gpos = getgpos(tx, ty, tileZoom );
+  --   walkLatPos = gpos.lat
+  --   walkLonPos = gpos.lon
+  -- end
+
+  -- --アナログスティック
+  if phbtn(0,1) == 7 then 
+    gpos = getgpos(cx+1, cy, tileZoom );
     walkLatPos = gpos.lat
     walkLonPos = gpos.lon
   end
 
+  if phbtn(0,1) == 6 then 
+    gpos = getgpos(cx+1, cy+1, tileZoom );
+    walkLatPos = gpos.lat
+    walkLonPos = gpos.lon
+  end
+
+  if phbtn(0,1) == 5 then 
+    gpos = getgpos(cx, cy+1, tileZoom );
+    walkLatPos = gpos.lat
+    walkLonPos = gpos.lon
+  end
+
+  if phbtn(0,1) == 4 then 
+    gpos = getgpos(cx-1, cy+1, tileZoom );
+    walkLatPos = gpos.lat
+    walkLonPos = gpos.lon
+  end
+
+  if phbtn(0,1) == 3 then 
+    gpos = getgpos(cx-1, cy, tileZoom );
+    walkLatPos = gpos.lat
+    walkLonPos = gpos.lon
+  end
+
+  if phbtn(0,1) == 2 then 
+    gpos = getgpos(cx-1, cy-1, tileZoom );
+    walkLatPos = gpos.lat
+    walkLonPos = gpos.lon
+  end
+
+  if phbtn(0,1) == 1 then 
+    gpos = getgpos(cx, cy-1, tileZoom );
+    walkLatPos = gpos.lat
+    walkLonPos = gpos.lon
+  end
+
+  if phbtn(0,1) == 0 then 
+    gpos = getgpos(cx+1, cy-1, tileZoom );
+    walkLatPos = gpos.lat
+    walkLonPos = gpos.lon
+  end
 end
 
 function _update()--ループします
+  
   input()
+
   -- --指定座標（新宿駅）の周辺をぐるぐる回るための処理
   -- walkAngle = walkAngle - 1.5
   -- radius = 0.001 -- 回転半径（0.00002の距離）
@@ -84,6 +143,8 @@ function _draw()--ループします
   spr8( 64, pos.x, pos.y)--火
   local pos = getmappos( 35.6783071, 139.7631488, tileZoom )
   spr8( 32, pos.x, pos.y)--木
+
+  print(phbtn(0,1))
 end
 
 
