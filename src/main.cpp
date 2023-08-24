@@ -190,7 +190,7 @@ int statebtn_value; //analog値を代入する変数を定義
 int jsx_value; //analog値を代入する変数を定義
 int jsy_value; //analog値を代入する変数を定義
 
-int phbtnState[4];
+
 
 enum struct FileType {
   LUA,
@@ -1200,35 +1200,36 @@ void setup()
   spriteMap.setColorDepth(16);//子スプライトの色深度
   spriteMap.createSprite(MAPWH, MAPWH/divnum);//マップ展開用スプライトメモリ確保
 
-File fr = SPIFFS.open("/init/param/uiinfo.txt", "r");
-String line;
+  File fr = SPIFFS.open("/init/param/uiinfo.txt", "r");
+  String line;
 
-while (fr.available()) {
-  line = fr.readStringUntil('\n');
-  if (!line.isEmpty()) {
-    int commaIndex = line.indexOf(',');
-    if (commaIndex != -1) {
-      String val = line.substring(0, commaIndex);
-      addUiNum[0] = val.toInt();
+  while (fr.available()) {
+    line = fr.readStringUntil('\n');
+    if (!line.isEmpty()) {
+      int commaIndex = line.indexOf(',');
+      if (commaIndex != -1) {
+        String val = line.substring(0, commaIndex);
+        addUiNum[0] = val.toInt();
 
-      if(addUiNum[0]!=-1){//-1の時は生成しない
+        if(addUiNum[0]!=-1){//-1の時は生成しない
 
-        for (int i = 1; i < 6; i++) {
-          int nextCommaIndex = line.indexOf(',', commaIndex + 1);
-          if (nextCommaIndex != -1) {
-            val = line.substring(commaIndex + 1, nextCommaIndex);
-            addUiNum[i] = val.toInt();
-            commaIndex = nextCommaIndex;
+          for (int i = 1; i < 6; i++) {
+            int nextCommaIndex = line.indexOf(',', commaIndex + 1);
+            if (nextCommaIndex != -1) {
+              val = line.substring(commaIndex + 1, nextCommaIndex);
+              addUiNum[i] = val.toInt();
+              commaIndex = nextCommaIndex;
+            }
           }
+          ui.createPanel( addUiNum[0], addUiNum[1], addUiNum[2], addUiNum[3], addUiNum[4], addUiNum[5], TOUCH, ui.getTouchZoom());//ホームボタン
+          allAddUiNum++;
         }
-        ui.createPanel( addUiNum[0], addUiNum[1], addUiNum[2], addUiNum[3], addUiNum[4], addUiNum[5], TOUCH, ui.getTouchZoom());//ホームボタン
-        allAddUiNum++;
       }
     }
   }
-}
 
-fr.close();
+  fr.close();
+
   delay(100);
 
   tft.setPsram( false );//DMA利用のためPSRAMは切る
@@ -1257,63 +1258,33 @@ fr.close();
   showRam();
   frame=0;
 
-  // ui.setupPhBtns(36, 25, 22);//物理ボタンをセットアップ  
+  ui.setupPhBtns(36, 25, 22);//物理ボタンをセットアップ  
 }
 
 void loop()
 {
-
-  //AD1の場合
-  jsx_value = 0;//34pin　ジョイスティックX
-  jsy_value = 0;//35pin　ジョイスティックY
-  vol_value = 0;//33pin　ボリューム
-  statebtn_value = 0;//39pin　4つのボタン
-
-  jsx_value = adc1_get_raw(ADC1_CHANNEL_7);//34pin　ジョイスティックX
-  jsy_value = adc1_get_raw(ADC1_CHANNEL_6);//35pin　ジョイスティックY
-  vol_value = adc1_get_raw(ADC1_CHANNEL_5);//33pin　ボリューム
-  statebtn_value = adc1_get_raw(ADC1_CHANNEL_3);//39pin　4つのボタン
-  
-  phbtnState[0] = jsx_value;
-  phbtnState[1] = jsy_value;
-  phbtnState[2] = statebtn_value;
-  phbtnState[3] = vol_value;
-  //取得したいチャンネルを指定したらOK！
-
-  Serial.print("joyStick x[0]:");
-  Serial.print(jsx_value);
-  Serial.print(" y[1]:");
-  Serial.print(jsy_value);
-  Serial.print("  button[2]:");
-  Serial.print(statebtn_value);
-  Serial.print("  volume[3]:");
-  Serial.print(vol_value);
-  
-  Serial.println(":");
-
-
-
-  //  ui.updatePhBtns();//物理ボタンの状態を更新
-  //  uint32_t hitvalue = ui.getHitValue();
-  //  // 入力内容を画面とシリアルに出力
-  //       switch (hitvalue)
-  //       {
-  //       default:  Serial.println("--"); break;
-  //       case 101: Serial.println("A click"); break;
-  //       case 102: Serial.println("B click"); break;
-  //       case 103: Serial.println("C click"); break;
-  //       case 111: Serial.println("A hold"); break;
-  //       case 112: Serial.println("B hold"); break;
-  //       case 113: Serial.println("C hold"); break;
-  //       case 121: Serial.println("A double click"); break;
-  //       case 122: Serial.println("B double click"); break;
-  //       case 123: Serial.println("C double click"); break;
-  //       case 201: Serial.println("AB hold"); break;
-  //       case 202: Serial.println("AC hold"); break;
-  //       case 203: Serial.println("BC hold"); break;
-  //       case 204: Serial.println("ABC hold"); break;
-  //       case 301: Serial.println("A->B->C"); break;
-  //       }
+  ui.updatePhVols();
+  ui.updatePhBtns();//物理ボタンの状態を更新
+  uint32_t hitvalue = ui.getHitValue();
+  // 入力内容を画面とシリアルに出力
+    // switch (hitvalue)
+    // {
+    // default:  Serial.println("--"); break;
+    // case 101: Serial.println("A click"); break;
+    // case 102: Serial.println("B click"); break;
+    // case 103: Serial.println("C click"); break;
+    // case 111: Serial.println("A hold"); break;
+    // case 112: Serial.println("B hold"); break;
+    // case 113: Serial.println("C hold"); break;
+    // case 121: Serial.println("A double click"); break;
+    // case 122: Serial.println("B double click"); break;
+    // case 123: Serial.println("C double click"); break;
+    // case 201: Serial.println("AB hold"); break;
+    // case 202: Serial.println("AC hold"); break;
+    // case 203: Serial.println("BC hold"); break;
+    // case 204: Serial.println("ABC hold"); break;
+    // case 301: Serial.println("A->B->C"); break;
+    // }
 
   // ui.setConstantGetF(true);//trueだとタッチポイントのボタンIDを連続取得するモード
   ui.update(screen);//タッチイベントを取るので、LGFXが基底クラスでないといけない
@@ -1414,12 +1385,10 @@ void loop()
     
   }
 
-        ui.showTouchEventInfo( tft, 0, 100 );//タッチイベントを視覚化する
-        ui.showInfo( tft, 0, 100+8 );//ボタン情報、フレームレート情報などを表示します。
+        // ui.showTouchEventInfo( tft, 0, 100 );//タッチイベントを視覚化する
+        // ui.showInfo( tft, 0, 100+8 );//ボタン情報、フレームレート情報などを表示します。
         // ui.drawPhBtns( tft, 0, 90+16 );//物理ボタンの状態を表示
 
-        
-        
         //SD利用可能かどうか
         tft.setTextSize(1);
         tft.setTextColor( TFT_WHITE , TFT_BLACK );

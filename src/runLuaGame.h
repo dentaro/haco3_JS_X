@@ -179,6 +179,7 @@ class RunLuaGame: public BaseGame
     String getBitmapName(String s);
     String getPngName(String s);
     void hsbToRgb(float angle, float si, float br, int& r, int& g, int& b);
+    void hsbToRgb2(float angle, float br, int& r, int& g, int& b);
     void fillFastTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t c1);
 
     //継承先の関数を優先するものにはvirtual

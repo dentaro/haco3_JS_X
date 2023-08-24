@@ -548,7 +548,42 @@ int RunLuaGame::l_drawtri(lua_State* L){
   return 0;
 }
 
+void RunLuaGame::hsbToRgb2(float angle, float br, int& r, int& g, int& b) {
+  if (angle != -1) {
+    float hue = angle / 360.0f;  // 角度を0から1の範囲に正規化
+
+    // 色相に応じて彩度を変化させる
+    float si = 0.5f + 0.5f * cos(hue * 2 * M_PI);
+
+    float hueNormalized = hue * 6.0f;
+    int i = static_cast<int>(hueNormalized);
+    float f = hueNormalized - i;
+
+    float p = br * (1.0f - si);
+    float q = br * (1.0f - si * f);
+    float t = br * (1.0f - si * (1.0f - f));
+
+    int br255 = static_cast<int>(br);
+    int p255 = static_cast<int>(p);
+    int q255 = static_cast<int>(q);
+    int t255 = static_cast<int>(t);
+
+    switch (i) {
+      // ... 同じ
+    }
+  } else { // 無彩色指定の場合
+      r = br;
+      g = br;
+      b = br;
+  }
+}
+
+
+
+
 void RunLuaGame::hsbToRgb(float angle, float si, float br, int& r, int& g, int& b) {
+
+  if(angle!=-1){
   float hue = angle / 360.0f;  // 角度を0から1の範囲に正規化
 
   si = 1.0f;  // 彩度を常に最大値として扱う
@@ -603,6 +638,12 @@ void RunLuaGame::hsbToRgb(float angle, float si, float br, int& r, int& g, int& 
       b = q255;
       break;
   }
+  }else{//無彩色指定の場合
+      r = br;
+      g = br;
+      b = br;
+  }
+
 }
 
 
@@ -770,11 +811,26 @@ int RunLuaGame::l_drawcircle(lua_State* L){
   return 0;
 }
 
-extern int phbtnState[4];
-
 int RunLuaGame::l_phbtn(lua_State* L){
   int n = lua_tointeger(L, 1);
-  lua_pushinteger(L, (lua_Integer)phbtnState[n]);
+  int n2 = lua_tointeger(L, 2);
+
+  if(n2!=NULL){
+
+    //アナログジョイスティックの場合
+    lua_pushinteger(L, (lua_Integer)ui.getPhVolVec(n, n2));
+   
+
+  }else if(n2==NULL){
+
+    if(n == 2){
+      lua_pushinteger(L, (lua_Integer)ui.getPhVolDir(n));//-1と0~7方向番号を返す//４アナログスイッチの場合
+      // Serial.print(ui.getPhVolDir(n));
+    }
+  }else if(n == 3){
+    lua_pushinteger(L, (lua_Integer)ui.getPhVol(n));//生のデータを返す(ボリュームの場合)
+  }
+  
   return 1;
 }
 
@@ -786,7 +842,14 @@ int RunLuaGame::l_btn(lua_State* L){
   double val = lua_tonumber(L, 4);
 
   if(n2 == NULL){
-    lua_pushinteger(L, (lua_Integer)self->buttonState[n]);
+    // if (self->buttonState[n] == 2) {
+    //   
+    //   lua_pushinteger(L, (lua_Integer)self->buttonState[n]);
+    // }
+    // if (self->buttonState[n] >= 2) {
+    //   
+      lua_pushinteger(L, (lua_Integer)self->buttonState[n]);
+    // }
   }else{
     if (self->buttonState[n] >= 2) {
       lua_pushnumber(L, val + addval);
@@ -809,10 +872,17 @@ int RunLuaGame::l_btnp(lua_State* L)
 {
   RunLuaGame* self = (RunLuaGame*)lua_touserdata(L, lua_upvalueindex(1));
   int n = lua_tointeger(L, 1);
-  if(self->buttonState[n]%4 == 0){
-    lua_pushboolean(L, false);
+
+  if(self->buttonState[n] <= 15){
+    if(self->buttonState[n]==1){lua_pushboolean(L, true);}//最初の１だけtrue
+    else{lua_pushboolean(L, false);}
   }else{
-    lua_pushboolean(L, true);
+    if(self->buttonState[n]%4 == 0){
+      Serial.println("定期的にtrue");
+      lua_pushboolean(L, true);
+    }else{
+      lua_pushboolean(L, false);
+    }
   }
   return 1;
 }

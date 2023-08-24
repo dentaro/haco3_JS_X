@@ -47,13 +47,7 @@ struct Intersection {
 
 class RunHaco8Game: public RunLuaGame
 {
-
-
   public:
-
-
-  // static int rayangle;
-
   struct Rect2D {
     int x;
     int y;
@@ -196,6 +190,8 @@ class RunHaco8Game: public RunLuaGame
   static int l_sp3d(lua_State* L);
   static int l_spmap(lua_State* L);
   static int l_drawpng(lua_State* L);
+  static int l_initstars(lua_State* L);
+  static int l_drawstars(lua_State* L);
   static int l_drawmaps(lua_State* L);
   static int l_getmappos(lua_State* L);
   static int l_getgpos(lua_State* L);
@@ -218,7 +214,8 @@ class RunHaco8Game: public RunLuaGame
   double calculateBrightness(const Vector3<double>& v1, const Vector3<double>& v2, const Vector3<double>& v3, const LightObj& light);
 
   // void renderPolygon(lua_State* L, const std::vector<std::vector<float>>& polygonData);
-  void renderPolygon(const std::vector<std::vector<float>>& polygonData, int colangle);
+  // void renderPolygon(const std::vector<std::vector<float>>& polygonData, int colangle);
+  
   // void renderPolygon(lua_State* L, const std::vector<std::vector<float>>& polygonData);
 
   // void getVertices(lua_State* L, int tableIndex, Vertex& v1, Vertex& v2, Vertex& v3);
