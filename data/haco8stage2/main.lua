@@ -36,7 +36,7 @@ function _init()
   -- ここに書いてもグローバル変数になるようにしたい
   -- x=8
   -- y=8
-  music(0);
+  -- music(0);
 end
 
 
@@ -87,7 +87,8 @@ function _update()
   -- fset(11,0,0)--岩スプライト11を通れなく（0ビットを1に）する
   -- fset(42,0,0)--緑スプライト11を通れるように（0ビットを0に）する
   -- fset(52,0,0)--スプライトを通れるように（0ビットを0に）する
-  t = t+1
+
+  -- t = t+1
   input()
 
 
@@ -105,11 +106,10 @@ function _draw()
   -- spr8(1,x,y,1,1,false,false)
 
   if x>46 and y>46 then go2("/haco8stage1/main.lua") end
-  spr8(10,48,48)
+  spr8(10,48,48)--アイテム
   spr8(s+64,x,y)
 
   print(gstat(),68,2,7)--ゲーム状態を表示
-
 
   -- pset(x+1-cl,y+2-cl, 8)
   -- pset(x+5-cl,y+2-cl, 8)

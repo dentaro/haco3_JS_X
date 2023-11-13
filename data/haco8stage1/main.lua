@@ -1,5 +1,5 @@
 cl = 4
-sound=-1
+-- sound=-1
 function get_map_sprn(sprx,spry)
   local celx=flr(sprx/8)
   local cely=flr(spry/8)
@@ -32,15 +32,20 @@ ipf=8 -- アニメーション1フレームについての時間(1ipf = 1/30秒)
 nf=2 -- アニメーションするフレーム数(足踏みは2フレーム)
 t=0
 
-last_sound=-1
+-- last_sound=-1
 
 function _init()
   -- ここに書いてもグローバル変数になるようにしたい
   
-   music(0);--引数変えてもまだ音楽は変わりません（コメントアウトすると音楽なしに）
+  
+  --  music(0);--引数変えてもまだ音楽は変わりません（コメントアウトすると音楽なしに）
 end
 
 function input()
+
+  if btn(6) >= 2 then
+    appmode(appinfo(0), 1)--エディットモードで開く
+  end
   
   local prex = x
   local prey = y
@@ -69,6 +74,7 @@ function input()
    d=4
    pressed=true
   end
+
   if pressed then
    s=d+flr((t%(nf*ipf))/ipf+1)*8 --8個先が次のコマ
   else
@@ -76,7 +82,7 @@ function input()
   end
 
   if collision(x,y) == true then
-    sound=8
+    -- sound=8
     x=prex
     y=prey
   end
@@ -84,7 +90,7 @@ function input()
 
 function _update()
 
-  sound=-1
+  -- sound=-1
   -- fset(45,0,0)--水スプライト45を通れなく（0ビットを1に）する
   -- fset(45,1,1)--水スプライト45を通れなく（0ビットを1に）する
   -- fset(45,2,1)--水スプライト45を通れなく（0ビットを1に）する
@@ -94,7 +100,8 @@ function _update()
   -- fset(11,0,0)--岩スプライト11を通れなく（0ビットを1に）する
   -- fset(42,0,0)--緑スプライト11を通れるように（0ビットを0に）する
   -- fset(52,0,0)--スプライトを通れるように（0ビットを0に）する
-  t = t+1
+
+  -- t = t+1
   input()
   
   -- if (btnp(5) == true) then
@@ -113,8 +120,8 @@ function _update()
 
 
   -- if sound>-1 then
-    sfx(sound, 32)
-    last_sound=sound
+    -- sfx(sound, 32)
+    -- last_sound=sound
   -- end
 
   -- tone(0, 523, 0)
@@ -138,8 +145,10 @@ function _draw()
   -- spr8(1,x,y,1,1,false,false)
 
   if x>46 and y>46 then go2("/haco8stage2/main.lua", 100) end--状態3で立ち上げる
-  spr8(9,48,48)
+  spr8(9,48,48)--アイテム
   spr8(s+64,x,y)
+  -- color(3)
+  -- fillrect(x-4,y-4,8,8)
 
   print(gstat(),68,2,7)--ゲーム状態を表示
 
@@ -153,7 +162,7 @@ function _draw()
   -- rectfill(0,0,127,127,0)
  -- 前回再生されたSFX番号を画面に表示する
 --  if last_sound>-1 then
-  print(last_sound, 68,14,7)
+  -- print(last_sound, 68,14,7)
 --  end
   
 end

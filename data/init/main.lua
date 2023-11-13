@@ -5,18 +5,19 @@ count = 0
 cursor = 0
 scroll = 0
 tabCursor = 0
-showmax = 7 --ファイルの最大表示数0~
-lineheight = 11
+showmax = 8 --ファイルの最大表示数0~
+lineheight = 13
 function setup()
 
 end
 
 function _init()
-  fs = list() --一回だけ読み込む
+  -- fs = list() 
+  fnum = list(-1)--　　-1でファイルの数を取得
 end
 
 function drawTab(x, y, w)
-  spr(x, y,8,8,32,0,8,8) -- left
+  spr(x, y, 8,8,32,0,8,8) -- left
   for i = 1,w do
     spr(x + i*8, y,8,8,40,0,8,8) -- middle
   end
@@ -31,43 +32,46 @@ function drawDisableTab(x, y, w)
   spr(x + w*8 ,y,8,8,48,8,8,8) -- right
 end
 
-function drawTile(x, y, w, h)
-  for i=0,h-1 do
-    for j=0,w-1 do
-      spr(x + j*8, y + i*8,8,8,40,24,8,8)
-    end
-  end
-end
+-- function drawTile(x, y, w, h)
+--   for i=0,h-1 do
+--     for j=0,w-1 do
+--       spr(x + j*8, y + i*8,8,8,40,24,8,8)
+--     end
+--   end
+-- end
 
 function drawFile()
-  drawTab(0,10,4)
-  color(1)
-  text("file", 12, 10)
+  drawTab(0,1,4)
+  color(1)--textcol
+  text("file", 12, 1)
 
-  drawDisableTab(40,10,4)
-  color(1)
-  text("util", 52, 9)
+  drawDisableTab(40,1,4)
+  color(1)--textcol
+  text("util", 52, 0)
 
-  for i = scroll,#fs do
+  color(7)--textcol
+  for i = scroll, fnum do
     if i - scroll >= 0 and i - scroll <= showmax then
-      v = fs[i] --パス名
+      v = list(i)--fs[i] --0以上でパス名を取得
       -- text(i .. v, 10, 20 + lineheight * (i-scroll))--先頭数字
-      text(v, 10, 20 + lineheight * (i-scroll))--先頭数字なし
+      text(v, 10, 13 + lineheight * (i-scroll))--先頭数字なし
     end
   end
 
-  spr(0, 20 + (cursor-scroll)*lineheight, 8, 8, 32, 16, 8, 8)
+  -- spr(0, 4 + (cursor-scroll)*lineheight+13, 8, 8, 32, 16, 8, 8)
+  drawrect(0, 4 + (cursor-scroll)*lineheight+13, 8, 8, 7)
+  spr(0, 4 + (cursor-scroll)*lineheight+13, 8, 8, 32, 16, 8, 8)
 
-  if btn(3) == 2 then
+  if btn(3) >= 1 then
     cursor = cursor - 1
     if cursor < 0 then
-      cursor = #fs
+      cursor = fnum
     end
   end
 
-  if btn(4) == 2 then
+  if btn(4) >= 1 then
     cursor = cursor + 1
-    if cursor > #fs then
+    if cursor > fnum then
       cursor = 0
     end
   end
@@ -79,22 +83,32 @@ function drawFile()
     scroll = cursor - showmax
   end
 
-  if btn(1) == 2 then
-    run(fs[cursor])
+  -- if btn(1) == 2 then
+  --   run(list(cursor))
+  -- end
+
+  if btn(5) >= 1 then
+    appmode(list(cursor),1)--エディットモードで再起動
+  end
+
+  if btn(6) >= 1 then
+    -- appmode(list(cursor),0)--アプリモードで再起動（エディタに戻るときはこっち）
+    run(list(cursor))--再起動せずにアプリを起動
   end
 end
 
-utilMenu = {"reload", "wifi on", "self wifi on", "reboot", "tone on", "tone off"}
+utilMenu = {"reload", "wifi on", "self wifi on", "reboot", "tone on", "tone off","chat"}
 
 function drawUtil()
-  drawDisableTab(0,10,4)
+  drawDisableTab(0,1,4)
   color(1)
-  text("file", 12, 9)
+  text("file", 12, 1)
 
-  drawTab(40,10,4)
+  drawTab(40,1,4)
   color(1)
-  text("util", 52, 10)
+  text("util", 52, 0)
 
+  color(7)
   for k, v in pairs(utilMenu) do
     text((k - 1) .. ":" .. v, 10, 20 + 10 * (k - 1))
   end
@@ -115,7 +129,7 @@ function drawUtil()
     end
   end
 
-  if btn(1) == 2 then
+  if btn(6) == 2  then
     if cursor == 0 then
       run("/init/main.lua")
     elseif cursor == 1 then
@@ -138,22 +152,25 @@ function drawUtil()
       -- tone(0, 0)
       -- tone(1, 0)
       -- tone(2, 0)
+    elseif cursor == 6 then
+      appmode("/chat/main.lua", 2)--チャットモードで起動
     end
   end
 end
 
 function _update()
+  cls(1)--bgcol
   color(1)
-  fillrect(0, 0, 128, 120)
-  color(7)
-  if iswifidebug() then
-    text("wifi: on", 0, 0)
-    text(getip(), 50, 0)
-  else
-    text("wifi: off", 0, 0)
-  end
+  fillrect(0, 0, 160, 16)
+  -- color(7)
+  -- if iswifidebug() then
+  --   text("wifi: on", 0, 0)
+  --   text(getip(), 50, 0)
+  -- else
+  --   text("wifi: off", 0, 0)
+  -- end
 
-  if btn(0) == 2 then
+  if btn(1) == 2 then
     tabCursor = tabCursor - 1
     if tabCursor < 0 then
       tabCursor = 1
@@ -168,7 +185,7 @@ function _update()
     cursor = 0
   end
 
-  drawTile(0,18,16,12)
+  -- drawTile(0,18,16,12)
 
   if tabCursor == 0 then
     drawFile()

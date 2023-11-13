@@ -2,12 +2,16 @@ M_IDLE, M_MOVE, M_ANIM = 0, 1, 2
 local mode, moveDir = M_IDLE, 0
 local stage = {}
 
-function _init()
+function setup()
     stage = {}
     for x = 1, 4 do
         stage[x] = {}
     end
     stage[1][1] = { value = 2 }
+end
+
+function _init()
+    setup()
 end
 
 function addBlock()
@@ -75,6 +79,12 @@ function move(dir)
 end
 
 function input()
+
+    if btn(6) >= 2 then--3
+    -- appmode(appinfo(0), 1)--エディットモードで開く
+    -- appmode("/2048/main.lua", 1)--エディットモードで開く
+    end
+      
     if mode == M_IDLE then
         for i = 1, 4 do
             if btn(i) == 2 then

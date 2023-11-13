@@ -28,25 +28,30 @@ end
 
 function _init()
  -- wini(32)
-  music(0);
+  -- music(0);
 end
 
 function input()
   -- x = tp(0)
   -- y = tp(1)
 
-  if btn(5) >= 2 then --1
+  if btn(1) >= 2 then --1
     prex = prex - 1
     --x = x - 1  -- 左に移動
-  elseif btn(8) >= 2 then--2
+  elseif btn(2) >= 2 then--2
     prex = prex + 1
     --x = x + 1  -- 右に移動
   end
 
   if btn(6) >= 2 then--3
+    -- appmode(appinfo(0), 1)--エディットモードで開く
+    -- appmode("/fake3d/main.lua", 1)--エディットモードで開く
+  end
+
+  if btn(3) >= 2 then--3
     prey = prey - 1
     --y = y - 1  -- 上に移動
-  elseif btn(7) >= 2 then--4
+  elseif btn(4) >= 2 then--4
     prey = prey + 1
     --y = y + 1  -- 下に移動
   end
@@ -66,8 +71,8 @@ function _update()
 end
 
 function _draw()
-  -- cls(0)
-  drawpng("/img.png", 0, 0)
+  cls(0)
+  -- drawpng("/img.png", 0, 0)
   unit = 10
   -- for ty = 0,3 do
   --   for tx = 0,3 do
