@@ -9,7 +9,7 @@ using namespace std;
 
 #define FLICK_DIST 3
 
-#define CALIBRATION_FILE "/init/caldata.txt"
+#define CALIBRATION_FILE "/init/param/caldata.txt"
 #define REPEAT_CAL false
 
 LovyanGFX_DentaroUI::LovyanGFX_DentaroUI(LGFX* _lcd)
@@ -17,37 +17,337 @@ LovyanGFX_DentaroUI::LovyanGFX_DentaroUI(LGFX* _lcd)
   lcd = _lcd;
 }
 
-void LovyanGFX_DentaroUI::setupPhBtns(int pfbNo0, int pfbNo1, int pfbNo2 ){
-  phbs.setup(pfbNo0, pfbNo1, pfbNo2);
-}
-
-std::uint32_t LovyanGFX_DentaroUI::getHitValue(){
-  // コマンド判定結果を取得
-  return  phbs.getValue();
-}
-
-void LovyanGFX_DentaroUI::updatePhBtns()
+void LovyanGFX_DentaroUI::updatePhVols()
 {
-  delay(1);
-  // 入力状態の更新（変化がなければ終了）
-  if (!phbs.loop()) return;
+//AD1の場合
+  phbtnState[0] = adc1_get_raw(ADC1_CHANNEL_7);//34pin　ジョイスティックX
+  phbtnState[1] = adc1_get_raw(ADC1_CHANNEL_6);//35pin　ジョイスティックY
+  phbtnState[2] = adc1_get_raw(ADC1_CHANNEL_3);//39pin　4つのボタン
+  //phbtnState[3] = adc1_get_raw(ADC1_CHANNEL_5);//33pin　ボリューム
+  
+  //取得したいチャンネルを指定したらOK！
 
-  // コマンド判定結果を取得
-  static std::uint32_t hitvalue = ~0U;
-  std::uint32_t prev = hitvalue;
-  hitvalue = phbs.getValue();
-
-  // 以前の値と同じ場合は除外
-  if (prev == hitvalue) return;
-
+  // Serial.print(" x[0]:");
+  // Serial.print(phbtnState[0]);
+  // Serial.print(" y[1]:");
+  // Serial.print(phbtnState[1]);
+  // Serial.print("  4btn[2]:");
+  // Serial.print(phbtnState[2]);
+  // Serial.print("  volume[3]:");
+  // Serial.print(phbtnState[3]);
+  
+  // Serial.print(" : ");
 }
 
-const bits_btn_t*  LovyanGFX_DentaroUI::getStack()
+int LovyanGFX_DentaroUI::getPhVol(int n)
 {
-  return phbs.getStack();
+  return phbtnState[n];
 }
 
-void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _calibF )
+// #define BTN_STATE_TIME 50
+// int cnt = 0;
+// bool statebtn_btnStateF = false;
+// int statebtn_value; //analog値を代入する変数を定義
+// uint8_t statebtn_btnState = B11111111;
+// uint8_t b_btnState = B00000000;
+
+// int valList[BTN_STATE_TIME];
+// int b_vals[16];
+// float b_value;
+// bool b_btnStateF;
+
+// uint8_t statebtn_btnStateList[BTN_STATE_TIME] = {0};//一括初期化
+// uint8_t b_btnStateList[BTN_STATE_TIME] = {0};//一括初期化
+
+// float statebtn_vals[16]={
+//   3450,3410,3370,3320,
+//   3220,3150,3070,2990,
+//   2850,2730,2580,2400,
+//   1930,1510,880,0
+// };
+
+// // //ピンによって抵抗値の特性がちがうので、キャリブレーションします。
+// // // float statebtn_vals[16]={
+// // //   3400,3350,3300,3270,
+// // //   3170,3120,3050,2970,
+// // //   2830,2710,2580,2400,
+// // //   1940,1530,900,0
+// // // };
+
+// //閾値を設定します。
+// float statebtn_mvals[16] = {
+//    (statebtn_vals[0]+statebtn_vals[1])/2, (statebtn_vals[1]+statebtn_vals[2])/2, (statebtn_vals[2]+statebtn_vals[3])/2, (statebtn_vals[3]+statebtn_vals[4])/2,
+//    (statebtn_vals[4]+statebtn_vals[5])/2, (statebtn_vals[5]+statebtn_vals[6])/2, (statebtn_vals[6]+statebtn_vals[7])/2, (statebtn_vals[7]+statebtn_vals[8])/2,
+//    (statebtn_vals[8]+statebtn_vals[9])/2, (statebtn_vals[9]+statebtn_vals[10])/2, (statebtn_vals[10]+statebtn_vals[11])/2, (statebtn_vals[11]+statebtn_vals[12])/2,
+//    (statebtn_vals[12]+statebtn_vals[13])/2, (statebtn_vals[13]+statebtn_vals[14])/2, (statebtn_vals[14]+statebtn_vals[15])/2, statebtn_vals[15]/2
+//    };
+
+
+// float b_mvals[16] = {
+//    (b_vals[0]+b_vals[1])/2, (b_vals[1]+b_vals[2])/2, (b_vals[2]+b_vals[3])/2, (b_vals[3]+b_vals[4])/2,
+//    (b_vals[4]+b_vals[5])/2, (b_vals[5]+b_vals[6])/2, (b_vals[6]+b_vals[7])/2, (b_vals[7]+b_vals[8])/2,
+//    (b_vals[8]+b_vals[9])/2, (b_vals[9]+b_vals[10])/2, (b_vals[10]+b_vals[11])/2, (b_vals[11]+b_vals[12])/2,
+//    (b_vals[12]+b_vals[13])/2, (b_vals[13]+b_vals[14])/2, (b_vals[14]+b_vals[15])/2, b_vals[15]/2
+//    };
+
+// bool LovyanGFX_DentaroUI::getStateBit(int _bitNo)
+// {
+//   uint32_t b = statebtn_btnState;//コピー
+//   //uint32_t mb = 0b1;//マスク用
+//   bool rb = 0b1 & (b >> _bitNo-1);//ビットシフトして、マスクで１ビット目を抽出してboolにキャスト
+//   return  rb;
+// }
+
+// int LovyanGFX_DentaroUI::getPhVolDir(int n)
+// {
+//   // 基準値から方向を割り出す
+
+//   valList[cnt] = getPhVol(n);
+//   statebtn_value = 0;//一度リセット
+
+//   for(int i = 0;i < 10; i++){ statebtn_value += valList[i]; }
+//   statebtn_value /= 10;//平均化処理
+
+//   Serial.println(statebtn_value);
+//   cnt++;
+//   if(cnt==10){cnt=0;}
+
+//        if(statebtn_value <  statebtn_vals[ 0]+100 && statebtn_value >= statebtn_mvals[0]){ statebtn_btnState = B00000000; }
+//   else if(statebtn_value < statebtn_mvals[ 0] && statebtn_value >= statebtn_mvals[1]){ statebtn_btnState = B00000001; }
+//   else if(statebtn_value < statebtn_mvals[ 1] && statebtn_value >= statebtn_mvals[2]){ statebtn_btnState = B00000010; }
+//   else if(statebtn_value < statebtn_mvals[ 2] && statebtn_value >= statebtn_mvals[3]){ statebtn_btnState = B00000011; }
+//   else if(statebtn_value < statebtn_mvals[ 3] && statebtn_value >= statebtn_mvals[4]){ statebtn_btnState = B00000100; }
+//   else if(statebtn_value < statebtn_mvals[ 4] && statebtn_value >= statebtn_mvals[5]){ statebtn_btnState = B00000101; }
+//   else if(statebtn_value < statebtn_mvals[ 5] && statebtn_value >= statebtn_mvals[6]){ statebtn_btnState = B00000110; }
+//   else if(statebtn_value < statebtn_mvals[ 6] && statebtn_value >= statebtn_mvals[7]){ statebtn_btnState = B00000111; }
+//   else if(statebtn_value < statebtn_mvals[ 7] && statebtn_value >= statebtn_mvals[8]){ statebtn_btnState = B00001000; }
+//   else if(statebtn_value < statebtn_mvals[ 8] && statebtn_value >= statebtn_mvals[9]){ statebtn_btnState = B00001001; }
+//   else if(statebtn_value < statebtn_mvals[ 9] && statebtn_value >= statebtn_mvals[10]){ statebtn_btnState = B00001010; }
+//   else if(statebtn_value < statebtn_mvals[10] && statebtn_value >= statebtn_mvals[11]){ statebtn_btnState = B00001011; }
+//   else if(statebtn_value < statebtn_mvals[11] && statebtn_value >= statebtn_mvals[12]){ statebtn_btnState = B00001100; }
+//   else if(statebtn_value < statebtn_mvals[12] && statebtn_value >= statebtn_mvals[13]){ statebtn_btnState = B00001101; }
+//   else if(statebtn_value < statebtn_mvals[13] && statebtn_value >= statebtn_mvals[14]){ statebtn_btnState = B00001110; }
+//   else if(statebtn_value < statebtn_mvals[14] && statebtn_value >= 0            ){ statebtn_btnState = B00001111; }
+
+//   statebtn_btnStateList[cnt] = statebtn_btnState;
+
+//   statebtn_btnStateF = true;
+//   for(int i = 0;i < BTN_STATE_TIME; i++){//過去のフレームの状態と比較
+//     if(statebtn_btnState != statebtn_btnStateList[i]) statebtn_btnStateF = false;
+//   }
+
+//   // if(statebtn_btnStateF){//状態が続いていれば
+//   //   for(int i = 1; i<=4; i++){
+//   //     // if(ui.getStateBit(statebtn_btnState, i)){
+//   //     if(getStateBit(i)){
+//   //       lcd.fillCircle(240- i*20, 50, 8, TFT_BLUE);
+//   //     }else{
+//   //       lcd.fillCircle(240- i*20, 50, 8, TFT_YELLOW);
+//   //     }
+//   //   }
+//   // }
+
+//        if(b_value < b_mvals[0] && b_value >= b_mvals[1]){ b_btnState = B00000000; }
+//   else if(b_value < b_mvals[1] && b_value >= b_mvals[2]){ b_btnState = B00000001; }
+//   else if(b_value < b_mvals[2] && b_value >= b_mvals[3]){ b_btnState = B00000010; }
+//   else if(b_value < b_mvals[3] && b_value >= b_mvals[4]){ b_btnState = B00000011; }
+//   else if(b_value < b_mvals[4] && b_value >= b_mvals[5]){ b_btnState = B00000100; }
+//   else if(b_value < b_mvals[5] && b_value >= b_mvals[6]){ b_btnState = B00000101; }
+//   else if(b_value < b_mvals[6] && b_value >= b_mvals[7]){ b_btnState = B00000110; }
+//   else if(b_value < b_mvals[7] && b_value >= b_mvals[8]){ b_btnState = B00000111; }
+//   else if(b_value < b_mvals[8] && b_value >= b_mvals[9]){ b_btnState = B00001000; }
+//   else if(b_value < b_mvals[9] && b_value >= b_mvals[10]){ b_btnState = B00001001; }
+//   else if(b_value < b_mvals[10] && b_value >= b_mvals[11]){ b_btnState = B00001010; }
+//   else if(b_value < b_mvals[11] && b_value >= b_mvals[12]){ b_btnState = B00001011; }
+//   else if(b_value < b_mvals[12] && b_value >= b_mvals[13]){ b_btnState = B00001100; }
+//   else if(b_value < b_mvals[13] && b_value >= b_mvals[14]){ b_btnState = B00001101; }
+//   else if(b_value < b_mvals[14] && b_value >= b_mvals[15] ){ b_btnState = B00001110; }
+//   else if(b_value < b_mvals[15]  && b_value >= 0   ){ b_btnState = B00001111; }
+
+//   b_btnStateList[cnt] = b_btnState;
+
+//   statebtn_btnStateF = true;
+//   for(int i = 0;i < BTN_STATE_TIME; i++){//過去のフレームの状態と比較
+//     if(statebtn_btnState != statebtn_btnStateList[i]) statebtn_btnStateF = false;
+//   }
+
+//   // if(statebtn_btnStateF){//状態が続いていれば
+//   //   for(int i = 1; i<=4; i++){
+//   //     // if(ui.getStateBit(statebtn_btnState, i)){
+//   //     if(getStateBit(i)){
+//   //       tft.fillCircle(240- i*20, 50, 8, TFT_BLUE);
+//   //     }else{
+//   //       tft.fillCircle(240- i*20, 50, 8, TFT_YELLOW);
+//   //     }
+//   //   }
+//   // }
+
+//        if(b_value < b_mvals[0] && b_value >= b_mvals[1]){ b_btnState = B00000000; }
+//   else if(b_value < b_mvals[1] && b_value >= b_mvals[2]){ b_btnState = B00000001; }
+//   else if(b_value < b_mvals[2] && b_value >= b_mvals[3]){ b_btnState = B00000010; }
+//   else if(b_value < b_mvals[3] && b_value >= b_mvals[4]){ b_btnState = B00000011; }
+//   else if(b_value < b_mvals[4] && b_value >= b_mvals[5]){ b_btnState = B00000100; }
+//   else if(b_value < b_mvals[5] && b_value >= b_mvals[6]){ b_btnState = B00000101; }
+//   else if(b_value < b_mvals[6] && b_value >= b_mvals[7]){ b_btnState = B00000110; }
+//   else if(b_value < b_mvals[7] && b_value >= b_mvals[8]){ b_btnState = B00000111; }
+//   else if(b_value < b_mvals[8] && b_value >= b_mvals[9]){ b_btnState = B00001000; }
+//   else if(b_value < b_mvals[9] && b_value >= b_mvals[10]){ b_btnState = B00001001; }
+//   else if(b_value < b_mvals[10] && b_value >= b_mvals[11]){ b_btnState = B00001010; }
+//   else if(b_value < b_mvals[11] && b_value >= b_mvals[12]){ b_btnState = B00001011; }
+//   else if(b_value < b_mvals[12] && b_value >= b_mvals[13]){ b_btnState = B00001100; }
+//   else if(b_value < b_mvals[13] && b_value >= b_mvals[14]){ b_btnState = B00001101; }
+//   else if(b_value < b_mvals[14] && b_value >= b_mvals[15] ){ b_btnState = B00001110; }
+//   else if(b_value < b_mvals[15]  && b_value >= 0   ){ b_btnState = B00001111; }
+
+//   b_btnStateList[cnt] = b_btnState;
+
+//   b_btnStateF = true;
+//   for(int i = 0;i < BTN_STATE_TIME; i++){//過去のフレームの状態と比較
+//     if(b_btnState != b_btnStateList[i]) b_btnStateF = false;
+//   }
+
+//   // if(b_btnStateF){//状態が続いていれば
+//   //   for(int i = 1;i<=4;i++){
+//   //     if(ui.getStateBit(b_btnState, i)){
+//   //       tft.fillCircle(120- i*10, 20, 8, TFT_BLUE);
+//   //     }else{
+//   //       tft.fillCircle(120- i*10, 20, 8, TFT_YELLOW);
+//   //     }
+//   //   }
+//   // }
+//   cnt++;
+//   if(cnt == BTN_STATE_TIME){cnt=0;}
+
+
+//   return phbtnState[n];
+
+  
+// }
+
+
+
+// 閾値の数
+const int numThresholds = 5;
+
+// 方向を示すビット列
+byte directionBits = 0;
+
+// 閾値のリスト
+  float statebtn_vals[6] = {
+      1150, 1050, 560, 180, 20, 0
+  };
+
+
+int LovyanGFX_DentaroUI::getPhVolDir(int n){
+  // 音声ボリュームの値
+  float volume = getPhVol(n);
+  // 閾値を元に方向を判断する
+  for (int i = 0; i < numThresholds; i++) {
+    float threshold = (statebtn_vals[i]+statebtn_vals[i+1])/2;
+      if (volume >= threshold) {
+          directionBits = i;  // 閾値を超えたら該当する方向を示すビット列をセット
+          break;  // 最初の該当する閾値を見つけたらループを終了
+      }
+  }
+  if(volume == 0){
+    directionBits = -1;
+  }
+  return directionBits;
+}
+
+int LovyanGFX_DentaroUI::getPhVolVec(int n1, int n2) {
+  // 音声ボリュームの値
+  float x = getPhVol(n1);
+  float y = getPhVol(n2);
+
+  // 基準値を引いて調整
+  x -= 1950;
+  y -= 1904;
+
+  // 値の制限
+  if (x > 1900) {
+    x = 1900;
+  } else if (x < -1900) {
+    x = -1900;
+  }
+  if (y > 1900) {
+    y = 1900;
+  } else if (y < -1900) {
+    y = -1900;
+  }
+// 角度を計算（ラジアン）
+  float angle = atan2(y, x);
+
+  // 角度を0~360度に変換
+  if (angle < 0) {
+    angle += 2 * M_PI;
+  }
+  float degrees = angle * 180.0 / M_PI;
+
+  // 方向を判定
+  int direction = -1; // デフォルトは方向がないという意味
+
+  if (abs(x) < 50 && abs(y) < 50) {
+    direction = -1; // 方向がない
+  } else if (degrees >= 22.5 && degrees < 67.5) {
+    direction = 0; // 右上
+  } else if (degrees >= 67.5 && degrees < 112.5) {
+    direction = 1; // 上
+  } else if (degrees >= 112.5 && degrees < 157.5) {
+    direction = 2; // 左上
+  } else if (degrees >= 157.5 && degrees < 202.5) {
+    direction = 3; // 左
+  } else if (degrees >= 202.5 && degrees < 247.5) {
+    direction = 4; // 左下
+  } else if (degrees >= 247.5 && degrees < 292.5) {
+    direction = 5; // 下
+  } else if (degrees >= 292.5 && degrees < 337.5) {
+    direction = 6; // 右下
+  } else if ((degrees >= 337.5 && degrees <= 360) || (degrees >= 0 && degrees < 22.5)) {
+    direction = 7; // 右
+  }
+
+  if (abs(x) < 50 && abs(y) < 50) {
+    direction = -1; // 方向がない
+  }
+
+  return direction;
+}
+
+
+
+
+// void LovyanGFX_DentaroUI::setupPhBtns(int pfbNo0, int pfbNo1, int pfbNo2 ){
+//   phbs.setup(pfbNo0, pfbNo1, pfbNo2);
+// }
+
+// std::uint32_t LovyanGFX_DentaroUI::getHitValue(){
+//   // コマンド判定結果を取得
+//   return  phbs.getValue();
+// }
+
+// void LovyanGFX_DentaroUI::updatePhBtns()
+// {
+//   delay(1);
+//   // 入力状態の更新（変化がなければ終了）
+//   if (!phbs.loop()) return;
+
+//   // コマンド判定結果を取得
+//   static std::uint32_t hitvalue = ~0U;
+//   std::uint32_t prev = hitvalue;
+//   // hitvalue = phbs.getValue();
+
+//   // 以前の値と同じ場合は除外
+//   if (prev == hitvalue) return;
+
+// }
+
+// const bits_btn_t*  LovyanGFX_DentaroUI::getStack()
+// {
+//   return phbs.getStack();
+// }
+
+void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _calibF)
 {
 
   _lcd.init();
@@ -59,12 +359,6 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _c
   _lcd.setRotation( _rotateNo );
   showSavedCalData(_lcd);//タッチキャリブレーションの値を表示
 
-  // for(int i = 0; i < BUF_PNG_NUM; i++)
-  // {
-  //   createLayout( 0, 0, 8, 8, layoutSprite_list[i], MULTI_EVENT );//レイアウト用のスプライトを作る
-  // }
-
-  
 }
 
 String LovyanGFX_DentaroUI::rCalData(String _wrfile){
@@ -125,9 +419,11 @@ void LovyanGFX_DentaroUI::calibrationRun( LGFX& _lcd){
 
       String readStr = rCalData(CALIBRATION_FILE);
       char del = ',';
+      int i=0;
       for (const auto subStr : split(readStr.c_str(), del)) {//csv形式のStringから数値文字を取り出し
         int calval = atoi(subStr.c_str());//c_strでconst char*に変換してからatoiで整数値に
-        calData[calval];
+        calData[i] = calval;
+        i++;
       }
       _lcd.calibrateTouch(calData, fg, bg, max(_lcd.width(), _lcd.height()) >> 3);
       _lcd.setTouchCalibrate(calData);
@@ -206,6 +502,35 @@ void LovyanGFX_DentaroUI::begin( LGFX& _lcd)
 
   if(touchCalibrationF == true){
     calibrationRun(_lcd);
+  }else{
+    // String readStr = rCalData(CALIBRATION_FILE);
+
+    File fr = SPIFFS.open(CALIBRATION_FILE, "r"); // パスを適切に指定してください
+    String line;
+    int i = 0;
+
+    while (fr.available()) {
+      line = fr.readStringUntil(',');
+      if (!line.isEmpty()) {
+        calData[i] = line.toInt();
+        Serial.print(calData[i]);
+        Serial.print(",");
+        i++;
+      }
+    }
+
+    fr.close();
+
+      // char del = ',';
+      // int i=0;
+      // for (const auto subStr : split(readStr.c_str(), del)) {//csv形式のStringから数値文字を取り出し
+      //   int calval = atoi(subStr.c_str());//c_strでconst char*に変換してからatoiで整数値に
+      //   calData[i] = calval;
+      //   Serial.
+      //   i++;
+      // }
+      _lcd.setTouchCalibrate(calData);
+
   }
   
   Serial.println("");
@@ -917,9 +1242,11 @@ void LovyanGFX_DentaroUI::setStartPos(int _x, int _y){
 }
 
 int LovyanGFX_DentaroUI::getTouchBtnID(){
-  // return obj_ret.btnID;
-  
   return obj_ret.btnID;
+}
+
+void LovyanGFX_DentaroUI::setTouchBtnID(int _btnID){
+  obj_ret.btnID = _btnID;
 }
 
 bool LovyanGFX_DentaroUI::switchToggleVal(int _btnID, int _tbmode){
@@ -1051,15 +1378,15 @@ void LovyanGFX_DentaroUI::showInfo(LovyanGFX& _lgfx , int _infox, int _infoy){
     _lgfx.setAddrWindow( 0, 0, _lgfx.width(), _lgfx.height() );
   }
 
-  _lgfx.setCursor( 0,_infoy-20 );
-    // ヒープメモリの全体サイズを取得
-  size_t totalHeap = ESP.getHeapSize();
-  // 現在の空きメモリ量を取得
-  size_t freeHeap = ESP.getFreeHeap();
+  // _lgfx.setCursor( 0,_infoy-20 );
+  //   // ヒープメモリの全体サイズを取得
+  // size_t totalHeap = ESP.getHeapSize();
+  // // 現在の空きメモリ量を取得
+  // size_t freeHeap = ESP.getFreeHeap();
   
-  // ヒープメモリの使用率を計算（0～100の値に変換）
-  uint8_t usagePercentage = (100 * (totalHeap - freeHeap)) / totalHeap;
-  _lgfx.printf("%u%%\n", usagePercentage);
+  // // ヒープメモリの使用率を計算（0～100の値に変換）
+  // uint8_t usagePercentage = (100 * (totalHeap - freeHeap)) / totalHeap;
+  // _lgfx.printf("%u%%\n", usagePercentage);
   
 
 }

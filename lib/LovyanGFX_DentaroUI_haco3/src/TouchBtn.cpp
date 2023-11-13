@@ -41,62 +41,62 @@ int _btn_mode)
   // layoutSpritePos = _layoutSpritePos;
 }
 
-void TouchBtn::setOBtnPos( int _b_x, int _b_y){
-  b_x = _b_x; 
-  b_y = _b_y;
-}
+// void TouchBtn::setOBtnPos( int _b_x, int _b_y){
+//   b_x = _b_x; 
+//   b_y = _b_y;
+// }
 
-void TouchBtn::initOBtn(int _btnID, String _btnIDlabel, int _btnNo, int _btns_starAngle, int _b_x, int _b_y, int _b_r0, int _b_r1, int _b_n, String _btn_name, 
-lgfx::v1::touch_point_t _layoutSpritePos,
-lgfx::v1::touch_point_t _uiSpritePos,
-int _btn_mode)
-{
-  btnID = _btnID;
-  btnIDlabel = _btnIDlabel;
-  btnNo = _btnNo;
-  btns_starAngle = _btns_starAngle;
-  uiSpritePos = _uiSpritePos;
-  b_x = _b_x; 
-  b_y = _b_y;
+// void TouchBtn::initOBtn(int _btnID, String _btnIDlabel, int _btnNo, int _btns_starAngle, int _b_x, int _b_y, int _b_r0, int _b_r1, int _b_n, String _btn_name, 
+// lgfx::v1::touch_point_t _layoutSpritePos,
+// lgfx::v1::touch_point_t _uiSpritePos,
+// int _btn_mode)
+// {
+//   btnID = _btnID;
+//   btnIDlabel = _btnIDlabel;
+//   btnNo = _btnNo;
+//   btns_starAngle = _btns_starAngle;
+//   uiSpritePos = _uiSpritePos;
+//   b_x = _b_x; 
+//   b_y = _b_y;
 
-    b_r0 = _b_r0; 
-    b_r1 = _b_r1;
-    b_n = _b_n;
+//     b_r0 = _b_r0; 
+//     b_r1 = _b_r1;
+//     b_n = _b_n;
 
-  b_a = 360/_b_n;
+//   b_a = 360/_b_n;
 
-  b_a0 = (b_a * btnNo + btns_starAngle)%360;
-  b_a1 = b_a0 + b_a;
+//   b_a0 = (b_a * btnNo + btns_starAngle)%360;
+//   b_a1 = b_a0 + b_a;
 
-  b_hw = b_w/2; 
-  b_hh = b_h/2;
+//   b_hw = b_w/2; 
+//   b_hh = b_h/2;
 
-  btn_name = _btn_name;
-  btn_mode = _btn_mode;
-  // layoutSpritePos = _layoutSpritePos;
-}
+//   btn_name = _btn_name;
+//   btn_mode = _btn_mode;
+//   // layoutSpritePos = _layoutSpritePos;
+// }
 
-void TouchBtn::initSlider( int _btnID, int _s_x, int _s_y, int _s_w, int _s_h, String _btn_name, 
-lgfx::v1::touch_point_t _layoutSpritePos,
-lgfx::v1::touch_point_t _uiSpritePos,
-LGFX_Sprite& _sprite,
-int _xy_mode )
-{
-  btnID = _btnID;
-  btn_mode = TOUCH_SLIDER_MODE;
-  uiSpritePos = _uiSpritePos;
-  s_x = _s_x; 
-  s_y = _s_y;
-  s_w = _s_w; 
-  s_h = _s_h;
-  s_hw = s_w/2; 
-  s_hh = s_h/2;
-  btn_name = _btn_name;
-  xy_mode = _xy_mode;
-  sliderPosx = _s_x + (_s_w/2);
-  sliderPosy = _s_x + (_s_h/2);
-  // layoutSpritePos = _layoutSpritePos;
-}
+// void TouchBtn::initSlider( int _btnID, int _s_x, int _s_y, int _s_w, int _s_h, String _btn_name, 
+// lgfx::v1::touch_point_t _layoutSpritePos,
+// lgfx::v1::touch_point_t _uiSpritePos,
+// LGFX_Sprite& _sprite,
+// int _xy_mode )
+// {
+//   btnID = _btnID;
+//   btn_mode = TOUCH_SLIDER_MODE;
+//   uiSpritePos = _uiSpritePos;
+//   s_x = _s_x; 
+//   s_y = _s_y;
+//   s_w = _s_w; 
+//   s_h = _s_h;
+//   s_hw = s_w/2; 
+//   s_hh = s_h/2;
+//   btn_name = _btn_name;
+//   xy_mode = _xy_mode;
+//   sliderPosx = _s_x + (_s_w/2);
+//   sliderPosy = _s_x + (_s_h/2);
+//   // layoutSpritePos = _layoutSpritePos;
+// }
 
 void TouchBtn::setBtnNameFalse(String _btnNameFalse)
 {
@@ -140,71 +140,71 @@ void TouchBtn::btnDraw(LovyanGFX&  _uiSprite, int _x, int _y )
       _uiSprite.drawString(btn_name, b_x + b_hw - b_str_hw , b_y + b_hh - 8);
     }
   }
-  else if(this->btn_mode == TOUCH_OBTN_MODE)//円形ボタンの時
-  {
-    if( visibleF == true ){
-      if(_x == -1 && _y == -1)//描画座標が指定されていなければ(スプライトの場合)
-      {
-        _x = _uiSprite.width()/2;
-        _y = _uiSprite.height()/2;
-      }
+  // else if(this->btn_mode == TOUCH_OBTN_MODE)//円形ボタンの時
+  // {
+  //   if( visibleF == true ){
+  //     if(_x == -1 && _y == -1)//描画座標が指定されていなければ(スプライトの場合)
+  //     {
+  //       _x = _uiSprite.width()/2;
+  //       _y = _uiSprite.height()/2;
+  //     }
 
-      if(this->b_n > 1){//分割数が2以上なら
+  //     if(this->b_n > 1){//分割数が2以上なら
         
-        _uiSprite.setColor(TFT_WHITE);//強制的に白にする
-        _uiSprite.fillArc(_x, _y, this->b_r0, this->b_r1, this->b_a0, this->b_a1);
+  //       _uiSprite.setColor(TFT_WHITE);//強制的に白にする
+  //       _uiSprite.fillArc(_x, _y, this->b_r0, this->b_r1, this->b_a0, this->b_a1);
 
-        // _uiSprite.setTextColor(TFT_BLACK);
-        //_uiSprite.setFont(&lgfxJapanGothicP_20);
-        // drawName = btn_name;
-        b_str_hw = _uiSprite.textWidth(btn_name)/2;
-        float middle_angle = (this->b_a0 + this->b_a1 + 0.1) /2;//角度が0にならないように0.1度を加えている//this->b_a * this->btnNo + this->b_a/2 - this->btns_starAngle;
-        float middle_radius = (this->b_r0 + this->b_r1)/2;
-        float str_x = cos(middle_angle/ 180.0 * M_PI) * middle_radius;
-        float str_y = sin(middle_angle/ 180.0 * M_PI) * middle_radius;
-        // _uiSprite.setTextColor(TFT_BLACK);
-        // _uiSprite.setColor(TFT_WHITE);
-        _uiSprite.drawString(btn_name, 
-                            _x + str_x + b_hw - b_str_hw-1, 
-                            _y + str_y + b_hh - 11 );
+  //       // _uiSprite.setTextColor(TFT_BLACK);
+  //       //_uiSprite.setFont(&lgfxJapanGothicP_20);
+  //       // drawName = btn_name;
+  //       b_str_hw = _uiSprite.textWidth(btn_name)/2;
+  //       float middle_angle = (this->b_a0 + this->b_a1 + 0.1) /2;//角度が0にならないように0.1度を加えている//this->b_a * this->btnNo + this->b_a/2 - this->btns_starAngle;
+  //       float middle_radius = (this->b_r0 + this->b_r1)/2;
+  //       float str_x = cos(middle_angle/ 180.0 * M_PI) * middle_radius;
+  //       float str_y = sin(middle_angle/ 180.0 * M_PI) * middle_radius;
+  //       // _uiSprite.setTextColor(TFT_BLACK);
+  //       // _uiSprite.setColor(TFT_WHITE);
+  //       _uiSprite.drawString(btn_name, 
+  //                           _x + str_x + b_hw - b_str_hw-1, 
+  //                           _y + str_y + b_hh - 11 );
 
-        _uiSprite.setColor(TFT_BLACK);
-        _uiSprite.drawArc(_x, _y, this->b_r0, this->b_r1, this->b_a0, this->b_a1);
+  //       _uiSprite.setColor(TFT_BLACK);
+  //       _uiSprite.drawArc(_x, _y, this->b_r0, this->b_r1, this->b_a0, this->b_a1);
 
-      }else if(this->b_n == 1){//分割数が1なら
-        // _uiSprite.setColor(TFT_RED);
-        _uiSprite.fillCircle(_x, _y,  this->b_r0);
-        // _uiSprite.setTextColor(TFT_BLACK);
-        b_str_hw = _uiSprite.textWidth(btn_name)/2;
-        _uiSprite.drawString(btn_name, _x + b_hw - b_str_hw-1 , _y + b_hh - 11);
+  //     }else if(this->b_n == 1){//分割数が1なら
+  //       // _uiSprite.setColor(TFT_RED);
+  //       _uiSprite.fillCircle(_x, _y,  this->b_r0);
+  //       // _uiSprite.setTextColor(TFT_BLACK);
+  //       b_str_hw = _uiSprite.textWidth(btn_name)/2;
+  //       _uiSprite.drawString(btn_name, _x + b_hw - b_str_hw-1 , _y + b_hh - 11);
 
-        _uiSprite.setColor(TFT_BLACK);
-        _uiSprite.drawCircle(_x, _y,  this->b_r0);
+  //       _uiSprite.setColor(TFT_BLACK);
+  //       _uiSprite.drawCircle(_x, _y,  this->b_r0);
 
-      }
-      else if(this->b_n == 0){//分割数が0=スライダなら
+  //     }
+  //     else if(this->b_n == 0){//分割数が0=スライダなら
 
-       // _uiSprite.setColor(TFT_RED);
-        _uiSprite.fillCircle(_x, _y,  this->b_r0);
-        // _uiSprite.setTextColor(TFT_BLACK);
-        b_str_hw = _uiSprite.textWidth(btn_name)/2;
-        _uiSprite.drawString(btn_name, _x + b_hw - b_str_hw-1 , _y + b_hh - 11);
+  //      // _uiSprite.setColor(TFT_RED);
+  //       _uiSprite.fillCircle(_x, _y,  this->b_r0);
+  //       // _uiSprite.setTextColor(TFT_BLACK);
+  //       b_str_hw = _uiSprite.textWidth(btn_name)/2;
+  //       _uiSprite.drawString(btn_name, _x + b_hw - b_str_hw-1 , _y + b_hh - 11);
 
-        _uiSprite.setColor(TFT_BLACK);
-        _uiSprite.drawCircle(_x, _y,  this->b_r0);
-      }
-    }
-  }
-  else if( this->btn_mode == TOUCH_FLICK_MODE )//フリックボタンの時
-  {
-    if( visibleF == true )
-    {
-      _uiSprite.fillRoundRect( this->b_x, this->b_y, this->b_w, this->b_h, 10, TFT_WHITE );
-      _uiSprite.setTextColor( TFT_BLACK );
-      b_str_hw = _uiSprite.textWidth( btn_name ) / 2;
-      _uiSprite.drawString( btn_name, b_x + b_hw - b_str_hw , b_y + b_hh - 8 );
-    }
-  }
+  //       _uiSprite.setColor(TFT_BLACK);
+  //       _uiSprite.drawCircle(_x, _y,  this->b_r0);
+  //     }
+  //   }
+  // }
+  // else if( this->btn_mode == TOUCH_FLICK_MODE )//フリックボタンの時
+  // {
+  //   if( visibleF == true )
+  //   {
+  //     _uiSprite.fillRoundRect( this->b_x, this->b_y, this->b_w, this->b_h, 10, TFT_WHITE );
+  //     _uiSprite.setTextColor( TFT_BLACK );
+  //     b_str_hw = _uiSprite.textWidth( btn_name ) / 2;
+  //     _uiSprite.drawString( btn_name, b_x + b_hw - b_str_hw , b_y + b_hh - 8 );
+  //   }
+  // }
 
   if(selectBtnF){
     _uiSprite.drawRoundRect(this->b_x, this->b_y, this->b_w, this->b_h, 10, TFT_WHITE);

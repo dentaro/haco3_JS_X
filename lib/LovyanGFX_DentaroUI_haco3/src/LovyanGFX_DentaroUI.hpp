@@ -346,6 +346,7 @@ class LovyanGFX_DentaroUI {
   uint8_t tapCount = 0;//タップカウンタ
   uint8_t lastTapCount = 0;
   bool jadgeF = false;
+  
 
   String kanalist[HENKAN_NUM][3] = {
   {"あ","ぁ","＿"},
@@ -497,6 +498,7 @@ class LovyanGFX_DentaroUI {
     // uint16_t calData[8] = {326,3722,259,185,3776,3655,3776,243};//y
     uint16_t calData[8] = {3811,3853,345,3789,3711,403,1086,430};//daiso
     //uint16_t calData[8] = {558,3648,447,396,3599,3622,3625,324};
+    // uint16_t calData[8];// = {0,1,0,273,319,1,319,264};//core2
     uint16_t calDataOK = 0;
 
     int TopBtnUiID = 0;
@@ -580,13 +582,15 @@ class LovyanGFX_DentaroUI {
     
     String ROI_m_url ="";
 
+    int phbtnState[4];//物理ボリューム
+
     //----Map用ここまで
 
 public:
     LovyanGFX_DentaroUI( LGFX* _lcd );
     LGFX* lcd;
     // LGFX_Sprite layoutSprite_list[BUF_PNG_NUM];
-    PhysicBtn phbs;
+    // PhysicBtn phbs;
     // LovyanGFX_DentaroUI( LGFX& _lcd ): lcd(_lcd) {};
     // LovyanGFX_DentaroUI( LGFX* _lcd );
     // LovyanGFX_DentaroUI();
@@ -595,8 +599,10 @@ public:
     //LGFX* lcd;//タッチポイントとれる
     //LovyanGFX* lgfx;//グラフィックのみ
     // LGFX_Sprite flickUiSprite;//フリック展開パネル用
+
     void update( LGFX& _lcd );
-    void begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _calibF );
+    void begin( LGFX& _lcd, int _colBit, int _rotateNo);
+    void begin( LGFX& _lcd, int _colBit, int _rotateNo, bool _calibF);
     void begin( LGFX& _lcd, String _host, int _shiftNum, int _colBit, int _rotateNo, bool _calibF );
     void begin( LGFX& _lcd, int _shiftNum, int _colBit, int _rotateNo, bool _calibF );
     void begin(LGFX& _lcd);
@@ -690,6 +696,7 @@ public:
     int getTouchBtnNum();//現在のタッチボタンの数を取得
 
     int getTouchBtnID();//タッチされたボタンオブジェクトのIDを取得
+    void setTouchBtnID(int _btnID);
     int getEvent();
     int getFlickEvent();
     void showTouchEventInfo(LovyanGFX& _lgfx, int _x, int _y);
@@ -849,15 +856,23 @@ public:
     void setEventBit(int bitNo, bool inputBit);
     void resetEventBits();
 
-    void setupPhBtns(int pfbNo0, int pfbNo1, int pfbNo2 );
-    void updatePhBtns();
-    const bits_btn_t*  getStack();
-    std::uint32_t getHitValue();
+    // void setupPhBtns(int pfbNo0, int pfbNo1, int pfbNo2 );
+    // void updatePhBtns();
+    // const bits_btn_t*  getStack();
+    // std::uint32_t getHitValue();
 
     void setBtnPos(int _b_ID, int _x, int _y);
     int getTouchZoom();
     void setTouchZoom(int _touchzoom);
     int getBtnW(int _b_ID);
     int getBtnH(int _b_ID);
+
+    //物理ボタン
+    void updatePhVols();
+    int getPhVol(int n);
+    int getPhVolDir(int n);
+    int getPhVolVec(int n1, int n2); 
+
+    bool getStateBit(int _bitNo);
 
 };

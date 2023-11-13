@@ -16,6 +16,16 @@ public:
         z = newZ;
     }
 
+    void setX(T newX) {
+        x = newX;
+    }
+    void setY(T newY) {
+        y = newY;
+    }
+    void setZ(T newZ) {
+        z = newZ;
+    }
+
     VectorBase<T> copy() const {
         return VectorBase<T>(x, y, z);
     }
@@ -70,6 +80,61 @@ public:
         this->x += vec.x;
         this->y += vec.y;
         this->z += vec.z;
+    }
+
+     Vector3 cross(const Vector3& other) const {
+        return Vector3(this->y * other.z - this->z * other.y,
+                       this->z * other.x - this->x * other.z,
+                       this->x * other.y - this->y * other.x);
+    }
+
+    Vector3& operator*=(T scaleFactor) {
+        this->x *= scaleFactor;
+        this->y *= scaleFactor;
+        this->z *= scaleFactor;
+        return *this;
+    }
+    Vector3& operator+=(const Vector3& other) {
+        this->x += other.x;
+        this->y += other.y;
+        this->z += other.z;
+        return *this;
+    }
+
+    Vector3& operator-=(const Vector3& other) {
+        this->x -= other.x;
+        this->y -= other.y;
+        this->z -= other.z;
+        return *this;
+    }
+
+    Vector3& operator/=(T divisor) {
+        if (divisor != 0) {
+            this->x /= divisor;
+            this->y /= divisor;
+            this->z /= divisor;
+        }
+        return *this;
+    }
+
+    
+
+    // Vector3 normalize() const {
+    //     float length = std::sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
+    //     return Vector3(this->x / length, this->y / length, this->z / length);
+    // }
+
+    float length() const {
+        return std::sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
+    }
+
+    Vector3 normalize() const {
+        float len = length();
+        if (len != 0) {
+            return Vector3(this->x / len, this->y / len, this->z / len);
+        } else {
+            return Vector3(0.0f, 0.0f, 0.0f); // return a zero vector if the length is zero
+        }
     }
 
     Vector3<T> scale(T scaleFactor) const {
