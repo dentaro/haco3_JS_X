@@ -9,8 +9,15 @@
 #define FAST_MODE 1
 #define WIDE_MODE 2 //倍率になっています。
 
-#define TFT_OFFSET_X 64
-#define TFT_OFFSET_Y 60
+#define TFT_OFFSET_X 60
+#define TFT_OFFSET_Y 0
+#define RAD_ONE PI/180
+
+#define PNG_SPRITE_WIDTH 64
+#define PNG_SPRITE_HEIGHT 128
+
+#define OUTPIN_0 16
+#define INPIN_0  17
 
 class BaseGame
 {

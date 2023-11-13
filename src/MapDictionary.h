@@ -15,7 +15,7 @@
 // #include "runJsGame.h"
 // #include "wifiGame.h"
 // MapTile構造体の定義
-#define BUF_PNG_NUM 9
+#define BUF_PNG_NUM 1
 
 class MapTile {
   private:
@@ -175,7 +175,7 @@ private:
     String oldKeys[BUF_PNG_NUM];
     int dirNos[BUF_PNG_NUM];
 
-    std::vector<double> angleList; // 角度の平均を出すための値を保持するベクター
+    std::vector<float> angleList; // 角度の平均を出すための値を保持するベクター
 
 public:
     static MapDictionary& getInstance() {
@@ -190,17 +190,6 @@ public:
     void setSprptr(int no, LGFX_Sprite* _sprptr){
       maptils[no].setSprptr2(_sprptr);
     }
-    
-
-    // void setKeySprptr(String _Key, LGFX_Sprite* _buffSprite){
-    //   auto it = key2ptr.find(_Key);
-    //     if (it != key2ptr.end()) {
-    //         key2ptr.erase(it);  // 古いキーのエントリを削除
-    //         key2ptr[_newKey] = sprptr;  // 新しいキーでエントリを追加
-    //     }
-
-    //   maptils[no].setSprptr2(_buffSprite);
-    // }
 
     void setNewKeySprptr(const String& _Key, LGFX_Sprite* sprptr) {
       auto it = key2ptr.find(_Key);
@@ -210,14 +199,7 @@ public:
     }
 
     void copy2buff(LovyanGFX& _buffSprite, LGFX_Sprite* _sprptr, int no) {
-        // maptils[no].setSprptr2(_sprptr);
-        // setSprptr(no, _sprptr);
-        // maptils[no].drawMap2(_buffSprite,0,0);
-
-        // _buffSprite.
         _buffSprite.fillRect(20*no, 20*no, 20,20, TFT_BLUE);
-
-        // _sprptr->pushSprite(&_buffSprite, 0,0);
     }
 
     void setOldReadNo(int no, int _oldreadNo){
@@ -446,30 +428,30 @@ int getBuffID2DirNo(int buffIDno){
     }
   }
 
-  int getTargetDirNo(double _x, double _y){
-    double angle = atan2(_y, _x) + 2 * M_PI;
+  int getTargetDirNo(float _x, float _y){
+    float angle = atan2(_y, _x) + 2 * M_PI;
       return fmod(angle / (M_PI / 4), 8);
   }
 
-  double calculateAverageAngle(double _angle, int averageLimitNum) {
+  float calculateAverageAngle(float _angle, int averageLimitNum) {
     if (angleList.size() >= averageLimitNum) {
         angleList.erase(angleList.begin()); // 最も古い要素を削除
     }
 
-    double oldestAngle = 0.0;
+    float oldestAngle = 0.0;
     if (!angleList.empty()) {
         oldestAngle = angleList.front();
     }
 
     angleList.push_back(_angle);
 
-    double sum = 0.0; // 角度の合計を保持する変数
+    float sum = 0.0; // 角度の合計を保持する変数
 
-    for (double angle : angleList) {
+    for (float angle : angleList) {
         sum += angle;
     }
 
-    double average = sum / angleList.size();
+    float average = sum / angleList.size();
     
     if (!angleList.empty()) {
         average -= oldestAngle / angleList.size(); // 最古の要素を除く
@@ -481,8 +463,8 @@ int getBuffID2DirNo(int buffIDno){
 
 
 
-  int getTargetDirNo(Vector3<double> _pos){
-    double angle = atan2(_pos.getY(), _pos.getX()) + 2 * M_PI;
+  int getTargetDirNo(Vector3<float> _pos){
+    float angle = atan2(_pos.getY(), _pos.getX()) + 2 * M_PI;
 
     angle = calculateAverageAngle(angle,10);
       return fmod(angle / (M_PI / 4), 8);

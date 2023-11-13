@@ -7,11 +7,15 @@
 
 #include "SPIFFS.h"
 #include "baseGame.h"
-#include "Tunes.h"
+// #include "Tunes.h"
+
+// #include "Editor.h"
 
 #include <bitset>
 #include <iostream>
 #include <fstream>
+
+// #include "Speaker_Class.hpp"
 
 extern "C"{
 #include <lua.h>
@@ -40,44 +44,6 @@ inline uint16_t lua_rgb24to16(uint8_t r, uint8_t g, uint8_t b) {
   return tmp; //(tmp >> 8) | (tmp << 8);
 }
 
-// struct Vector3 {
-//   double x;
-//   double y;
-//   double z;
-  
-//   Vector3(double x = 0.0, double y = 0.0, double z = 0.0)
-//     : x(x), y(y), z(z)
-//   {}
-
-//   void set(double newX, double newY, double newZ) {
-//     x = newX;
-//     y = newY;
-//     z = newZ;
-//   }
-
-//   void add(const Vector3& vec) {
-//     x += vec.x;
-//     y += vec.y;
-//     z += vec.z;
-//   }
-
-//   Vector3 copy() const {
-//     return Vector3(x, y, z);
-//   }
-
-//   // ベクトルの差を計算する関数
-//   Vector3 diff(const Vector3& other) const {
-//     return Vector3(x - other.x, y - other.y, z - other.z);
-//   }
-
-//   // ベクトルの各要素を指定した倍率でスケーリングするメソッド
-//   Vector3 scale(double scaleFactor) const {
-//     return Vector3(x * scaleFactor, y * scaleFactor, z * scaleFactor);
-//   }
-// };
-
-
-
 class RunLuaGame: public BaseGame
 {//クラスはデフォルトではprivata
 
@@ -92,15 +58,8 @@ class RunLuaGame: public BaseGame
     lua_State* L;
     luaL_Buffer b;
     byte col[3] = {0,0,0};
-    // int frame = 0;
-    
-    // int buttonState[CTRLBTNNUM+20];//ボタンの個数20個まで追加可能
-    // std::deque<int> buttonState(buttonState, buttonState + CTRLBTNNUM);
-    std::deque<int> buttonState;//ボタンの個数未定
 
-    // std::vector<int> phbtnState;
-    
-    
+    // std::deque<int> buttonState;//ボタンの個数未定
     int touchState;//タッチボタン
     int tp[2] ={0,0};
     uint16_t palette[256];
@@ -116,6 +75,8 @@ class RunLuaGame: public BaseGame
     // Vector3::Vector3 boxzero;
     int boxzerox = 60;
     int boxzeroy = 60;
+
+    std::vector<String> fileNamelist;
 
     // int gameState = 0;
 
@@ -142,6 +103,9 @@ class RunLuaGame: public BaseGame
     int loadSurface(File* fp, uint8_t* buf);
     static int l_tp(lua_State* L);
     static int l_tstat(lua_State* L);
+    static int l_vol(lua_State* L);
+    static int l_pinw(lua_State* L);
+    static int l_pinr(lua_State* L);
     static int l_tone(lua_State* L);
     static int l_spr(lua_State* L);
     static int l_scroll(lua_State* L);
@@ -160,19 +124,23 @@ class RunLuaGame: public BaseGame
     static int l_drawtri(lua_State* L);
     static int l_filltri(lua_State* L);
     static int l_phbtn(lua_State* L);
+    static int l_key(lua_State* L);
     static int l_btn(lua_State* L);
     static int l_touch(lua_State* L);
     static int l_btnp(lua_State* L);
     static int l_sldr(lua_State* L);
-    static int l_getip(lua_State* L);
-    static int l_iswifidebug(lua_State* L);
-    static int l_wifiserve(lua_State* L);
+    // static int l_getip(lua_State* L);
+    // static int l_iswifidebug(lua_State* L);
+    // static int l_wifiserve(lua_State* L);
     static int l_run(lua_State* L);
+    static int l_appmode(lua_State* L);
+    static int l_appinfo(lua_State* L);
+    static int l_editor(lua_State* L);
     static int l_list(lua_State* L);
-    static int l_require(lua_State* L);
-    static int l_httpsget(lua_State* L);
-    static int l_httpsgetfile(lua_State* L);
-    static int l_savebmp(lua_State* L);
+    // static int l_require(lua_State* L);
+    // static int l_httpsget(lua_State* L);
+    // static int l_httpsgetfile(lua_State* L);
+    // static int l_savebmp(lua_State* L);
     static int l_reboot(lua_State* L);
     static int l_debug(lua_State* L);
 
@@ -180,8 +148,7 @@ class RunLuaGame: public BaseGame
     String getPngName(String s);
     void hsbToRgb(float angle, float si, float br, int& r, int& g, int& b);
     void hsbToRgb2(float angle, float br, int& r, int& g, int& b);
-    void fillFastTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t c1);
-
+    void fillFastTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t c1);
     //継承先の関数を優先するものにはvirtual
     virtual void haco8resume(){};//派生クラスに書き換えられるダミー関数
     //派生クラスでのみ実行されるダミー関数（このクラスでは何の処理もしていない）
@@ -190,8 +157,12 @@ class RunLuaGame: public BaseGame
     void init();
     int run(int _remainTime);
     void pause();
+
+    // void fillFastTriangle(float x0, float y0, float x1, float y1, float x2, float y2, uint16_t c1);
   
     protected://継承先でも使えるもの
+    
+    
 };
 
 #endif
